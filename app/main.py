@@ -1,24 +1,23 @@
+import json
+import re
 import sqlite3
 from datetime import date, datetime
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Optional
-
-from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from urllib.parse import urlparse
 
 from . import db, seed
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_DIR = BASE_DIR / "static"
+INDEX_HTML = STATIC_DIR / "index.html"
 
-app = FastAPI(title="Financial Relationship OS")
+HOST = "127.0.0.1"
+PORT = 8000
 
-
-@app.on_event("startup")
-def on_startup():
-    db.init_db()
-    seed.seed_if_empty()
+CLIENT_ID_RE = re.compile(r"^/api/clients/(\d+)$")
+CONVERT_RE = re.compile(r"^/api/prospects/(\d+)/convert$")
 
 
 def _to_number_or_str(raw: Optional[str]):
@@ -106,8 +105,7 @@ def column_to_dict(row) -> dict:
     }
 
 
-@app.get("/api/clients")
-def list_clients():
+def list_clients() -> list:
     conn = db.get_conn()
     rows = conn.execute("SELECT * FROM clients ORDER BY name").fetchall()
     conn.close()
@@ -115,36 +113,31 @@ def list_clients():
     return [client_to_dict(r, today) for r in rows]
 
 
-class ClientUpdate(BaseModel):
-    reviewed: Optional[bool] = None
-    note: Optional[str] = None
-    birthdayMonth: Optional[int] = None
-    birthdayDay: Optional[int] = None
+def update_client(client_id: int, body: dict):
+    reviewed = body.get("reviewed")
+    note = body.get("note")
+    birthday_month = body.get("birthdayMonth")
+    birthday_day = body.get("birthdayDay")
 
+    if birthday_month is not None and not (isinstance(birthday_month, int) and 1 <= birthday_month <= 12):
+        raise ValueError("birthdayMonth must be between 1 and 12")
+    if birthday_day is not None and not (isinstance(birthday_day, int) and 1 <= birthday_day <= 31):
+        raise ValueError("birthdayDay must be between 1 and 31")
 
-@app.patch("/api/clients/{client_id}")
-def update_client(client_id: int, body: ClientUpdate):
-    if body.birthdayMonth is not None and not (1 <= body.birthdayMonth <= 12):
-        raise HTTPException(400, "birthdayMonth must be between 1 and 12")
-    if body.birthdayDay is not None and not (1 <= body.birthdayDay <= 31):
-        raise HTTPException(400, "birthdayDay must be between 1 and 31")
-
-    fields_set = body.model_fields_set
-    updates: list[str] = []
-    values: list = []
-
-    if body.reviewed is not None:
+    updates = []
+    values = []
+    if reviewed is not None:
         updates.append("reviewed = ?")
-        values.append(1 if body.reviewed else 0)
-    if body.note is not None:
+        values.append(1 if reviewed else 0)
+    if note is not None:
         updates.append("note = ?")
-        values.append(body.note)
-    if "birthdayMonth" in fields_set:
+        values.append(note)
+    if "birthdayMonth" in body:
         updates.append("birthday_month = ?")
-        values.append(body.birthdayMonth)
-    if "birthdayDay" in fields_set:
+        values.append(birthday_month)
+    if "birthdayDay" in body:
         updates.append("birthday_day = ?")
-        values.append(body.birthdayDay)
+        values.append(birthday_day)
 
     conn = db.get_conn()
     if updates:
@@ -155,25 +148,23 @@ def update_client(client_id: int, body: ClientUpdate):
     row = conn.execute("SELECT * FROM clients WHERE id = ?", (client_id,)).fetchone()
     conn.close()
     if row is None:
-        raise HTTPException(404, "client not found")
+        return None
     return client_to_dict(row, datetime.now().date())
 
 
-@app.get("/api/prospects")
-def list_prospects():
+def list_prospects() -> list:
     conn = db.get_conn()
     rows = conn.execute("SELECT * FROM prospects ORDER BY segment, name").fetchall()
     conn.close()
     return [prospect_to_dict(r) for r in rows]
 
 
-@app.post("/api/prospects/{prospect_id}/convert")
 def convert_prospect(prospect_id: int):
     conn = db.get_conn()
     prospect = conn.execute("SELECT * FROM prospects WHERE id = ?", (prospect_id,)).fetchone()
     if prospect is None:
         conn.close()
-        raise HTTPException(404, "prospect not found")
+        return None
 
     cur = conn.execute(
         "INSERT INTO clients (name, email, phone, note) VALUES (?, ?, ?, ?)",
@@ -188,12 +179,112 @@ def convert_prospect(prospect_id: int):
     return client_to_dict(row, datetime.now().date())
 
 
-@app.get("/api/columns")
-def list_columns():
+def list_columns() -> list:
     conn = db.get_conn()
     rows = conn.execute("SELECT * FROM columns_lib ORDER BY num").fetchall()
     conn.close()
     return [column_to_dict(r) for r in rows]
 
 
-app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+class Handler(BaseHTTPRequestHandler):
+    server_version = "FinancialOS/1.0"
+
+    def _send_json(self, status: int, payload) -> None:
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_error_json(self, status: int, message: str) -> None:
+        self._send_json(status, {"detail": message})
+
+    def _read_json_body(self):
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        if length == 0:
+            return {}
+        raw = self.rfile.read(length)
+        try:
+            return json.loads(raw.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return None
+
+    def _serve_index(self) -> None:
+        content = INDEX_HTML.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
+
+    def do_GET(self) -> None:
+        path = urlparse(self.path).path
+        try:
+            if path == "/api/clients":
+                return self._send_json(200, list_clients())
+            if path == "/api/prospects":
+                return self._send_json(200, list_prospects())
+            if path == "/api/columns":
+                return self._send_json(200, list_columns())
+            if path.startswith("/api/"):
+                return self._send_error_json(404, "not found")
+            return self._serve_index()
+        except Exception as exc:  # noqa: BLE001 - surface any handler bug as JSON, not a hang
+            self._send_error_json(500, str(exc))
+
+    def do_PATCH(self) -> None:
+        path = urlparse(self.path).path
+        match = CLIENT_ID_RE.match(path)
+        if not match:
+            return self._send_error_json(404, "not found")
+
+        body = self._read_json_body()
+        if body is None:
+            return self._send_error_json(400, "invalid JSON body")
+
+        try:
+            updated = update_client(int(match.group(1)), body)
+        except ValueError as exc:
+            return self._send_error_json(400, str(exc))
+        except Exception as exc:  # noqa: BLE001
+            return self._send_error_json(500, str(exc))
+
+        if updated is None:
+            return self._send_error_json(404, "client not found")
+        self._send_json(200, updated)
+
+    def do_POST(self) -> None:
+        path = urlparse(self.path).path
+        match = CONVERT_RE.match(path)
+        if not match:
+            return self._send_error_json(404, "not found")
+
+        try:
+            created = convert_prospect(int(match.group(1)))
+        except Exception as exc:  # noqa: BLE001
+            return self._send_error_json(500, str(exc))
+
+        if created is None:
+            return self._send_error_json(404, "prospect not found")
+        self._send_json(200, created)
+
+    def log_message(self, format: str, *args) -> None:  # noqa: A002 - matches base signature
+        print(f"{self.address_string()} - {format % args}")
+
+
+def main() -> None:
+    db.init_db()
+    seed.seed_if_empty()
+    server = ThreadingHTTPServer((HOST, PORT), Handler)
+    print(f"Serving on http://{HOST}:{PORT}")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+
+
+if __name__ == "__main__":
+    main()

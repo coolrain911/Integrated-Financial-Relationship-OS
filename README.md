@@ -1,19 +1,21 @@
 # Financial Relationship OS
 
 `financial_os_app.html`의 디자인/레이아웃/탭 구성을 그대로 유지하면서, 데이터가 실제로 영속되는
-로컬 앱으로 만든 버전입니다. 백엔드는 FastAPI + SQLite이고, 프론트엔드는 기존 정적 페이지를
-fetch API 기반으로 전환한 것입니다.
+로컬 앱으로 만든 버전입니다. 백엔드는 Python 표준 라이브러리(`http.server` + `sqlite3`)만으로
+만들어져 있고, 프론트엔드는 기존 정적 페이지를 fetch API 기반으로 전환한 것입니다.
+
+**pip install이 전혀 필요 없습니다.** FastAPI/Flask 같은 서드파티 패키지, pydantic-core 같은
+컴파일된 네이티브 확장(.pyd/.so)에 전혀 의존하지 않습니다 — Windows Application Control
+정책으로 서드파티 컴파일 바이너리 실행이 막혀 있는 환경에서도 그대로 동작합니다. 사용된
+모듈(`http.server`, `sqlite3`, `json`, `pathlib` 등)은 모두 CPython에 내장된 표준 라이브러리입니다.
 
 ## 로컬 실행
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+python3 -m app.main
 ```
 
-브라우저에서 http://127.0.0.1:8000 을 열면 됩니다.
+(저장소 루트에서 실행) 브라우저에서 http://127.0.0.1:8000 을 열면 됩니다. `Ctrl+C`로 종료합니다.
 
 첫 실행 시 `app/data/full_data.json` (clients 163건, prospects 227명, columns 104편)을
 SQLite 파일 `financial_os.db`에 자동으로 시딩합니다. 이 파일은 저장소 루트에 생성되며
