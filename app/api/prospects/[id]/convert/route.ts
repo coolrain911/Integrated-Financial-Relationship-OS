@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { clientRowToDto, type ClientRow } from "@/lib/clientMapping";
+import { personRowToDto, type PersonRow } from "@/lib/mapping";
 
 export async function POST(
   _request: NextRequest,
@@ -12,10 +12,10 @@ export async function POST(
     return NextResponse.json({ detail: "invalid id" }, { status: 400 });
   }
 
-  // convert_prospect() runs the insert-into-clients + delete-from-prospects
+  // convert_prospect() runs the insert-into-people + delete-from-prospects
   // as a single Postgres transaction (see supabase/schema.sql), so a prospect
-  // can never be dropped without the corresponding client existing, or vice
-  // versa.
+  // can never be dropped without the corresponding person existing, or vice
+  // versa. The new person starts with zero policies.
   const { data, error } = await getSupabaseAdmin().rpc("convert_prospect", {
     p_id: prospectId,
   });
@@ -27,5 +27,5 @@ export async function POST(
     return NextResponse.json({ detail: "prospect not found" }, { status: 404 });
   }
 
-  return NextResponse.json(clientRowToDto(data as ClientRow, new Date()));
+  return NextResponse.json(personRowToDto(data as PersonRow, new Date()));
 }

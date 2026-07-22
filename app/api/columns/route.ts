@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { columnRowToDto, type ColumnRow } from "@/lib/clientMapping";
+import { columnRowToDto, type ColumnRow } from "@/lib/mapping";
 
 export async function GET() {
   const { data, error } = await getSupabaseAdmin()

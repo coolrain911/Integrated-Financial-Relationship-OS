@@ -1,5 +1,11 @@
--- Financial Relationship OS schema.
--- Run this once in the Supabase SQL Editor on a fresh project.
+-- One-time migration: splits the old flat `clients` table (one row per
+-- policy, with person fields like name/email/phone duplicated on every row)
+-- into separate `people` and `policies` tables, so a person can hold
+-- multiple policies while their own info is entered only once.
+--
+-- Safe to run on a project that already has the OLD schema.sql (with a
+-- `clients` table) applied and seeded. Running it a second time is a no-op:
+-- once `clients` is gone, the migration block below skips itself.
 
 create table if not exists people (
   id bigint generated always as identity primary key,
@@ -22,22 +28,15 @@ create table if not exists policies (
   carrier text,
   product text,
   category text not null default 'Life' check (category in ('Life', 'Annuity')),
-  -- Life-only fields
   life_type text check (life_type in ('Term', 'UL', 'IUL')),
   option_type text check (option_type in ('A', 'B', 'B->A')),
-  -- death_benefit/total_premium/annual_premium/account_value/surrender_value
-  -- are stored as text (rather than numeric) so the "na" sentinel used
-  -- alongside real numbers and nulls in the source data round-trips cleanly;
-  -- the API layer converts back to a number where possible.
   death_benefit text,
   total_premium text,
   premium_method text check (premium_method in ('월납', '분기납', '반기납', '연납', '일시납')),
   annual_premium text,
-  -- Annuity-only fields
   annuity_type text check (annuity_type in ('IRA', 'Roth IRA', 'Non-Qualified')),
   initial_premium text,
   additional_premium text,
-  -- Shared fields
   account_value text,
   surrender_value text,
   loan_or_withdrawal boolean,
@@ -48,36 +47,9 @@ create table if not exists policies (
   reviewed boolean not null default false
 );
 
-create table if not exists prospects (
-  id bigint generated always as identity primary key,
-  name text,
-  email text,
-  phone text,
-  segment text,
-  note text
-);
-
-create table if not exists columns_lib (
-  id bigint generated always as identity primary key,
-  num numeric,
-  title text not null,
-  category text,
-  file text
-);
-
--- No RLS policies are defined below, so once RLS is enabled, anon/authenticated
--- roles have zero access to these tables. The app talks to Supabase only from
--- Next.js server routes using the service role key, which bypasses RLS
--- entirely — the browser never holds Supabase credentials.
 alter table people enable row level security;
 alter table policies enable row level security;
-alter table prospects enable row level security;
-alter table columns_lib enable row level security;
 
--- Splits a "LastName FirstName [MiddleInitial]" string (the convention used
--- throughout this app) into (last_name, first_name). Falls back to a
--- placeholder when the name is blank so people.last_name's NOT NULL
--- constraint is never violated.
 create or replace function split_last_first(full_name text, out last_name text, out first_name text)
 language plpgsql
 immutable
@@ -99,6 +71,57 @@ begin
   else
     last_name := left(trimmed, sp - 1);
     first_name := nullif(trim(substring(trimmed from sp + 1)), '');
+  end if;
+end;
+$$;
+
+-- The old convert_prospect(bigint) returned `clients`, so it depends on that
+-- table's row type and would block dropping it below. Drop it now; the new
+-- version (returning `people`) is (re)created at the end of this script.
+drop function if exists convert_prospect(bigint);
+
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'clients'
+  ) then
+
+    -- Temporary column used only to join the newly-created people rows back
+    -- to the clients rows they came from; dropped again once policies are
+    -- populated.
+    alter table people add column if not exists _migration_name text;
+
+    -- One person per distinct name. When the same name appears on several
+    -- clients rows (multiple policies for one person), prefer the row with
+    -- the most fields filled in for that person's contact info.
+    insert into people (last_name, first_name, email, phone, note, _migration_name)
+    select
+      (split_last_first(d.name)).last_name,
+      (split_last_first(d.name)).first_name,
+      d.email, d.phone, d.note, d.name
+    from (
+      select distinct on (name) name, email, phone, note
+      from clients
+      order by name, (email is null)::int, (phone is null)::int, (note is null)::int
+    ) d;
+
+    -- One policy per original clients row, linked to the matching person.
+    insert into policies (
+      person_id, policy_number, issue_date, carrier, product,
+      death_benefit, annual_premium, account_value,
+      needs_review, review_reason, comment, note, reviewed
+    )
+    select
+      p.id, c.policy, c.issue_date, c.carrier, c.product,
+      c.face_amount, c.premium, c.av,
+      c.needs_review, c.review_reason, c.comment, c.note, c.reviewed
+    from clients c
+    join people p on p._migration_name = c.name;
+
+    alter table people drop column _migration_name;
+
+    drop table clients;
   end if;
 end;
 $$;

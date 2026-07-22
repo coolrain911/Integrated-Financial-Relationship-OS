@@ -1,28 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ClientRow } from "@/components/ClientRow";
+import { PolicyRow } from "@/components/PolicyRow";
+import { PolicyTable } from "@/components/PolicyTable";
 import { ProspectRow } from "@/components/ProspectRow";
 import { ColumnRow } from "@/components/ColumnRow";
-import type { ClientDTO, ColumnDTO, ProspectDTO } from "@/lib/types";
+import { PersonModal } from "@/components/PersonModal";
+import { PolicyModal } from "@/components/PolicyModal";
+import type { ColumnDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
 
 type Tab = "today" | "clients" | "prospects" | "columns";
 
 const NAV_ITEMS: { tab: Tab; label: string }[] = [
   { tab: "today", label: "Today" },
-  { tab: "clients", label: "Clients" },
-  { tab: "prospects", label: "Prospects" },
+  { tab: "clients", label: "Current Client" },
+  { tab: "prospects", label: "Potential Client" },
   { tab: "columns", label: "Columns" },
 ];
 
 export default function Home() {
-  const [clients, setClients] = useState<ClientDTO[]>([]);
+  const [policies, setPolicies] = useState<PolicyDTO[]>([]);
   const [prospects, setProspects] = useState<ProspectDTO[]>([]);
   const [columns, setColumns] = useState<ColumnDTO[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [search, setSearch] = useState("");
   const [dateStr, setDateStr] = useState("");
+  const [openPersonId, setOpenPersonId] = useState<number | null>(null);
+  const [openPolicyId, setOpenPolicyId] = useState<number | null>(null);
 
   useEffect(() => {
     // Deliberately deferred to an effect: the page is statically prerendered,
@@ -39,34 +44,44 @@ export default function Home() {
     );
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      const [c, p, col] = await Promise.all([
-        fetch("/api/clients").then((r) => r.json()),
-        fetch("/api/prospects").then((r) => r.json()),
-        fetch("/api/columns").then((r) => r.json()),
-      ]);
-      setClients(c);
-      setProspects(p);
-      setColumns(col);
-      setLoaded(true);
-    })();
+  const loadAll = useCallback(async () => {
+    const [pol, p, col] = await Promise.all([
+      fetch("/api/policies").then((r) => r.json()),
+      fetch("/api/prospects").then((r) => r.json()),
+      fetch("/api/columns").then((r) => r.json()),
+    ]);
+    setPolicies(pol);
+    setProspects(p);
+    setColumns(col);
+    setLoaded(true);
   }, []);
 
-  const handleClientSaved = useCallback((updated: ClientDTO) => {
-    setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  useEffect(() => {
+    // Data fetch on mount — the resulting setState calls happen inside
+    // loadAll's own async continuation, not synchronously in the effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAll();
+  }, [loadAll]);
+
+  const handlePolicySaved = useCallback((updated: PolicyDTO) => {
+    setPolicies((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
   }, []);
+
+  const handlePersonSaved = useCallback(() => {
+    // Person edits (name, etc.) can change what a policy row displays, so
+    // refresh the policies list to pick that up.
+    loadAll();
+  }, [loadAll]);
 
   const handleProspectConverted = useCallback(async () => {
-    // Refetch both lists rather than optimistically splicing them together —
-    // this is an infrequent, deliberate action (a button click), not
-    // concurrent typing, so the small round-trip cost buys simpler, more
-    // obviously-correct code.
-    const [c, p] = await Promise.all([
-      fetch("/api/clients").then((r) => r.json()),
+    // Refetch rather than optimistically splicing — this is an infrequent,
+    // deliberate action (a button click), not concurrent typing, so the
+    // small round-trip cost buys simpler, more obviously-correct code.
+    const [pol, p] = await Promise.all([
+      fetch("/api/policies").then((r) => r.json()),
       fetch("/api/prospects").then((r) => r.json()),
     ]);
-    setClients(c);
+    setPolicies(pol);
     setProspects(p);
   }, []);
 
@@ -75,10 +90,12 @@ export default function Home() {
     setSearch("");
   }
 
-  const filteredClients = useMemo(() => {
+  const filteredPolicies = useMemo(() => {
     const f = search.toLowerCase();
-    return clients.filter((c) => !f || (c.name || "").toLowerCase().includes(f));
-  }, [clients, search]);
+    return policies.filter(
+      (p) => !f || `${p.lastName} ${p.firstName || ""}`.toLowerCase().includes(f)
+    );
+  }, [policies, search]);
 
   const filteredProspects = useMemo(() => {
     const f = search.toLowerCase();
@@ -100,34 +117,34 @@ export default function Home() {
     return Array.from(map.entries());
   }, [filteredProspects]);
 
-  const uniqueClients = useMemo(() => new Set(clients.map((c) => c.name)).size, [clients]);
+  const uniquePeople = useMemo(() => new Set(policies.map((p) => p.personId)).size, [policies]);
   const reviewCount = useMemo(
-    () => clients.filter((c) => c.needsReview && !c.reviewed).length,
-    [clients]
+    () => policies.filter((p) => p.needsReview && !p.reviewed).length,
+    [policies]
   );
   const weekAnniv = useMemo(
     () =>
-      clients.filter((c) => c.daysToAnniv !== null && c.daysToAnniv >= 0 && c.daysToAnniv <= 7)
+      policies.filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 7)
         .length,
-    [clients]
+    [policies]
   );
 
   const reviewItems = useMemo(
-    () => clients.filter((c) => c.needsReview && !c.reviewed).slice(0, 6),
-    [clients]
+    () => policies.filter((p) => p.needsReview && !p.reviewed).slice(0, 6),
+    [policies]
   );
   const annivItems = useMemo(
     () =>
-      clients
-        .filter((c) => c.daysToAnniv !== null && c.daysToAnniv >= 0 && c.daysToAnniv <= 30)
+      policies
+        .filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30)
         .sort((a, b) => (a.daysToAnniv as number) - (b.daysToAnniv as number))
         .slice(0, 6),
-    [clients]
+    [policies]
   );
 
   const kpis = [
-    { n: uniqueClients, l: "전체 고객", cls: "" },
-    { n: clients.length, l: "전체 정책", cls: "" },
+    { n: uniquePeople, l: "전체 고객", cls: "" },
+    { n: policies.length, l: "전체 정책", cls: "" },
     { n: prospects.length, l: "잠재고객", cls: "accent" },
     { n: weekAnniv, l: "이번주 anniversary", cls: "accent" },
     { n: reviewCount, l: "검토 필요", cls: "danger" },
@@ -181,8 +198,14 @@ export default function Home() {
                   <div className="section">
                     <div className="section-title">검토 필요</div>
                     {reviewItems.length ? (
-                      reviewItems.map((c) => (
-                        <ClientRow key={c.id} client={c} onSaved={handleClientSaved} />
+                      reviewItems.map((p) => (
+                        <PolicyRow
+                          key={p.id}
+                          policy={p}
+                          onOpenPerson={setOpenPersonId}
+                          onOpenPolicy={setOpenPolicyId}
+                          onSaved={handlePolicySaved}
+                        />
                       ))
                     ) : (
                       <div className="empty">검토 필요 항목 없음</div>
@@ -191,8 +214,14 @@ export default function Home() {
                   <div className="section">
                     <div className="section-title">다가오는 Anniversary (30일 이내)</div>
                     {annivItems.length ? (
-                      annivItems.map((c) => (
-                        <ClientRow key={c.id} client={c} onSaved={handleClientSaved} />
+                      annivItems.map((p) => (
+                        <PolicyRow
+                          key={p.id}
+                          policy={p}
+                          onOpenPerson={setOpenPersonId}
+                          onOpenPolicy={setOpenPolicyId}
+                          onSaved={handlePolicySaved}
+                        />
                       ))
                     ) : (
                       <div className="empty">30일 이내 anniversary 없음</div>
@@ -204,16 +233,17 @@ export default function Home() {
 
             {activeTab === "clients" && (
               <div className="tab-panel active">
-                <div className="section-title">전체 고객 · {filteredClients.length}건</div>
-                <div className="list-scroll">
-                  {filteredClients.length ? (
-                    filteredClients.map((c) => (
-                      <ClientRow key={c.id} client={c} onSaved={handleClientSaved} />
-                    ))
-                  ) : (
-                    <div className="empty">검색 결과 없음</div>
-                  )}
-                </div>
+                <div className="section-title">전체 고객 · {filteredPolicies.length}건</div>
+                {filteredPolicies.length ? (
+                  <PolicyTable
+                    policies={filteredPolicies}
+                    onOpenPerson={setOpenPersonId}
+                    onOpenPolicy={setOpenPolicyId}
+                    onPolicySaved={handlePolicySaved}
+                  />
+                ) : (
+                  <div className="empty">검색 결과 없음</div>
+                )}
               </div>
             )}
 
@@ -258,6 +288,25 @@ export default function Home() {
           </>
         )}
       </div>
+
+      {openPersonId !== null && (
+        <PersonModal
+          personId={openPersonId}
+          onClose={() => setOpenPersonId(null)}
+          onSaved={handlePersonSaved}
+          onOpenPolicy={(policyId) => {
+            setOpenPersonId(null);
+            setOpenPolicyId(policyId);
+          }}
+        />
+      )}
+      {openPolicyId !== null && (
+        <PolicyModal
+          policyId={openPolicyId}
+          onClose={() => setOpenPolicyId(null)}
+          onSaved={handlePolicySaved}
+        />
+      )}
     </div>
   );
 }
