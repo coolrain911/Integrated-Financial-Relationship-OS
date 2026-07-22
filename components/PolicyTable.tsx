@@ -7,7 +7,8 @@ import { compareByLastName } from "@/lib/mapping";
 type SortKey = "lastName" | "issueDate" | "category" | "carrier";
 
 function pillFor(p: PolicyDTO) {
-  if (p.surrendered) return { cls: "muted", label: "Surrendered" };
+  if (p.surrendered) return { cls: "muted", label: "계약해지" };
+  if (p.needsAttention) return { cls: "caution", label: "주의요망" };
   if (p.reviewed) return { cls: "success", label: "완료" };
   if (p.needsReview) return { cls: "danger", label: "검토 필요" };
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) {

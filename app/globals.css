@@ -13,6 +13,8 @@
   --warn-bg: #FFF3E0;
   --danger: #E0342A;
   --danger-bg: #FDEBEA;
+  --caution: #8B5CF6;
+  --caution-bg: #F1EBFE;
   --line: #E5E5EA;
 }
 
@@ -274,6 +276,11 @@ body {
   background: var(--bg);
   color: var(--text-2);
   border: 1px solid var(--line);
+}
+
+.pill.caution {
+  background: var(--caution-bg);
+  color: var(--caution);
 }
 
 .empty {

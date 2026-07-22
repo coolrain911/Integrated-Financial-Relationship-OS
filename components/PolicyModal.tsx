@@ -47,6 +47,7 @@ export function PolicyModal({
   const [surrenderValue, setSurrenderValue] = useState("");
   const [loanOrWithdrawal, setLoanOrWithdrawal] = useState(false);
   const [surrendered, setSurrendered] = useState(false);
+  const [needsAttention, setNeedsAttention] = useState(false);
   const [comment, setComment] = useState("");
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
@@ -74,6 +75,7 @@ export function PolicyModal({
       setSurrenderValue(toInputStr(data.surrenderValue));
       setLoanOrWithdrawal(Boolean(data.loanOrWithdrawal));
       setSurrendered(data.surrendered);
+      setNeedsAttention(data.needsAttention);
       setComment(data.comment ?? "");
       setNote(data.note ?? "");
       setReviewed(data.reviewed);
@@ -106,6 +108,7 @@ export function PolicyModal({
           surrenderValue: surrenderValue || null,
           loanOrWithdrawal,
           surrendered,
+          needsAttention,
           comment: comment || null,
           note: note || null,
           reviewed,
@@ -266,7 +269,15 @@ export function PolicyModal({
                 checked={surrendered}
                 onChange={(e) => setSurrendered(e.target.checked)}
               />
-              <span>Surrendered (해지됨)</span>
+              <span>계약해지</span>
+            </label>
+            <label className="form-field form-field-checkbox">
+              <input
+                type="checkbox"
+                checked={needsAttention}
+                onChange={(e) => setNeedsAttention(e.target.checked)}
+              />
+              <span>주의요망</span>
             </label>
             <label className="form-field form-field-checkbox">
               <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />

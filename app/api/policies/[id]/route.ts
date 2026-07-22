@@ -93,6 +93,7 @@ export async function PATCH(
     surrenderValue: "surrender_value",
     loanOrWithdrawal: "loan_or_withdrawal",
     surrendered: "surrendered",
+    needsAttention: "needs_attention",
     comment: "comment",
     note: "note",
     reviewed: "reviewed",
