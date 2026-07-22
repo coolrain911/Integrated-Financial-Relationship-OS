@@ -4,7 +4,13 @@ import { useState } from "react";
 import type { PolicyDTO } from "@/lib/types";
 import { fmtMoney } from "@/lib/format";
 
-function pillFor(p: { reviewed: boolean; needsReview: boolean; daysToAnniv: number | null }) {
+function pillFor(p: {
+  surrendered: boolean;
+  reviewed: boolean;
+  needsReview: boolean;
+  daysToAnniv: number | null;
+}) {
+  if (p.surrendered) return { cls: "muted", label: "Surrendered" };
   if (p.reviewed) return { cls: "success", label: "완료" };
   if (p.needsReview) return { cls: "danger", label: "검토 필요" };
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) {
@@ -46,7 +52,12 @@ export function PolicyRow({
     }
   }
 
-  const pill = pillFor({ reviewed, needsReview: policy.needsReview, daysToAnniv: policy.daysToAnniv });
+  const pill = pillFor({
+    surrendered: policy.surrendered,
+    reviewed,
+    needsReview: policy.needsReview,
+    daysToAnniv: policy.daysToAnniv,
+  });
   const meta = [policy.carrier, policy.product, fmtMoney(policy.deathBenefit)].filter(Boolean).join(" · ");
 
   return (

@@ -57,6 +57,7 @@ export type PolicyDTO = {
   accountValue: number | string | null;
   surrenderValue: number | string | null;
   loanOrWithdrawal: boolean | null;
+  surrendered: boolean;
   needsReview: boolean;
   reviewReason: string | null;
   comment: string | null;
@@ -82,6 +83,7 @@ export type PolicyUpdateBody = Partial<{
   accountValue: string | null;
   surrenderValue: string | null;
   loanOrWithdrawal: boolean | null;
+  surrendered: boolean;
   comment: string | null;
   note: string | null;
   reviewed: boolean;

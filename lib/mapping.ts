@@ -45,6 +45,7 @@ export type PolicyRow = {
   account_value: string | null;
   surrender_value: string | null;
   loan_or_withdrawal: boolean | null;
+  surrendered: boolean;
   needs_review: boolean;
   review_reason: string | null;
   comment: string | null;
@@ -201,6 +202,7 @@ export function policyRowToDto(row: PolicyWithNameRow, today: Date): PolicyDTO {
     accountValue: toNumberOrStr(row.account_value),
     surrenderValue: toNumberOrStr(row.surrender_value),
     loanOrWithdrawal: row.loan_or_withdrawal,
+    surrendered: row.surrendered,
     // needsReview/reviewReason are preserved as computed at seed time.
     // Recomputing them requires the raw design-projection inputs, which are
     // not part of the current data source.

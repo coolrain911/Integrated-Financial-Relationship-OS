@@ -270,6 +270,12 @@ body {
   color: var(--success);
 }
 
+.pill.muted {
+  background: var(--bg);
+  color: var(--text-2);
+  border: 1px solid var(--line);
+}
+
 .empty {
   font-size: 13px;
   color: var(--text-3);

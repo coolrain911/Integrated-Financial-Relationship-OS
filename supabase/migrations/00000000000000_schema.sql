@@ -41,6 +41,7 @@ create table if not exists policies (
   account_value text,
   surrender_value text,
   loan_or_withdrawal boolean,
+  surrendered boolean not null default false,
   needs_review boolean not null default false,
   review_reason text,
   comment text,
