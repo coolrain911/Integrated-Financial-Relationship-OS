@@ -10,11 +10,19 @@
 
 ## 이미 배포된 프로젝트를 업그레이드하는 경우 (기존 `clients` 테이블 → `people`+`policies`)
 
-이전 버전을 이미 Supabase에 배포해서 쓰고 계셨다면, Supabase SQL Editor에서
-**`supabase/migrate_people_policies.sql`**을 한 번 실행하세요. 기존 `clients` 테이블의
-163건 데이터를 이름이 같으면 같은 사람으로 묶어서 `people`(사람) + `policies`(정책)
-테이블로 자동 이전하고, 옮기고 나면 `clients` 테이블은 삭제됩니다. 두 번 실행해도 안전합니다
-(이미 이전이 끝났으면 아무 것도 하지 않습니다).
+이전 버전을 이미 Supabase에 배포해서 쓰고 계셨다면, Supabase SQL Editor에서 아래 순서로
+실행하세요 (모두 두 번 실행해도 안전합니다 — 이미 끝난 단계는 아무 것도 하지 않습니다):
+
+1. **`supabase/migrate_people_policies.sql`** — 기존 `clients` 테이블의 163건 데이터를
+   이름이 같으면 같은 사람으로 묶어서 `people`(사람) + `policies`(정책) 테이블로 이전하고,
+   `clients` 테이블은 삭제합니다.
+2. **`supabase/migrate_add_surrendered.sql`**, **`supabase/migrate_add_needs_attention.sql`**
+   — `policies`에 "계약해지"/"주의요망" 상태 컬럼을 추가합니다.
+3. **`supabase/migrate_prospects_fields.sql`** — 기존 `prospects` 테이블의 `(name, segment)`를
+   `(last_name, first_name, korean_name, category)`로 재구성합니다. 원래 이름(`name`)은
+   `korean_name`에 그대로 보존되고, `last_name`/`first_name`은 한글 이름은 통째로
+   `last_name`에, 영문 이름("Luke Chung" 같은 First-Last 순서)은 자연스러운 순서로
+   분리해 넣습니다 — 자동 분리가 애매한 경우 나중에 직접 수정하시면 됩니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 
@@ -60,14 +68,16 @@
    탭에서 제외됩니다.
 6. **메모 추가** — Today 탭 정책 카드의 메모 입력창에서 자유롭게 입력 후 다른 곳을
    클릭하면(blur) 저장됩니다.
-7. **잠재고객 → 고객 전환** — Potential Client 탭의 "고객으로 전환" 버튼을 누르면 해당
-   레코드가 사람(people)으로 이동합니다 (`convert_prospect` Postgres 함수로 insert+delete가
-   하나의 트랜잭션으로 원자적으로 처리됩니다). 아직 정책은 없는 상태로 생성되며, 이후
-   Current Client 탭에서 정책을 추가하면 표시됩니다.
-8. **검색** — 클라이언트 사이드에서 이름 기준으로 필터링합니다.
+7. **Potential Client 테이블** — 성/이름/한글명/Email/Phone/접촉경로를 한눈에 보는 표.
+   성/접촉경로 컬럼 헤더를 클릭하면 정렬됩니다. 행을 클릭하면 상세정보(모든 필드 편집 +
+   "고객으로 전환" 버튼)가 나옵니다.
+8. **잠재고객 → 고객 전환** — "전환" 버튼을 누르면 해당 레코드가 사람(people)으로
+   이동합니다 (`convert_prospect` Postgres 함수로 insert+delete가 하나의 트랜잭션으로
+   원자적으로 처리됩니다). 아직 정책은 없는 상태로 생성되며, 이후 Current Client 탭에서
+   정책을 추가하면 표시됩니다.
+9. **검색** — 클라이언트 사이드에서 이름 기준으로 필터링합니다.
 
-아직 구현되지 않은 것 (다음 순서로 예정): 엑셀처럼 프린트하는 기능, Potential Client
-탭 자체의 상세 기능 개선.
+아직 구현되지 않은 것 (다음 순서로 예정): 엑셀처럼 프린트하는 기능.
 
 ## API
 
@@ -79,6 +89,8 @@
 | GET    | `/api/people/{id}`                 | 사람 상세 + 보유 정책 목록              |
 | PATCH  | `/api/people/{id}`                 | 사람 필드 부분 업데이트                |
 | GET    | `/api/prospects`                   | 전체 잠재고객                          |
+| GET    | `/api/prospects/{id}`              | 잠재고객 상세                          |
+| PATCH  | `/api/prospects/{id}`              | 잠재고객 필드 부분 업데이트 (성/이름/한글명/이메일/전화/접촉경로/주요정보) |
 | POST   | `/api/prospects/{id}/convert`      | 잠재고객 → 사람(people) 전환 (`convert_prospect` RPC 호출) |
 | GET    | `/api/columns`                     | 재정칼럼 라이브러리                    |
 

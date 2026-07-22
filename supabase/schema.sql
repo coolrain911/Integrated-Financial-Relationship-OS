@@ -52,10 +52,12 @@ create table if not exists policies (
 
 create table if not exists prospects (
   id bigint generated always as identity primary key,
-  name text,
+  last_name text,
+  first_name text,
+  korean_name text,
   email text,
   phone text,
-  segment text,
+  category text,
   note text
 );
 
@@ -109,6 +111,9 @@ $$;
 -- transaction), so a prospect can never be dropped without the corresponding
 -- person existing, or vice versa. The new person has no policies yet.
 -- Returns the new person row, or NULL if the prospect id doesn't exist.
+--
+-- prospects.korean_name has no equivalent column on people, so it's folded
+-- into the new person's note (prefixed "한글명: ...") rather than dropped.
 create or replace function convert_prospect(p_id bigint)
 returns people
 language plpgsql
@@ -116,19 +121,28 @@ as $$
 declare
   v_prospect prospects%rowtype;
   v_person people%rowtype;
-  v_last text;
-  v_first text;
+  v_note text;
 begin
   select * into v_prospect from prospects where id = p_id;
   if not found then
     return null;
   end if;
 
-  select s.last_name, s.first_name into v_last, v_first
-  from split_last_first(v_prospect.name) as s;
+  v_note := concat_ws(
+    E'\n',
+    case when nullif(v_prospect.korean_name, '') is not null
+      then '한글명: ' || v_prospect.korean_name end,
+    nullif(v_prospect.note, '')
+  );
 
   insert into people (last_name, first_name, email, phone, note)
-  values (v_last, v_first, v_prospect.email, v_prospect.phone, v_prospect.note)
+  values (
+    coalesce(nullif(v_prospect.last_name, ''), nullif(v_prospect.korean_name, ''), '(이름 미상)'),
+    v_prospect.first_name,
+    v_prospect.email,
+    v_prospect.phone,
+    nullif(v_note, '')
+  )
   returning * into v_person;
 
   delete from prospects where id = p_id;

@@ -93,12 +93,24 @@ export type PolicyUpdateBody = Partial<{
 
 export type ProspectDTO = {
   id: number;
-  name: string | null;
+  lastName: string | null;
+  firstName: string | null;
+  koreanName: string | null;
   email: string | null;
   phone: string | null;
-  segment: string;
+  category: string | null;
   note: string | null;
 };
+
+export type ProspectUpdateBody = Partial<{
+  lastName: string | null;
+  firstName: string | null;
+  koreanName: string | null;
+  email: string | null;
+  phone: string | null;
+  category: string | null;
+  note: string | null;
+}>;
 
 export type ColumnDTO = {
   id: number;

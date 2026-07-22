@@ -11,6 +11,15 @@ export const OCCUPATION_PRESETS = [
   "기타",
 ];
 
+export const CONTACT_CHANNEL_PRESETS = [
+  "소개",
+  "모임/골프",
+  "교회",
+  "전화/이메일 연락",
+  "명함",
+  "기타",
+];
+
 export const CATEGORY_OPTIONS = ["Life", "Annuity"] as const;
 export const LIFE_TYPE_OPTIONS = ["Term", "UL", "IUL"] as const;
 export const OPTION_TYPE_OPTIONS = ["A", "B", "B->A"] as const;

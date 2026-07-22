@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PolicyRow } from "@/components/PolicyRow";
 import { PolicyTable } from "@/components/PolicyTable";
-import { ProspectRow } from "@/components/ProspectRow";
+import { ProspectTable } from "@/components/ProspectTable";
 import { ColumnRow } from "@/components/ColumnRow";
 import { PersonModal } from "@/components/PersonModal";
 import { PolicyModal } from "@/components/PolicyModal";
+import { ProspectModal } from "@/components/ProspectModal";
 import type { ColumnDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
 
 type Tab = "today" | "clients" | "prospects" | "columns";
@@ -28,6 +29,7 @@ export default function Home() {
   const [dateStr, setDateStr] = useState("");
   const [openPersonId, setOpenPersonId] = useState<number | null>(null);
   const [openPolicyId, setOpenPolicyId] = useState<number | null>(null);
+  const [openProspectId, setOpenProspectId] = useState<number | null>(null);
 
   useEffect(() => {
     // Deliberately deferred to an effect: the page is statically prerendered,
@@ -85,6 +87,10 @@ export default function Home() {
     setProspects(p);
   }, []);
 
+  const handleProspectSaved = useCallback((updated: ProspectDTO) => {
+    setProspects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  }, []);
+
   function switchTab(tab: Tab) {
     setActiveTab(tab);
     setSearch("");
@@ -99,23 +105,17 @@ export default function Home() {
 
   const filteredProspects = useMemo(() => {
     const f = search.toLowerCase();
-    return prospects.filter((p) => !f || (p.name || "").toLowerCase().includes(f));
+    return prospects.filter(
+      (p) =>
+        !f ||
+        `${p.lastName || ""} ${p.firstName || ""} ${p.koreanName || ""}`.toLowerCase().includes(f)
+    );
   }, [prospects, search]);
 
   const filteredColumns = useMemo(() => {
     const f = search.toLowerCase();
     return columns.filter((c) => !f || (c.title || "").toLowerCase().includes(f));
   }, [columns, search]);
-
-  const prospectsBySegment = useMemo(() => {
-    const map = new Map<string, ProspectDTO[]>();
-    filteredProspects.forEach((p) => {
-      const arr = map.get(p.segment) ?? [];
-      arr.push(p);
-      map.set(p.segment, arr);
-    });
-    return Array.from(map.entries());
-  }, [filteredProspects]);
 
   const uniquePeople = useMemo(() => new Set(policies.map((p) => p.personId)).size, [policies]);
   const reviewCount = useMemo(
@@ -250,26 +250,15 @@ export default function Home() {
             {activeTab === "prospects" && (
               <div className="tab-panel active">
                 <div className="section-title">잠재고객 · {filteredProspects.length}명</div>
-                <div className="list-scroll">
-                  {prospectsBySegment.length ? (
-                    prospectsBySegment.map(([segment, items]) => (
-                      <div key={segment}>
-                        <div className="seg-header">
-                          {segment} · {items.length}
-                        </div>
-                        {items.map((p) => (
-                          <ProspectRow
-                            key={p.id}
-                            prospect={p}
-                            onConverted={handleProspectConverted}
-                          />
-                        ))}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="empty">검색 결과 없음</div>
-                  )}
-                </div>
+                {filteredProspects.length ? (
+                  <ProspectTable
+                    prospects={filteredProspects}
+                    onOpenProspect={setOpenProspectId}
+                    onConverted={handleProspectConverted}
+                  />
+                ) : (
+                  <div className="empty">검색 결과 없음</div>
+                )}
               </div>
             )}
 
@@ -305,6 +294,14 @@ export default function Home() {
           policyId={openPolicyId}
           onClose={() => setOpenPolicyId(null)}
           onSaved={handlePolicySaved}
+        />
+      )}
+      {openProspectId !== null && (
+        <ProspectModal
+          prospectId={openProspectId}
+          onClose={() => setOpenProspectId(null)}
+          onSaved={handleProspectSaved}
+          onConverted={handleProspectConverted}
         />
       )}
     </div>

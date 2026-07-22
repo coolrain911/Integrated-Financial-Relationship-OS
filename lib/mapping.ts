@@ -62,10 +62,12 @@ export type PolicyWithNameRow = PolicyRow & {
 
 export type ProspectRow = {
   id: number;
-  name: string | null;
+  last_name: string | null;
+  first_name: string | null;
+  korean_name: string | null;
   email: string | null;
   phone: string | null;
-  segment: string;
+  category: string | null;
   note: string | null;
 };
 
@@ -219,10 +221,12 @@ export function policyRowToDto(row: PolicyWithNameRow, today: Date): PolicyDTO {
 export function prospectRowToDto(row: ProspectRow): ProspectDTO {
   return {
     id: row.id,
-    name: row.name,
+    lastName: row.last_name,
+    firstName: row.first_name,
+    koreanName: row.korean_name,
     email: row.email,
     phone: row.phone,
-    segment: row.segment,
+    category: row.category,
     note: row.note,
   };
 }
@@ -239,7 +243,10 @@ export function columnRowToDto(row: ColumnRow): ColumnDTO {
 
 /** Case-insensitive last-name-first sort, matching how names are entered
  * throughout this app ("LastName FirstName"). */
-export function compareByLastName(a: { lastName: string; firstName: string | null }, b: { lastName: string; firstName: string | null }): number {
+export function compareByLastName(
+  a: { lastName: string | null; firstName: string | null },
+  b: { lastName: string | null; firstName: string | null }
+): number {
   const la = (a.lastName || "").toLowerCase();
   const lb = (b.lastName || "").toLowerCase();
   if (la !== lb) return la < lb ? -1 : 1;
