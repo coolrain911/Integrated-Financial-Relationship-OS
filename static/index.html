@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Relationship OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F5F7;
+    --card:#FFFFFF;
+    --sidebar:#FBFBFD;
+    --text-1:#1D1D1F;
+    --text-2:#6E6E73;
+    --text-3:#AEAEB2;
+    --accent:#0A84FF;
+    --accent-bg:#E8F2FF;
+    --success:#2FA84F;
+    --success-bg:#E7F6EC;
+    --warn:#C77700;
+    --warn-bg:#FFF3E0;
+    --danger:#E0342A;
+    --danger-bg:#FDEBEA;
+    --line:#E5E5EA;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);font-family:'Inter','Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--text-1);-webkit-font-smoothing:antialiased;}
+  .app{display:flex;min-height:100vh;}
+
+  .sidebar{width:220px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--line);padding:28px 16px;position:sticky;top:0;height:100vh;}
+  .logo{font-size:17px;font-weight:700;letter-spacing:-0.3px;padding:0 10px;margin-bottom:2px;}
+  .logo-sub{font-size:11px;color:var(--text-3);padding:0 10px;margin-bottom:28px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:14px;font-weight:500;color:var(--text-2);cursor:pointer;margin-bottom:2px;}
+  .nav-item:hover{background:#EFEFF2;}
+  .nav-item.active{background:var(--accent-bg);color:var(--accent);}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.5;}
+
+  .main{flex:1;padding:32px 40px;max-width:1180px;}
+  .searchbar{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:14px;color:var(--text-2);margin-bottom:28px;display:flex;align-items:center;gap:10px;}
+  .searchbar input{border:none;outline:none;font-size:14px;flex:1;background:transparent;font-family:inherit;color:var(--text-1);}
+
+  .greeting-eyebrow{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;}
+  .greeting{font-size:30px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px;}
+  .greeting-sub{font-size:14px;color:var(--text-2);margin-bottom:28px;}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:32px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 16px;}
+  .kpi .n{font-size:26px;font-weight:700;letter-spacing:-0.5px;}
+  .kpi .l{font-size:12.5px;color:var(--text-2);margin-top:4px;}
+  .kpi.danger .n{color:var(--danger);}
+  .kpi.accent .n{color:var(--accent);}
+  @media (max-width:1000px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+
+  .section{margin-bottom:32px;}
+  .section-title{font-size:17px;font-weight:600;margin-bottom:14px;letter-spacing:-0.2px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media (max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+  .row-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;flex-direction:column;gap:0;}
+  .row-card-top{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .row-name{font-weight:600;font-size:14px;}
+  .row-meta{font-size:12.5px;color:var(--text-2);margin-top:2px;}
+  .row-note{font-size:12px;color:var(--text-3);margin-top:2px;}
+  .pill{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+  .pill.warn{background:var(--warn-bg);color:var(--warn);}
+  .pill.danger{background:var(--danger-bg);color:var(--danger);}
+  .pill.accent{background:var(--accent-bg);color:var(--accent);}
+  .pill.success{background:var(--success-bg);color:var(--success);}
+  .empty{font-size:13px;color:var(--text-3);padding:20px;text-align:center;border:1px dashed var(--line);border-radius:12px;}
+
+  .seg-header{font-size:12.5px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.4px;margin:22px 0 10px;}
+  .seg-header:first-child{margin-top:0;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .list-scroll{max-height:640px;overflow-y:auto;padding-right:4px;}
+
+  .row-actions{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  .row-check{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);white-space:nowrap;}
+  .row-check input[type="checkbox"]{width:14px;height:14px;accent-color:var(--accent);}
+  .bday-input{width:44px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12.5px;font-family:inherit;color:var(--text-1);background:var(--bg);text-align:center;}
+  .bday-input:focus{outline:none;border-color:var(--accent);}
+  .row-note-input{flex:1;min-width:140px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px;font-family:inherit;color:var(--text-1);background:var(--bg);}
+  .row-note-input:focus{outline:none;border-color:var(--accent);}
+  .btn-mini{border:none;background:var(--accent-bg);color:var(--accent);font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .btn-mini:hover{background:var(--accent);color:#fff;}
+  .btn-mini:disabled{opacity:0.5;cursor:default;background:var(--accent-bg);color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">Financial Relationship</div>
+    <div class="logo-sub">OS · 실제 데이터 연동</div>
+    <div class="nav-item active" data-tab="today"><span class="nav-dot"></span>Today</div>
+    <div class="nav-item" data-tab="clients"><span class="nav-dot"></span>Clients</div>
+    <div class="nav-item" data-tab="prospects"><span class="nav-dot"></span>Prospects</div>
+    <div class="nav-item" data-tab="columns"><span class="nav-dot"></span>Columns</div>
+  </div>
+  <div class="main">
+    <div class="searchbar">
+      <span>Search</span>
+      <input id="searchInput" placeholder="고객, 잠재고객, 칼럼 이름으로 검색..." />
+    </div>
+
+    <div class="tab-panel active" id="tab-today">
+      <div class="greeting-eyebrow" id="dateStr"></div>
+      <div class="greeting">좋은 아침입니다.</div>
+      <div class="greeting-sub">오늘 챙겨야 할 사람과 일이 정리되어 있습니다.</div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="two-col">
+        <div class="section">
+          <div class="section-title">검토 필요</div>
+          <div id="reviewList"></div>
+        </div>
+        <div class="section">
+          <div class="section-title">다가오는 Anniversary (30일 이내)</div>
+          <div id="annivList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-clients">
+      <div class="section-title">전체 고객 · <span id="clientCount"></span></div>
+      <div class="list-scroll" id="clientList"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-prospects">
+      <div class="section-title">잠재고객 · <span id="prospectCount"></span></div>
+      <div class="list-scroll" id="prospectList"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-columns">
+      <div class="section-title">재정칼럼 라이브러리 · <span id="columnCount"></span></div>
+      <div class="list-scroll" id="columnList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const data = { clients: [], prospects: [], columns: [] };
+const TODAY = new Date();
+
+document.getElementById('dateStr').textContent = TODAY.toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+
+function fmtMoney(v){ if(v===null||v===undefined||v==='na') return ''; return '$'+Number(v).toLocaleString(); }
+
+function esc(s){
+  return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ---- Row templates ----
+function clientRow(c){
+  let pill = '';
+  if(c.reviewed) pill = `<span class="pill success">완료</span>`;
+  else if(c.needsReview) pill = `<span class="pill danger">검토 필요</span>`;
+  else if(c.daysToAnniv!==null && c.daysToAnniv>=0 && c.daysToAnniv<=30) pill = `<span class="pill warn">D-${c.daysToAnniv}</span>`;
+  const meta = [c.carrier, c.product, fmtMoney(c.faceAmount)].filter(Boolean).join(' · ');
+  const bMonth = c.birthdayMonth ?? '';
+  const bDay = c.birthdayDay ?? '';
+  return `<div class="row-card" data-client-id="${c.id}">
+    <div class="row-card-top">
+      <div>
+        <div class="row-name">${esc(c.name)}</div>
+        <div class="row-meta">${esc(meta)}${c.phone ? ' · '+esc(c.phone) : ''}</div>
+        ${c.reviewReason ? `<div class="row-note" style="color:var(--danger)">${esc(c.reviewReason)}</div>` : ''}
+      </div>
+      ${pill}
+    </div>
+    <div class="row-actions">
+      <label class="row-check"><input type="checkbox" class="js-reviewed" ${c.reviewed?'checked':''}/> 검토 완료</label>
+      <span class="row-check">생일
+        <input class="bday-input js-bmonth" type="number" min="1" max="12" placeholder="월" value="${bMonth}"/> /
+        <input class="bday-input js-bday" type="number" min="1" max="31" placeholder="일" value="${bDay}"/>
+      </span>
+      <input class="row-note-input js-note" placeholder="메모 추가..." value="${esc(c.note||'')}"/>
+    </div>
+  </div>`;
+}
+
+function prospectRow(p){
+  return `<div class="row-card" data-prospect-id="${p.id}">
+    <div class="row-card-top">
+      <div>
+        <div class="row-name">${esc(p.name)||'(이름 미상)'}</div>
+        <div class="row-meta">${esc(p.email||'')}${p.phone?' · '+esc(p.phone):''}</div>
+        ${p.note ? `<div class="row-note">${esc(p.note)}</div>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="pill accent">${esc(p.segment)}</span>
+        <button class="btn-mini js-convert">고객으로 전환</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function columnRow(col){
+  return `<div class="row-card">
+    <div class="row-card-top">
+      <div>
+        <div class="row-name">${col.num!==null ? col.num+'. ' : ''}${esc(col.title)}</div>
+      </div>
+      <span class="pill success">${esc((col.category||'').split(',')[0])}</span>
+    </div>
+  </div>`;
+}
+
+// ---- Today tab ----
+function renderToday(){
+  const uniqueClients = new Set(data.clients.map(c=>c.name)).size;
+  const reviewCount = data.clients.filter(c=>c.needsReview && !c.reviewed).length;
+  const weekAnniv = data.clients.filter(c=>c.daysToAnniv!==null && c.daysToAnniv>=0 && c.daysToAnniv<=7).length;
+  const kpis = [
+    {n: uniqueClients, l:'전체 고객', cls:''},
+    {n: data.clients.length, l:'전체 정책', cls:''},
+    {n: data.prospects.length, l:'잠재고객', cls:'accent'},
+    {n: weekAnniv, l:'이번주 anniversary', cls:'accent'},
+    {n: reviewCount, l:'검토 필요', cls:'danger'},
+  ];
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k=>`<div class="kpi ${k.cls}"><div class="n">${k.n}</div><div class="l">${k.l}</div></div>`).join('');
+
+  const reviewItems = data.clients.filter(c=>c.needsReview && !c.reviewed).slice(0,6);
+  document.getElementById('reviewList').innerHTML = reviewItems.length ? reviewItems.map(clientRow).join('') : '<div class="empty">검토 필요 항목 없음</div>';
+
+  const annivItems = data.clients.filter(c=>c.daysToAnniv!==null && c.daysToAnniv>=0 && c.daysToAnniv<=30).sort((a,b)=>a.daysToAnniv-b.daysToAnniv).slice(0,6);
+  document.getElementById('annivList').innerHTML = annivItems.length ? annivItems.map(clientRow).join('') : '<div class="empty">30일 이내 anniversary 없음</div>';
+}
+
+// ---- Clients tab ----
+function renderClients(filter){
+  const f = (filter||'').toLowerCase();
+  const items = data.clients.filter(c=>!f || (c.name||'').toLowerCase().includes(f));
+  document.getElementById('clientCount').textContent = items.length + '건';
+  document.getElementById('clientList').innerHTML = items.length ? items.map(clientRow).join('') : '<div class="empty">검색 결과 없음</div>';
+}
+
+// ---- Prospects tab ----
+function renderProspects(filter){
+  const f = (filter||'').toLowerCase();
+  const items = data.prospects.filter(p=>!f || (p.name||'').toLowerCase().includes(f));
+  document.getElementById('prospectCount').textContent = items.length + '명';
+  const bySeg = {};
+  items.forEach(p=>{ (bySeg[p.segment] = bySeg[p.segment]||[]).push(p); });
+  let html = '';
+  Object.entries(bySeg).forEach(([seg, arr])=>{
+    html += `<div class="seg-header">${esc(seg)} · ${arr.length}</div>` + arr.map(prospectRow).join('');
+  });
+  document.getElementById('prospectList').innerHTML = html || '<div class="empty">검색 결과 없음</div>';
+}
+
+// ---- Columns tab ----
+function renderColumns(filter){
+  const f = (filter||'').toLowerCase();
+  const items = data.columns.filter(c=>!f || (c.title||'').toLowerCase().includes(f));
+  document.getElementById('columnCount').textContent = items.length + '편';
+  document.getElementById('columnList').innerHTML = items.length ? items.map(columnRow).join('') : '<div class="empty">검색 결과 없음</div>';
+}
+
+function renderAll(filter){
+  renderToday();
+  renderClients(filter);
+  renderProspects(filter);
+  renderColumns(filter);
+}
+
+// ---- Data loading ----
+async function fetchAll(){
+  const [clients, prospects, columns] = await Promise.all([
+    fetch('/api/clients').then(r=>r.json()),
+    fetch('/api/prospects').then(r=>r.json()),
+    fetch('/api/columns').then(r=>r.json()),
+  ]);
+  data.clients = clients; data.prospects = prospects; data.columns = columns;
+}
+
+async function reloadAll(){
+  await fetchAll();
+  const activeTab = document.querySelector('.nav-item.active').dataset.tab;
+  renderAll(activeTab==='today' ? '' : document.getElementById('searchInput').value);
+}
+
+// Updates only the affected row's pill + the (small) Today-tab lists, rather than
+// re-rendering the whole Clients list — a full re-render would blow away any
+// unsaved edits a user has in progress on other rows.
+function pillHtmlFor(c){
+  if(c.reviewed) return `<span class="pill success">완료</span>`;
+  if(c.needsReview) return `<span class="pill danger">검토 필요</span>`;
+  if(c.daysToAnniv!==null && c.daysToAnniv>=0 && c.daysToAnniv<=30) return `<span class="pill warn">D-${c.daysToAnniv}</span>`;
+  return '';
+}
+
+function refreshPill(id){
+  const c = data.clients.find(x=>x.id===id);
+  if(!c) return;
+  const html = pillHtmlFor(c);
+  document.querySelectorAll(`[data-client-id="${id}"] .row-card-top`).forEach(top=>{
+    const existing = top.querySelector('.pill');
+    if(existing) existing.outerHTML = html;
+    else if(html) top.insertAdjacentHTML('beforeend', html);
+  });
+}
+
+async function patchClient(id, body){
+  const res = await fetch(`/api/clients/${id}`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  });
+  if(!res.ok) throw new Error('저장 실패');
+  const updated = await res.json();
+  const idx = data.clients.findIndex(c=>c.id===updated.id);
+  if(idx>=0) data.clients[idx] = updated; else data.clients.push(updated);
+  renderToday();
+  refreshPill(updated.id);
+}
+
+// ---- Client row interactions (checkbox / birthday / note) ----
+document.addEventListener('change', (e)=>{
+  const card = e.target.closest('[data-client-id]');
+  if(!card) return;
+  const id = card.dataset.clientId;
+
+  if(e.target.classList.contains('js-reviewed')){
+    patchClient(id, {reviewed: e.target.checked}).catch(()=>alert('저장에 실패했습니다.'));
+  } else if(e.target.classList.contains('js-bmonth') || e.target.classList.contains('js-bday')){
+    const m = card.querySelector('.js-bmonth').value;
+    const d = card.querySelector('.js-bday').value;
+    patchClient(id, {
+      birthdayMonth: m ? parseInt(m, 10) : null,
+      birthdayDay: d ? parseInt(d, 10) : null,
+    }).catch(()=>alert('저장에 실패했습니다.'));
+  }
+});
+
+document.addEventListener('focusout', (e)=>{
+  if(!e.target.classList.contains('js-note')) return;
+  const card = e.target.closest('[data-client-id]');
+  if(!card) return;
+  patchClient(card.dataset.clientId, {note: e.target.value}).catch(()=>alert('저장에 실패했습니다.'));
+});
+
+// ---- Prospect -> Client conversion ----
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('.js-convert');
+  if(!btn) return;
+  const card = e.target.closest('[data-prospect-id]');
+  const id = card.dataset.prospectId;
+  btn.disabled = true;
+  btn.textContent = '전환 중...';
+  try{
+    const res = await fetch(`/api/prospects/${id}/convert`, {method:'POST'});
+    if(!res.ok) throw new Error('전환 실패');
+    await reloadAll();
+  }catch(err){
+    alert('전환에 실패했습니다.');
+    btn.disabled = false;
+    btn.textContent = '고객으로 전환';
+  }
+});
+
+// ---- Tab switching ----
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('tab-'+item.dataset.tab).classList.add('active');
+    document.getElementById('searchInput').value = '';
+  });
+});
+
+// ---- Search ----
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  const v = e.target.value;
+  const activeTab = document.querySelector('.nav-item.active').dataset.tab;
+  if(activeTab==='clients') renderClients(v);
+  else if(activeTab==='prospects') renderProspects(v);
+  else if(activeTab==='columns') renderColumns(v);
+});
+
+// ---- Init ----
+fetchAll().then(()=>renderAll(''));
+</script>
+</body>
+</html>
