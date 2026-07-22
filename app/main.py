@@ -105,12 +105,23 @@ def column_to_dict(row) -> dict:
     }
 
 
+def _last_name_sort_key(client: dict):
+    # Names are stored "LastName FirstName [MiddleInitial]" (e.g. "Park Chul J"),
+    # so the first token is the last name. Sort on that first, case-insensitively,
+    # falling back to the full name to break ties.
+    name = client["name"] or ""
+    last_name = name.split(" ", 1)[0]
+    return (last_name.lower(), name.lower())
+
+
 def list_clients() -> list:
     conn = db.get_conn()
-    rows = conn.execute("SELECT * FROM clients ORDER BY name").fetchall()
+    rows = conn.execute("SELECT * FROM clients").fetchall()
     conn.close()
     today = datetime.now().date()
-    return [client_to_dict(r, today) for r in rows]
+    clients = [client_to_dict(r, today) for r in rows]
+    clients.sort(key=_last_name_sort_key)
+    return clients
 
 
 def update_client(client_id: int, body: dict):
