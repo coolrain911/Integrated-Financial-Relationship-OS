@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { prospectRowToDto, type ProspectRow } from "@/lib/mapping";
-import type { ProspectUpdateBody } from "@/lib/types";
+import { columnRowToDto, type ColumnRow } from "@/lib/mapping";
+import type { ColumnUpdateBody } from "@/lib/types";
 
-async function loadProspect(id: number) {
-  return getSupabaseAdmin().from("prospects").select("*").eq("id", id).maybeSingle();
+async function loadColumn(id: number) {
+  return getSupabaseAdmin().from("columns_lib").select("*").eq("id", id).maybeSingle();
 }
 
 export async function GET(
@@ -12,20 +12,20 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const prospectId = Number(id);
-  if (!Number.isInteger(prospectId)) {
+  const columnId = Number(id);
+  if (!Number.isInteger(columnId)) {
     return NextResponse.json({ detail: "invalid id" }, { status: 400 });
   }
 
-  const { data, error } = await loadProspect(prospectId);
+  const { data, error } = await loadColumn(columnId);
   if (error) {
     return NextResponse.json({ detail: error.message }, { status: 500 });
   }
   if (!data) {
-    return NextResponse.json({ detail: "prospect not found" }, { status: 404 });
+    return NextResponse.json({ detail: "column not found" }, { status: 404 });
   }
 
-  return NextResponse.json(prospectRowToDto(data as ProspectRow));
+  return NextResponse.json(columnRowToDto(data as ColumnRow));
 }
 
 export async function PATCH(
@@ -33,26 +33,27 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const prospectId = Number(id);
-  if (!Number.isInteger(prospectId)) {
+  const columnId = Number(id);
+  if (!Number.isInteger(columnId)) {
     return NextResponse.json({ detail: "invalid id" }, { status: 400 });
   }
 
-  let body: ProspectUpdateBody;
+  let body: ColumnUpdateBody;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ detail: "invalid JSON body" }, { status: 400 });
   }
 
+  if (Object.prototype.hasOwnProperty.call(body, "title") && (!body.title || !body.title.trim())) {
+    return NextResponse.json({ detail: "title cannot be empty" }, { status: 400 });
+  }
+
   const columnMap: Record<string, string> = {
-    lastName: "last_name",
-    firstName: "first_name",
-    koreanName: "korean_name",
-    email: "email",
-    phone: "phone",
+    num: "num",
+    title: "title",
     category: "category",
-    note: "note",
+    file: "file",
   };
 
   const updates: Record<string, unknown> = {};
@@ -65,21 +66,21 @@ export async function PATCH(
   const supabaseAdmin = getSupabaseAdmin();
 
   if (Object.keys(updates).length > 0) {
-    const { error } = await supabaseAdmin.from("prospects").update(updates).eq("id", prospectId);
+    const { error } = await supabaseAdmin.from("columns_lib").update(updates).eq("id", columnId);
     if (error) {
       return NextResponse.json({ detail: error.message }, { status: 500 });
     }
   }
 
-  const { data, error } = await loadProspect(prospectId);
+  const { data, error } = await loadColumn(columnId);
   if (error) {
     return NextResponse.json({ detail: error.message }, { status: 500 });
   }
   if (!data) {
-    return NextResponse.json({ detail: "prospect not found" }, { status: 404 });
+    return NextResponse.json({ detail: "column not found" }, { status: 404 });
   }
 
-  return NextResponse.json(prospectRowToDto(data as ProspectRow));
+  return NextResponse.json(columnRowToDto(data as ColumnRow));
 }
 
 export async function DELETE(
@@ -87,21 +88,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const prospectId = Number(id);
-  if (!Number.isInteger(prospectId)) {
+  const columnId = Number(id);
+  if (!Number.isInteger(columnId)) {
     return NextResponse.json({ detail: "invalid id" }, { status: 400 });
   }
 
   const { error, count } = await getSupabaseAdmin()
-    .from("prospects")
+    .from("columns_lib")
     .delete({ count: "exact" })
-    .eq("id", prospectId);
+    .eq("id", columnId);
 
   if (error) {
     return NextResponse.json({ detail: error.message }, { status: 500 });
   }
   if (!count) {
-    return NextResponse.json({ detail: "prospect not found" }, { status: 404 });
+    return NextResponse.json({ detail: "column not found" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true });

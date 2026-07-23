@@ -76,6 +76,11 @@
    원자적으로 처리됩니다). 아직 정책은 없는 상태로 생성되며, 이후 Current Client 탭에서
    정책을 추가하면 표시됩니다.
 9. **검색** — 클라이언트 사이드에서 이름 기준으로 필터링합니다.
+10. **새로 추가 / 삭제** — Current Client, Potential Client, Columns 탭 상단의 "+ 새로
+    추가" 버튼으로 새 레코드를 만들 수 있습니다. 사람을 새로 추가하면 (Current Client
+    테이블은 정책 단위라 정책이 없으면 표에 보이지 않으므로) 바로 이어서 정책 추가 창이
+    뜹니다. 각 상세정보 창에는 삭제 버튼도 있습니다 — 사람을 삭제하면 그 사람의 정책도
+    모두 함께 삭제됩니다 (DB의 `ON DELETE CASCADE`로 원자적으로 처리).
 
 아직 구현되지 않은 것 (다음 순서로 예정): 엑셀처럼 프린트하는 기능.
 
@@ -84,15 +89,25 @@
 | Method | Path                              | 설명                                  |
 |--------|-----------------------------------|---------------------------------------|
 | GET    | `/api/policies`                   | 전체 정책 (사람 이름 join, Current Client 테이블용) |
+| POST   | `/api/policies`                    | 정책 생성 (`personId` 필수)            |
 | GET    | `/api/policies/{id}`               | 정책 상세                              |
 | PATCH  | `/api/policies/{id}`               | 정책 필드 부분 업데이트 (Life/Annuity 상세 필드, `reviewed`, `note` 등) |
+| DELETE | `/api/policies/{id}`               | 정책 삭제                              |
+| POST   | `/api/people`                      | 사람 생성 (`lastName` 필수)             |
 | GET    | `/api/people/{id}`                 | 사람 상세 + 보유 정책 목록              |
 | PATCH  | `/api/people/{id}`                 | 사람 필드 부분 업데이트                |
+| DELETE | `/api/people/{id}`                 | 사람 삭제 (보유 정책도 함께 cascade 삭제) |
 | GET    | `/api/prospects`                   | 전체 잠재고객                          |
+| POST   | `/api/prospects`                   | 잠재고객 생성                          |
 | GET    | `/api/prospects/{id}`              | 잠재고객 상세                          |
 | PATCH  | `/api/prospects/{id}`              | 잠재고객 필드 부분 업데이트 (성/이름/한글명/이메일/전화/접촉경로/주요정보) |
+| DELETE | `/api/prospects/{id}`              | 잠재고객 삭제                          |
 | POST   | `/api/prospects/{id}/convert`      | 잠재고객 → 사람(people) 전환 (`convert_prospect` RPC 호출) |
 | GET    | `/api/columns`                     | 재정칼럼 라이브러리                    |
+| POST   | `/api/columns`                     | 칼럼 생성 (`title` 필수)                |
+| GET    | `/api/columns/{id}`                | 칼럼 상세                              |
+| PATCH  | `/api/columns/{id}`                | 칼럼 필드 부분 업데이트                |
+| DELETE | `/api/columns/{id}`                | 칼럼 삭제                              |
 
 `daysToAnniv`/`anniv`/`periodYears`는 저장된 값이 아니라 정책의 `issueDate`를 기준으로
 매 요청마다 오늘 날짜 기준으로 재계산됩니다. `ageBracket`도 사람의 `dob` 기준으로 매

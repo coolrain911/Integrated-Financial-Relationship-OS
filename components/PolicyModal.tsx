@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import type { PolicyDTO } from "@/lib/types";
+import { computePeriodYears } from "@/lib/mapping";
 import {
   ANNUITY_TYPE_OPTIONS,
   CATEGORY_OPTIONS,
@@ -18,16 +19,24 @@ function toInputStr(v: number | string | null): string {
 
 export function PolicyModal({
   policyId,
+  personId,
   onClose,
   onSaved,
+  onCreated,
+  onDeleted,
 }: {
-  policyId: number;
+  policyId: number | null;
+  personId?: number;
   onClose: () => void;
   onSaved: (policy: PolicyDTO) => void;
+  onCreated: (policy: PolicyDTO) => void;
+  onDeleted: (policyId: number) => void;
 }) {
+  const isNew = policyId === null;
   const [policy, setPolicy] = useState<PolicyDTO | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [policyNumber, setPolicyNumber] = useState("");
   const [issueDate, setIssueDate] = useState("");
@@ -53,6 +62,7 @@ export function PolicyModal({
   const [reviewed, setReviewed] = useState(false);
 
   useEffect(() => {
+    if (isNew) return;
     (async () => {
       const res = await fetch(`/api/policies/${policyId}`);
       const data: PolicyDTO = await res.json();
@@ -81,42 +91,44 @@ export function PolicyModal({
       setReviewed(data.reviewed);
       setLoading(false);
     })();
-  }, [policyId]);
+  }, [policyId, isNew]);
 
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch(`/api/policies/${policyId}`, {
-        method: "PATCH",
+      const payload = {
+        policyNumber: policyNumber || null,
+        issueDate: issueDate || null,
+        carrier: carrier || null,
+        product: product || null,
+        category,
+        lifeType: category === "Life" ? lifeType || null : null,
+        optionType: category === "Life" ? optionType || null : null,
+        deathBenefit: category === "Life" ? deathBenefit || null : null,
+        totalPremium: category === "Life" ? totalPremium || null : null,
+        premiumMethod: category === "Life" ? premiumMethod || null : null,
+        annualPremium: category === "Life" ? annualPremium || null : null,
+        annuityType: category === "Annuity" ? annuityType || null : null,
+        initialPremium: category === "Annuity" ? initialPremium || null : null,
+        additionalPremium: category === "Annuity" ? additionalPremium || null : null,
+        accountValue: accountValue || null,
+        surrenderValue: surrenderValue || null,
+        loanOrWithdrawal,
+        comment: comment || null,
+        note: note || null,
+      };
+      const res = await fetch(isNew ? "/api/policies" : `/api/policies/${policyId}`, {
+        method: isNew ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          policyNumber: policyNumber || null,
-          issueDate: issueDate || null,
-          carrier: carrier || null,
-          product: product || null,
-          category,
-          lifeType: category === "Life" ? lifeType || null : null,
-          optionType: category === "Life" ? optionType || null : null,
-          deathBenefit: category === "Life" ? deathBenefit || null : null,
-          totalPremium: category === "Life" ? totalPremium || null : null,
-          premiumMethod: category === "Life" ? premiumMethod || null : null,
-          annualPremium: category === "Life" ? annualPremium || null : null,
-          annuityType: category === "Annuity" ? annuityType || null : null,
-          initialPremium: category === "Annuity" ? initialPremium || null : null,
-          additionalPremium: category === "Annuity" ? additionalPremium || null : null,
-          accountValue: accountValue || null,
-          surrenderValue: surrenderValue || null,
-          loanOrWithdrawal,
-          surrendered,
-          needsAttention,
-          comment: comment || null,
-          note: note || null,
-          reviewed,
-        }),
+        body: JSON.stringify(isNew ? { personId, ...payload } : { ...payload, surrendered, needsAttention, reviewed }),
       });
       if (!res.ok) throw new Error("저장 실패");
-      const updated: PolicyDTO = await res.json();
-      onSaved(updated);
+      const data: PolicyDTO = await res.json();
+      if (isNew) {
+        onCreated(data);
+      } else {
+        onSaved(data);
+      }
       onClose();
     } catch {
       alert("저장에 실패했습니다.");
@@ -125,15 +137,34 @@ export function PolicyModal({
     }
   }
 
+  async function handleDelete() {
+    if (isNew) return;
+    if (!confirm("이 정책을 삭제하시겠습니까?")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/policies/${policyId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("삭제 실패");
+      onDeleted(policyId);
+      onClose();
+    } catch {
+      alert("삭제에 실패했습니다.");
+      setDeleting(false);
+    }
+  }
+
+  const periodYears = computePeriodYears(issueDate || null, new Date());
+
   return (
-    <Modal title="정책 정보" onClose={onClose}>
-      {loading || !policy ? (
+    <Modal title={isNew ? "새 정책 추가" : "정책 정보"} onClose={onClose}>
+      {loading ? (
         <div className="empty">불러오는 중...</div>
       ) : (
         <>
-          <div className="modal-subtitle">
-            {policy.lastName} {policy.firstName}
-          </div>
+          {policy && (
+            <div className="modal-subtitle">
+              {policy.lastName} {policy.firstName}
+            </div>
+          )}
           <div className="form-grid">
             <label className="form-field">
               <span>Policy Number</span>
@@ -145,7 +176,7 @@ export function PolicyModal({
             </label>
             <label className="form-field">
               <span>Period</span>
-              <input value={policy.periodYears !== null ? `${policy.periodYears}년차` : "-"} disabled />
+              <input value={periodYears !== null ? `${periodYears}년차` : "-"} disabled />
             </label>
             <label className="form-field">
               <span>회사 (Carrier)</span>
@@ -263,26 +294,34 @@ export function PolicyModal({
               />
               <span>Loan / Withdrawal 있음</span>
             </label>
-            <label className="form-field form-field-checkbox">
-              <input
-                type="checkbox"
-                checked={surrendered}
-                onChange={(e) => setSurrendered(e.target.checked)}
-              />
-              <span>계약해지</span>
-            </label>
-            <label className="form-field form-field-checkbox">
-              <input
-                type="checkbox"
-                checked={needsAttention}
-                onChange={(e) => setNeedsAttention(e.target.checked)}
-              />
-              <span>주의요망</span>
-            </label>
-            <label className="form-field form-field-checkbox">
-              <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />
-              <span>검토 완료</span>
-            </label>
+            {!isNew && (
+              <>
+                <label className="form-field form-field-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={surrendered}
+                    onChange={(e) => setSurrendered(e.target.checked)}
+                  />
+                  <span>계약해지</span>
+                </label>
+                <label className="form-field form-field-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={needsAttention}
+                    onChange={(e) => setNeedsAttention(e.target.checked)}
+                  />
+                  <span>주의요망</span>
+                </label>
+                <label className="form-field form-field-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={reviewed}
+                    onChange={(e) => setReviewed(e.target.checked)}
+                  />
+                  <span>검토 완료</span>
+                </label>
+              </>
+            )}
             <label className="form-field form-field-wide">
               <span>기타 주요 변동 사항</span>
               <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={2} />
@@ -293,13 +332,18 @@ export function PolicyModal({
             </label>
           </div>
 
-          {policy.reviewReason && (
+          {policy?.reviewReason && (
             <div className="row-note" style={{ color: "var(--danger)" }}>
               검토 필요 사유: {policy.reviewReason}
             </div>
           )}
 
-          <div className="modal-actions">
+          <div className="modal-actions" style={{ justifyContent: isNew ? "flex-end" : "space-between" }}>
+            {!isNew && (
+              <button className="btn-danger" disabled={deleting} onClick={handleDelete}>
+                {deleting ? "삭제 중..." : "정책 삭제"}
+              </button>
+            )}
             <button className="btn-primary" disabled={saving} onClick={handleSave}>
               {saving ? "저장 중..." : "저장"}
             </button>

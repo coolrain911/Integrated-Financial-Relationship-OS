@@ -8,7 +8,8 @@ import { ColumnRow } from "@/components/ColumnRow";
 import { PersonModal } from "@/components/PersonModal";
 import { PolicyModal } from "@/components/PolicyModal";
 import { ProspectModal } from "@/components/ProspectModal";
-import type { ColumnDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
+import { ColumnModal } from "@/components/ColumnModal";
+import type { ColumnDTO, PersonDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
 
 type Tab = "today" | "clients" | "prospects" | "columns";
 
@@ -19,6 +20,14 @@ const NAV_ITEMS: { tab: Tab; label: string }[] = [
   { tab: "columns", label: "Columns" },
 ];
 
+type PersonModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
+type PolicyModalState =
+  | { mode: "closed" }
+  | { mode: "edit"; id: number }
+  | { mode: "create"; personId: number };
+type ProspectModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
+type ColumnModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
+
 export default function Home() {
   const [policies, setPolicies] = useState<PolicyDTO[]>([]);
   const [prospects, setProspects] = useState<ProspectDTO[]>([]);
@@ -27,9 +36,11 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [search, setSearch] = useState("");
   const [dateStr, setDateStr] = useState("");
-  const [openPersonId, setOpenPersonId] = useState<number | null>(null);
-  const [openPolicyId, setOpenPolicyId] = useState<number | null>(null);
-  const [openProspectId, setOpenProspectId] = useState<number | null>(null);
+
+  const [personModal, setPersonModal] = useState<PersonModalState>({ mode: "closed" });
+  const [policyModal, setPolicyModal] = useState<PolicyModalState>({ mode: "closed" });
+  const [prospectModal, setProspectModal] = useState<ProspectModalState>({ mode: "closed" });
+  const [columnModal, setColumnModal] = useState<ColumnModalState>({ mode: "closed" });
 
   useEffect(() => {
     // Deliberately deferred to an effect: the page is statically prerendered,
@@ -69,9 +80,28 @@ export default function Home() {
     setPolicies((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
   }, []);
 
+  const handlePolicyCreated = useCallback((created: PolicyDTO) => {
+    setPolicies((prev) => [...prev, created]);
+  }, []);
+
+  const handlePolicyDeleted = useCallback((id: number) => {
+    setPolicies((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
   const handlePersonSaved = useCallback(() => {
     // Person edits (name, etc.) can change what a policy row displays, so
     // refresh the policies list to pick that up.
+    loadAll();
+  }, [loadAll]);
+
+  const handlePersonCreated = useCallback((created: PersonDTO) => {
+    // A person with zero policies won't show up anywhere (Current Client is a
+    // policies table), so immediately prompt for their first policy.
+    setPolicyModal({ mode: "create", personId: created.id });
+  }, []);
+
+  const handlePersonDeleted = useCallback(() => {
+    // Deleting a person cascades to all of their policies in the database.
     loadAll();
   }, [loadAll]);
 
@@ -89,6 +119,26 @@ export default function Home() {
 
   const handleProspectSaved = useCallback((updated: ProspectDTO) => {
     setProspects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  }, []);
+
+  const handleProspectCreated = useCallback((created: ProspectDTO) => {
+    setProspects((prev) => [...prev, created]);
+  }, []);
+
+  const handleProspectDeleted = useCallback((id: number) => {
+    setProspects((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const handleColumnSaved = useCallback((updated: ColumnDTO) => {
+    setColumns((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  }, []);
+
+  const handleColumnCreated = useCallback((created: ColumnDTO) => {
+    setColumns((prev) => [...prev, created]);
+  }, []);
+
+  const handleColumnDeleted = useCallback((id: number) => {
+    setColumns((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
   function switchTab(tab: Tab) {
@@ -202,8 +252,8 @@ export default function Home() {
                         <PolicyRow
                           key={p.id}
                           policy={p}
-                          onOpenPerson={setOpenPersonId}
-                          onOpenPolicy={setOpenPolicyId}
+                          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
                           onSaved={handlePolicySaved}
                         />
                       ))
@@ -218,8 +268,8 @@ export default function Home() {
                         <PolicyRow
                           key={p.id}
                           policy={p}
-                          onOpenPerson={setOpenPersonId}
-                          onOpenPolicy={setOpenPolicyId}
+                          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
                           onSaved={handlePolicySaved}
                         />
                       ))
@@ -233,12 +283,17 @@ export default function Home() {
 
             {activeTab === "clients" && (
               <div className="tab-panel active">
-                <div className="section-title">전체 고객 · {filteredPolicies.length}건</div>
+                <div className="section-title-row">
+                  <div className="section-title">전체 고객 · {filteredPolicies.length}건</div>
+                  <button className="btn-mini" onClick={() => setPersonModal({ mode: "create" })}>
+                    + 새 고객
+                  </button>
+                </div>
                 {filteredPolicies.length ? (
                   <PolicyTable
                     policies={filteredPolicies}
-                    onOpenPerson={setOpenPersonId}
-                    onOpenPolicy={setOpenPolicyId}
+                    onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                    onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
                     onPolicySaved={handlePolicySaved}
                   />
                 ) : (
@@ -249,11 +304,16 @@ export default function Home() {
 
             {activeTab === "prospects" && (
               <div className="tab-panel active">
-                <div className="section-title">잠재고객 · {filteredProspects.length}명</div>
+                <div className="section-title-row">
+                  <div className="section-title">잠재고객 · {filteredProspects.length}명</div>
+                  <button className="btn-mini" onClick={() => setProspectModal({ mode: "create" })}>
+                    + 새 잠재고객
+                  </button>
+                </div>
                 {filteredProspects.length ? (
                   <ProspectTable
                     prospects={filteredProspects}
-                    onOpenProspect={setOpenProspectId}
+                    onOpenProspect={(id) => setProspectModal({ mode: "edit", id })}
                     onConverted={handleProspectConverted}
                   />
                 ) : (
@@ -264,10 +324,21 @@ export default function Home() {
 
             {activeTab === "columns" && (
               <div className="tab-panel active">
-                <div className="section-title">재정칼럼 라이브러리 · {filteredColumns.length}편</div>
+                <div className="section-title-row">
+                  <div className="section-title">재정칼럼 라이브러리 · {filteredColumns.length}편</div>
+                  <button className="btn-mini" onClick={() => setColumnModal({ mode: "create" })}>
+                    + 새 칼럼
+                  </button>
+                </div>
                 <div className="list-scroll">
                   {filteredColumns.length ? (
-                    filteredColumns.map((c) => <ColumnRow key={c.id} column={c} />)
+                    filteredColumns.map((c) => (
+                      <ColumnRow
+                        key={c.id}
+                        column={c}
+                        onOpen={(id) => setColumnModal({ mode: "edit", id })}
+                      />
+                    ))
                   ) : (
                     <div className="empty">검색 결과 없음</div>
                   )}
@@ -278,30 +349,50 @@ export default function Home() {
         )}
       </div>
 
-      {openPersonId !== null && (
+      {personModal.mode !== "closed" && (
         <PersonModal
-          personId={openPersonId}
-          onClose={() => setOpenPersonId(null)}
+          personId={personModal.mode === "edit" ? personModal.id : null}
+          onClose={() => setPersonModal({ mode: "closed" })}
           onSaved={handlePersonSaved}
+          onCreated={handlePersonCreated}
+          onDeleted={handlePersonDeleted}
           onOpenPolicy={(policyId) => {
-            setOpenPersonId(null);
-            setOpenPolicyId(policyId);
+            setPersonModal({ mode: "closed" });
+            setPolicyModal({ mode: "edit", id: policyId });
+          }}
+          onAddPolicy={(personId) => {
+            setPersonModal({ mode: "closed" });
+            setPolicyModal({ mode: "create", personId });
           }}
         />
       )}
-      {openPolicyId !== null && (
+      {policyModal.mode !== "closed" && (
         <PolicyModal
-          policyId={openPolicyId}
-          onClose={() => setOpenPolicyId(null)}
+          policyId={policyModal.mode === "edit" ? policyModal.id : null}
+          personId={policyModal.mode === "create" ? policyModal.personId : undefined}
+          onClose={() => setPolicyModal({ mode: "closed" })}
           onSaved={handlePolicySaved}
+          onCreated={handlePolicyCreated}
+          onDeleted={handlePolicyDeleted}
         />
       )}
-      {openProspectId !== null && (
+      {prospectModal.mode !== "closed" && (
         <ProspectModal
-          prospectId={openProspectId}
-          onClose={() => setOpenProspectId(null)}
+          prospectId={prospectModal.mode === "edit" ? prospectModal.id : null}
+          onClose={() => setProspectModal({ mode: "closed" })}
           onSaved={handleProspectSaved}
+          onCreated={handleProspectCreated}
+          onDeleted={handleProspectDeleted}
           onConverted={handleProspectConverted}
+        />
+      )}
+      {columnModal.mode !== "closed" && (
+        <ColumnModal
+          columnId={columnModal.mode === "edit" ? columnModal.id : null}
+          onClose={() => setColumnModal({ mode: "closed" })}
+          onSaved={handleColumnSaved}
+          onCreated={handleColumnCreated}
+          onDeleted={handleColumnDeleted}
         />
       )}
     </div>

@@ -32,6 +32,17 @@ export type PersonUpdateBody = Partial<{
   note: string | null;
 }>;
 
+export type PersonCreateBody = { lastName: string } & Partial<{
+  firstName: string | null;
+  gender: Gender | null;
+  dob: string | null;
+  occupation: string | null;
+  medicare: boolean | null;
+  email: string | null;
+  phone: string | null;
+  note: string | null;
+}>;
+
 export type PolicyDTO = {
   id: number;
   personId: number;
@@ -91,6 +102,28 @@ export type PolicyUpdateBody = Partial<{
   reviewed: boolean;
 }>;
 
+export type PolicyCreateBody = { personId: number } & Partial<{
+  policyNumber: string | null;
+  issueDate: string | null;
+  carrier: string | null;
+  product: string | null;
+  category: PolicyCategory;
+  lifeType: LifeType | null;
+  optionType: OptionType | null;
+  deathBenefit: string | null;
+  totalPremium: string | null;
+  premiumMethod: PremiumMethod | null;
+  annualPremium: string | null;
+  annuityType: AnnuityType | null;
+  initialPremium: string | null;
+  additionalPremium: string | null;
+  accountValue: string | null;
+  surrenderValue: string | null;
+  loanOrWithdrawal: boolean | null;
+  comment: string | null;
+  note: string | null;
+}>;
+
 export type ProspectDTO = {
   id: number;
   lastName: string | null;
@@ -112,6 +145,8 @@ export type ProspectUpdateBody = Partial<{
   note: string | null;
 }>;
 
+export type ProspectCreateBody = ProspectUpdateBody;
+
 export type ColumnDTO = {
   id: number;
   num: number | null;
@@ -119,3 +154,16 @@ export type ColumnDTO = {
   category: string | null;
   file: string | null;
 };
+
+export type ColumnUpdateBody = Partial<{
+  num: number | null;
+  title: string;
+  category: string | null;
+  file: string | null;
+}>;
+
+export type ColumnCreateBody = { title: string } & Partial<{
+  num: number | null;
+  category: string | null;
+  file: string | null;
+}>;

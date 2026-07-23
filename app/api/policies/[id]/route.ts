@@ -125,3 +125,28 @@ export async function PATCH(
 
   return NextResponse.json(policyRowToDto(data as unknown as PolicyWithNameRow, new Date()));
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const policyId = Number(id);
+  if (!Number.isInteger(policyId)) {
+    return NextResponse.json({ detail: "invalid id" }, { status: 400 });
+  }
+
+  const { error, count } = await getSupabaseAdmin()
+    .from("policies")
+    .delete({ count: "exact" })
+    .eq("id", policyId);
+
+  if (error) {
+    return NextResponse.json({ detail: error.message }, { status: 500 });
+  }
+  if (!count) {
+    return NextResponse.json({ detail: "policy not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

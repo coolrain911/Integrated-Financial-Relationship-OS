@@ -129,3 +129,30 @@ export async function PATCH(
     ),
   });
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const personId = Number(id);
+  if (!Number.isInteger(personId)) {
+    return NextResponse.json({ detail: "invalid id" }, { status: 400 });
+  }
+
+  // policies.person_id has ON DELETE CASCADE, so this also removes all of
+  // this person's policies.
+  const { error, count } = await getSupabaseAdmin()
+    .from("people")
+    .delete({ count: "exact" })
+    .eq("id", personId);
+
+  if (error) {
+    return NextResponse.json({ detail: error.message }, { status: 500 });
+  }
+  if (!count) {
+    return NextResponse.json({ detail: "person not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

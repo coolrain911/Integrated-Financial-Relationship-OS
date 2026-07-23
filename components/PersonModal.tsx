@@ -4,22 +4,30 @@ import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import type { PersonDTO, PolicyDTO } from "@/lib/types";
 import { GENDER_OPTIONS, OCCUPATION_PRESETS } from "@/lib/options";
+import { computeAgeBracket } from "@/lib/mapping";
 
 export function PersonModal({
   personId,
   onClose,
   onSaved,
+  onCreated,
+  onDeleted,
   onOpenPolicy,
+  onAddPolicy,
 }: {
-  personId: number;
+  personId: number | null;
   onClose: () => void;
   onSaved: (person: PersonDTO) => void;
+  onCreated: (person: PersonDTO) => void;
+  onDeleted: (personId: number) => void;
   onOpenPolicy: (policyId: number) => void;
+  onAddPolicy: (personId: number) => void;
 }) {
-  const [person, setPerson] = useState<PersonDTO | null>(null);
+  const isNew = personId === null;
   const [policies, setPolicies] = useState<PolicyDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -33,10 +41,10 @@ export function PersonModal({
   const [note, setNote] = useState("");
 
   useEffect(() => {
+    if (isNew) return;
     (async () => {
       const res = await fetch(`/api/people/${personId}`);
       const data = await res.json();
-      setPerson(data.person);
       setPolicies(data.policies);
       setLastName(data.person.lastName ?? "");
       setFirstName(data.person.firstName ?? "");
@@ -56,29 +64,38 @@ export function PersonModal({
       setNote(data.person.note ?? "");
       setLoading(false);
     })();
-  }, [personId]);
+  }, [personId, isNew]);
 
   async function handleSave() {
+    if (!lastName.trim()) {
+      alert("성을 입력해주세요.");
+      return;
+    }
     setSaving(true);
     try {
-      const res = await fetch(`/api/people/${personId}`, {
-        method: "PATCH",
+      const payload = {
+        lastName,
+        firstName: firstName || null,
+        gender: gender || null,
+        dob: dob || null,
+        occupation: occupationChoice === "기타" ? occupationCustom || null : occupationChoice || null,
+        medicare,
+        email: email || null,
+        phone: phone || null,
+        note: note || null,
+      };
+      const res = await fetch(isNew ? "/api/people" : `/api/people/${personId}`, {
+        method: isNew ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lastName,
-          firstName: firstName || null,
-          gender: gender || null,
-          dob: dob || null,
-          occupation: occupationChoice === "기타" ? occupationCustom || null : occupationChoice || null,
-          medicare,
-          email: email || null,
-          phone: phone || null,
-          note: note || null,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("저장 실패");
       const data = await res.json();
-      onSaved(data.person);
+      if (isNew) {
+        onCreated(data);
+      } else {
+        onSaved(data.person);
+      }
       onClose();
     } catch {
       alert("저장에 실패했습니다.");
@@ -87,9 +104,26 @@ export function PersonModal({
     }
   }
 
+  async function handleDelete() {
+    if (isNew) return;
+    if (!confirm("이 고객을 삭제하시겠습니까? 보유한 모든 정책도 함께 삭제됩니다.")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/people/${personId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("삭제 실패");
+      onDeleted(personId);
+      onClose();
+    } catch {
+      alert("삭제에 실패했습니다.");
+      setDeleting(false);
+    }
+  }
+
+  const ageBracket = computeAgeBracket(dob || null, new Date());
+
   return (
-    <Modal title="고객 정보" onClose={onClose}>
-      {loading || !person ? (
+    <Modal title={isNew ? "새 고객 추가" : "고객 정보"} onClose={onClose}>
+      {loading ? (
         <div className="empty">불러오는 중...</div>
       ) : (
         <>
@@ -119,7 +153,7 @@ export function PersonModal({
             </label>
             <label className="form-field">
               <span>연령대</span>
-              <input value={person.ageBracket ?? "-"} disabled />
+              <input value={ageBracket ?? "-"} disabled />
             </label>
             <label className="form-field">
               <span>직업</span>
@@ -156,21 +190,35 @@ export function PersonModal({
             </label>
           </div>
 
-          <div className="modal-section-title">보유 정책 ({policies.length}건)</div>
-          {policies.length ? (
-            policies.map((p) => (
-              <div key={p.id} className="policy-mini-row" onClick={() => onOpenPolicy(p.id)}>
-                <span className="policy-mini-num">{p.policyNumber || "(정책번호 없음)"}</span>
-                <span className="policy-mini-meta">
-                  {p.carrier} · {p.product} · {p.category}
-                </span>
+          {!isNew && (
+            <>
+              <div className="modal-section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>보유 정책 ({policies.length}건)</span>
+                <button className="btn-mini" onClick={() => onAddPolicy(personId)}>
+                  + 정책 추가
+                </button>
               </div>
-            ))
-          ) : (
-            <div className="empty">보유 정책 없음</div>
+              {policies.length ? (
+                policies.map((p) => (
+                  <div key={p.id} className="policy-mini-row" onClick={() => onOpenPolicy(p.id)}>
+                    <span className="policy-mini-num">{p.policyNumber || "(정책번호 없음)"}</span>
+                    <span className="policy-mini-meta">
+                      {p.carrier} · {p.product} · {p.category}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="empty">보유 정책 없음</div>
+              )}
+            </>
           )}
 
-          <div className="modal-actions">
+          <div className="modal-actions" style={{ justifyContent: isNew ? "flex-end" : "space-between" }}>
+            {!isNew && (
+              <button className="btn-danger" disabled={deleting} onClick={handleDelete}>
+                {deleting ? "삭제 중..." : "고객 삭제"}
+              </button>
+            )}
             <button className="btn-primary" disabled={saving} onClick={handleSave}>
               {saving ? "저장 중..." : "저장"}
             </button>

@@ -1,8 +1,14 @@
 import type { ColumnDTO } from "@/lib/types";
 
-export function ColumnRow({ column }: { column: ColumnDTO }) {
+export function ColumnRow({
+  column,
+  onOpen,
+}: {
+  column: ColumnDTO;
+  onOpen: (columnId: number) => void;
+}) {
   return (
-    <div className="row-card">
+    <div className="row-card link-cell" onClick={() => onOpen(column.id)}>
       <div className="row-card-top">
         <div>
           <div className="row-name">
