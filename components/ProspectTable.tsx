@@ -89,8 +89,7 @@ export function ProspectTable({
             <th className="sortable" onClick={() => toggleSort("category")}>
               접촉경로{sortArrow("category")}
             </th>
-            <th></th>
-            <th></th>
+            <th className="sticky-col-right"></th>
           </tr>
         </thead>
         <tbody>
@@ -106,23 +105,23 @@ export function ProspectTable({
               <td>{p.email || "-"}</td>
               <td>{p.phone || "-"}</td>
               <td>{p.category ? <span className="pill accent">{p.category}</span> : "-"}</td>
-              <td>
-                <button
-                  className="btn-mini"
-                  disabled={convertingId === p.id}
-                  onClick={() => convert(p.id)}
-                >
-                  {convertingId === p.id ? "전환 중..." : "전환"}
-                </button>
-              </td>
-              <td>
-                <button
-                  className="btn-danger-mini"
-                  disabled={deletingId === p.id}
-                  onClick={() => remove(p.id, p.koreanName || p.lastName || "")}
-                >
-                  {deletingId === p.id ? "삭제 중..." : "삭제"}
-                </button>
+              <td className="sticky-col-right">
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    className="btn-mini"
+                    disabled={convertingId === p.id}
+                    onClick={() => convert(p.id)}
+                  >
+                    {convertingId === p.id ? "전환 중..." : "전환"}
+                  </button>
+                  <button
+                    className="btn-danger-mini"
+                    disabled={deletingId === p.id}
+                    onClick={() => remove(p.id, p.koreanName || p.lastName || "")}
+                  >
+                    {deletingId === p.id ? "삭제 중..." : "삭제"}
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

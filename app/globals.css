@@ -473,6 +473,24 @@ body {
   background: var(--bg);
 }
 
+/* Pins action buttons (전환/삭제) to the visible right edge of the table,
+   so they're never scrolled out of view regardless of how many columns
+   come before them. */
+.sticky-col-right {
+  position: sticky;
+  right: 0;
+  background: var(--card);
+  box-shadow: -6px 0 8px -6px rgba(0, 0, 0, 0.15);
+}
+
+.data-table tbody tr:hover .sticky-col-right {
+  background: var(--bg);
+}
+
+.data-table thead th.sticky-col-right {
+  z-index: 1;
+}
+
 .link-cell {
   cursor: pointer;
   color: var(--accent);

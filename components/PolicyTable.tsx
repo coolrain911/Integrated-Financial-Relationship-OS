@@ -116,7 +116,7 @@ export function PolicyTable({
             </th>
             <th>상태</th>
             <th>검토</th>
-            <th></th>
+            <th className="sticky-col-right"></th>
           </tr>
         </thead>
         <tbody>
@@ -145,7 +145,7 @@ export function PolicyTable({
                     onChange={(e) => toggleReviewed(p, e.target.checked)}
                   />
                 </td>
-                <td>
+                <td className="sticky-col-right">
                   <button
                     className="btn-danger-mini"
                     disabled={deletingId === p.id}
