@@ -70,6 +70,7 @@ export type PolicyDTO = {
   loanOrWithdrawal: boolean | null;
   surrendered: boolean;
   needsAttention: boolean;
+  policyChanged: boolean;
   needsReview: boolean;
   reviewReason: string | null;
   comment: string | null;
@@ -97,6 +98,7 @@ export type PolicyUpdateBody = Partial<{
   loanOrWithdrawal: boolean | null;
   surrendered: boolean;
   needsAttention: boolean;
+  policyChanged: boolean;
   comment: string | null;
   note: string | null;
   reviewed: boolean;

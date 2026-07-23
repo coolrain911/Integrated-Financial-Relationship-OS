@@ -16,8 +16,9 @@
 1. **`supabase/migrate_people_policies.sql`** — 기존 `clients` 테이블의 163건 데이터를
    이름이 같으면 같은 사람으로 묶어서 `people`(사람) + `policies`(정책) 테이블로 이전하고,
    `clients` 테이블은 삭제합니다.
-2. **`supabase/migrate_add_surrendered.sql`**, **`supabase/migrate_add_needs_attention.sql`**
-   — `policies`에 "계약해지"/"주의요망" 상태 컬럼을 추가합니다.
+2. **`supabase/migrate_add_surrendered.sql`**, **`supabase/migrate_add_needs_attention.sql`**,
+   **`supabase/migrate_add_policy_changed.sql`**
+   — `policies`에 "계약해지"/"주의요망"/"정책변경" 상태 컬럼을 추가합니다.
 3. **`supabase/migrate_prospects_fields.sql`** — 기존 `prospects` 테이블의 `(name, segment)`를
    `(last_name, first_name, korean_name, category)`로 재구성합니다. 원래 이름(`name`)은
    `korean_name`에 그대로 보존되고, `last_name`/`first_name`은 한글 이름은 통째로

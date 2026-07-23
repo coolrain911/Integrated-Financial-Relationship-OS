@@ -94,6 +94,7 @@ export async function PATCH(
     loanOrWithdrawal: "loan_or_withdrawal",
     surrendered: "surrendered",
     needsAttention: "needs_attention",
+    policyChanged: "policy_changed",
     comment: "comment",
     note: "note",
     reviewed: "reviewed",

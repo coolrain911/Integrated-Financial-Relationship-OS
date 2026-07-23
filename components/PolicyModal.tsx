@@ -57,6 +57,7 @@ export function PolicyModal({
   const [loanOrWithdrawal, setLoanOrWithdrawal] = useState(false);
   const [surrendered, setSurrendered] = useState(false);
   const [needsAttention, setNeedsAttention] = useState(false);
+  const [policyChanged, setPolicyChanged] = useState(false);
   const [comment, setComment] = useState("");
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
@@ -86,6 +87,7 @@ export function PolicyModal({
       setLoanOrWithdrawal(Boolean(data.loanOrWithdrawal));
       setSurrendered(data.surrendered);
       setNeedsAttention(data.needsAttention);
+      setPolicyChanged(data.policyChanged);
       setComment(data.comment ?? "");
       setNote(data.note ?? "");
       setReviewed(data.reviewed);
@@ -120,7 +122,9 @@ export function PolicyModal({
       const res = await fetch(isNew ? "/api/policies" : `/api/policies/${policyId}`, {
         method: isNew ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(isNew ? { personId, ...payload } : { ...payload, surrendered, needsAttention, reviewed }),
+        body: JSON.stringify(
+          isNew ? { personId, ...payload } : { ...payload, surrendered, needsAttention, policyChanged, reviewed }
+        ),
       });
       if (!res.ok) throw new Error("저장 실패");
       const data: PolicyDTO = await res.json();
@@ -311,6 +315,14 @@ export function PolicyModal({
                     onChange={(e) => setNeedsAttention(e.target.checked)}
                   />
                   <span>주의요망</span>
+                </label>
+                <label className="form-field form-field-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={policyChanged}
+                    onChange={(e) => setPolicyChanged(e.target.checked)}
+                  />
+                  <span>정책변경</span>
                 </label>
                 <label className="form-field form-field-checkbox">
                   <input
