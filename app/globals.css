@@ -389,6 +389,31 @@ body {
   color: var(--accent);
 }
 
+.btn-danger-mini {
+  border: none;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.btn-danger-mini:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger-mini:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
 /* ---- Data table (Current Client) ---- */
 .table-scroll {
   max-height: 640px;

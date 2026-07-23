@@ -295,6 +295,7 @@ export default function Home() {
                     onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
                     onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
                     onPolicySaved={handlePolicySaved}
+                    onPolicyDeleted={handlePolicyDeleted}
                   />
                 ) : (
                   <div className="empty">검색 결과 없음</div>
@@ -315,6 +316,7 @@ export default function Home() {
                     prospects={filteredProspects}
                     onOpenProspect={(id) => setProspectModal({ mode: "edit", id })}
                     onConverted={handleProspectConverted}
+                    onDeleted={handleProspectDeleted}
                   />
                 ) : (
                   <div className="empty">검색 결과 없음</div>
@@ -337,6 +339,7 @@ export default function Home() {
                         key={c.id}
                         column={c}
                         onOpen={(id) => setColumnModal({ mode: "edit", id })}
+                        onDeleted={handleColumnDeleted}
                       />
                     ))
                   ) : (

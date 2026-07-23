@@ -22,15 +22,18 @@ export function PolicyTable({
   onOpenPerson,
   onOpenPolicy,
   onPolicySaved,
+  onPolicyDeleted,
 }: {
   policies: PolicyDTO[];
   onOpenPerson: (personId: number) => void;
   onOpenPolicy: (policyId: number) => void;
   onPolicySaved: (updated: PolicyDTO) => void;
+  onPolicyDeleted: (policyId: number) => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("lastName");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -72,6 +75,21 @@ export function PolicyTable({
     }
   }
 
+  async function remove(policy: PolicyDTO) {
+    const label = `${policy.lastName} ${policy.firstName || ""}`.trim();
+    if (!confirm(`${label}${policy.policyNumber ? ` (${policy.policyNumber})` : ""} 정책을 삭제하시겠습니까?`)) return;
+    setDeletingId(policy.id);
+    try {
+      const res = await fetch(`/api/policies/${policy.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("삭제 실패");
+      onPolicyDeleted(policy.id);
+    } catch {
+      alert("삭제에 실패했습니다.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   function sortArrow(key: SortKey) {
     if (key !== sortKey) return "";
     return sortDir === "asc" ? " ▲" : " ▼";
@@ -98,6 +116,7 @@ export function PolicyTable({
             </th>
             <th>상태</th>
             <th>검토</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -125,6 +144,15 @@ export function PolicyTable({
                     disabled={savingId === p.id}
                     onChange={(e) => toggleReviewed(p, e.target.checked)}
                   />
+                </td>
+                <td>
+                  <button
+                    className="btn-danger-mini"
+                    disabled={deletingId === p.id}
+                    onClick={() => remove(p)}
+                  >
+                    {deletingId === p.id ? "삭제 중..." : "삭제"}
+                  </button>
                 </td>
               </tr>
             );

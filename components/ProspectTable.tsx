@@ -10,14 +10,17 @@ export function ProspectTable({
   prospects,
   onOpenProspect,
   onConverted,
+  onDeleted,
 }: {
   prospects: ProspectDTO[];
   onOpenProspect: (prospectId: number) => void;
   onConverted: () => void;
+  onDeleted: (prospectId: number) => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("lastName");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [convertingId, setConvertingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -57,6 +60,20 @@ export function ProspectTable({
     }
   }
 
+  async function remove(id: number, label: string) {
+    if (!confirm(`${label || "이 잠재고객"}을(를) 삭제하시겠습니까?`)) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/prospects/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("삭제 실패");
+      onDeleted(id);
+    } catch {
+      alert("삭제에 실패했습니다.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="table-scroll">
       <table className="data-table">
@@ -72,6 +89,7 @@ export function ProspectTable({
             <th className="sortable" onClick={() => toggleSort("category")}>
               접촉경로{sortArrow("category")}
             </th>
+            <th></th>
             <th></th>
           </tr>
         </thead>
@@ -95,6 +113,15 @@ export function ProspectTable({
                   onClick={() => convert(p.id)}
                 >
                   {convertingId === p.id ? "전환 중..." : "전환"}
+                </button>
+              </td>
+              <td>
+                <button
+                  className="btn-danger-mini"
+                  disabled={deletingId === p.id}
+                  onClick={() => remove(p.id, p.koreanName || p.lastName || "")}
+                >
+                  {deletingId === p.id ? "삭제 중..." : "삭제"}
                 </button>
               </td>
             </tr>
