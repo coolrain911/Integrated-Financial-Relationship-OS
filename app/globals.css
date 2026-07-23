@@ -400,6 +400,12 @@ body {
   white-space: nowrap;
 }
 
+.data-table td {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .data-table thead th {
   position: sticky;
   top: 0;

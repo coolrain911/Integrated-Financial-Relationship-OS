@@ -72,7 +72,6 @@ export function ProspectTable({
             <th className="sortable" onClick={() => toggleSort("category")}>
               접촉경로{sortArrow("category")}
             </th>
-            <th>주요 정보</th>
             <th></th>
           </tr>
         </thead>
@@ -89,7 +88,6 @@ export function ProspectTable({
               <td>{p.email || "-"}</td>
               <td>{p.phone || "-"}</td>
               <td>{p.category ? <span className="pill accent">{p.category}</span> : "-"}</td>
-              <td>{p.note || "-"}</td>
               <td>
                 <button
                   className="btn-mini"
