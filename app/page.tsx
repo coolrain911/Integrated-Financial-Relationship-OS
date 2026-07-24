@@ -10,6 +10,7 @@ import { PolicyModal } from "@/components/PolicyModal";
 import { ProspectModal } from "@/components/ProspectModal";
 import { ColumnModal } from "@/components/ColumnModal";
 import type { ColumnDTO, PersonDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
+import { buildMailtoUrl } from "@/lib/mailto";
 
 type Tab = "today" | "clients" | "prospects" | "columns";
 
@@ -36,6 +37,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [search, setSearch] = useState("");
   const [dateStr, setDateStr] = useState("");
+
+  const [reviewUnselected, setReviewUnselected] = useState<Set<number>>(new Set());
+  const [annivUnselected, setAnnivUnselected] = useState<Set<number>>(new Set());
 
   const [personModal, setPersonModal] = useState<PersonModalState>({ mode: "closed" });
   const [policyModal, setPolicyModal] = useState<PolicyModalState>({ mode: "closed" });
@@ -192,6 +196,43 @@ export default function Home() {
     [policies]
   );
 
+  function toggleReviewSelect(id: number) {
+    setReviewUnselected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAnnivSelect(id: number) {
+    setAnnivUnselected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const reviewEmails = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          reviewItems.filter((p) => !reviewUnselected.has(p.id) && p.email).map((p) => p.email as string)
+        )
+      ),
+    [reviewItems, reviewUnselected]
+  );
+  const annivEmails = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          annivItems.filter((p) => !annivUnselected.has(p.id) && p.email).map((p) => p.email as string)
+        )
+      ),
+    [annivItems, annivUnselected]
+  );
+
   const kpis = [
     { n: uniquePeople, l: "전체 고객", cls: "" },
     { n: policies.length, l: "전체 정책", cls: "" },
@@ -246,7 +287,18 @@ export default function Home() {
                 </div>
                 <div className="two-col">
                   <div className="section">
-                    <div className="section-title">검토 필요</div>
+                    <div className="section-title-row">
+                      <div className="section-title">검토 필요</div>
+                      <button
+                        className="btn-mini"
+                        disabled={reviewEmails.length === 0}
+                        onClick={() => {
+                          window.location.href = buildMailtoUrl(reviewEmails);
+                        }}
+                      >
+                        이메일 보내기 ({reviewEmails.length})
+                      </button>
+                    </div>
                     {reviewItems.length ? (
                       reviewItems.map((p) => (
                         <PolicyRow
@@ -255,6 +307,8 @@ export default function Home() {
                           onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
                           onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
                           onSaved={handlePolicySaved}
+                          selected={!reviewUnselected.has(p.id)}
+                          onToggleSelect={() => toggleReviewSelect(p.id)}
                         />
                       ))
                     ) : (
@@ -262,7 +316,18 @@ export default function Home() {
                     )}
                   </div>
                   <div className="section">
-                    <div className="section-title">다가오는 Anniversary (30일 이내)</div>
+                    <div className="section-title-row">
+                      <div className="section-title">다가오는 Anniversary (30일 이내)</div>
+                      <button
+                        className="btn-mini"
+                        disabled={annivEmails.length === 0}
+                        onClick={() => {
+                          window.location.href = buildMailtoUrl(annivEmails);
+                        }}
+                      >
+                        이메일 보내기 ({annivEmails.length})
+                      </button>
+                    </div>
                     {annivItems.length ? (
                       annivItems.map((p) => (
                         <PolicyRow
@@ -271,6 +336,8 @@ export default function Home() {
                           onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
                           onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
                           onSaved={handlePolicySaved}
+                          selected={!annivUnselected.has(p.id)}
+                          onToggleSelect={() => toggleAnnivSelect(p.id)}
                         />
                       ))
                     ) : (

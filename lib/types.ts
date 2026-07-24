@@ -48,6 +48,8 @@ export type PolicyDTO = {
   personId: number;
   lastName: string;
   firstName: string | null;
+  email: string | null;
+  ageBracket: AgeBracket | null;
   policyNumber: string | null;
   issueDate: string | null;
   anniv: string | null;

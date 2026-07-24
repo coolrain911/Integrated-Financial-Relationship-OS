@@ -16,7 +16,7 @@ async function loadPersonWithPolicies(id: number) {
     supabaseAdmin.from("people").select("*").eq("id", id).maybeSingle(),
     supabaseAdmin
       .from("policies")
-      .select("*, people(last_name, first_name)")
+      .select("*, people(last_name, first_name, dob, email)")
       .eq("person_id", id),
   ]);
   return { personRes, policiesRes };

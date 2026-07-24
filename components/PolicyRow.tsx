@@ -26,11 +26,15 @@ export function PolicyRow({
   onOpenPerson,
   onOpenPolicy,
   onSaved,
+  selected,
+  onToggleSelect,
 }: {
   policy: PolicyDTO;
   onOpenPerson: (personId: number) => void;
   onOpenPolicy: (policyId: number) => void;
   onSaved: (updated: PolicyDTO) => void;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }) {
   const [reviewed, setReviewed] = useState(policy.reviewed);
   const [note, setNote] = useState(policy.note ?? "");
@@ -66,6 +70,14 @@ export function PolicyRow({
   return (
     <div className="row-card">
       <div className="row-card-top">
+        {onToggleSelect && (
+          <input
+            type="checkbox"
+            checked={Boolean(selected)}
+            onChange={onToggleSelect}
+            title="이메일 보낼 대상으로 선택"
+          />
+        )}
         <div>
           <div className="row-name link-cell" onClick={() => onOpenPerson(policy.personId)}>
             {policy.lastName} {policy.firstName}

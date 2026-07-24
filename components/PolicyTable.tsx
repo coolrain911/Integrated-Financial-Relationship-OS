@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { PolicyDTO } from "@/lib/types";
+import type { AgeBracket, PolicyDTO } from "@/lib/types";
 import { compareByLastName } from "@/lib/mapping";
+import { buildMailtoUrl } from "@/lib/mailto";
+import { CATEGORY_OPTIONS } from "@/lib/options";
 
 type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status";
 
@@ -46,6 +48,16 @@ const STATUS_PILL_CLASS: Record<StatusKey, string> = {
   normal: "muted",
 };
 
+const AGE_BRACKET_ORDER: AgeBracket[] = [
+  "20대 미만",
+  "20대",
+  "30대",
+  "40대",
+  "50대",
+  "60대",
+  "70대 이상",
+];
+
 function statusKeyFor(p: PolicyDTO): StatusKey {
   if (p.surrendered) return "surrendered";
   if (p.needsAttention) return "attention";
@@ -61,6 +73,13 @@ function pillFor(p: PolicyDTO) {
   if (key === "normal") return null;
   const label = key === "upcoming" ? `D-${p.daysToAnniv}` : STATUS_LABELS[key];
   return { cls: STATUS_PILL_CLASS[key], label };
+}
+
+function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
 }
 
 export function PolicyTable({
@@ -80,7 +99,21 @@ export function PolicyTable({
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [savingId, setSavingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
   const [activeStatuses, setActiveStatuses] = useState<Set<StatusKey>>(new Set());
+  const [activeAgeBrackets, setActiveAgeBrackets] = useState<Set<AgeBracket>>(new Set());
+  const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
+  const [activeCarriers, setActiveCarriers] = useState<Set<string>>(new Set());
+
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+
+  const carrierOptions = useMemo(() => {
+    const s = new Set<string>();
+    policies.forEach((p) => {
+      if (p.carrier) s.add(p.carrier);
+    });
+    return Array.from(s).sort();
+  }, [policies]);
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -91,19 +124,22 @@ export function PolicyTable({
     }
   }
 
-  function toggleStatusFilter(key: StatusKey) {
-    setActiveStatuses((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
+  const hasActiveFilter =
+    activeStatuses.size > 0 ||
+    activeAgeBrackets.size > 0 ||
+    activeCategories.size > 0 ||
+    activeCarriers.size > 0;
 
   const filtered = useMemo(() => {
-    if (activeStatuses.size === 0) return policies;
-    return policies.filter((p) => activeStatuses.has(statusKeyFor(p)));
-  }, [policies, activeStatuses]);
+    if (!hasActiveFilter) return policies;
+    return policies.filter((p) => {
+      if (activeStatuses.size && !activeStatuses.has(statusKeyFor(p))) return false;
+      if (activeAgeBrackets.size && (!p.ageBracket || !activeAgeBrackets.has(p.ageBracket))) return false;
+      if (activeCategories.size && !activeCategories.has(p.category)) return false;
+      if (activeCarriers.size && (!p.carrier || !activeCarriers.has(p.carrier))) return false;
+      return true;
+    });
+  }, [policies, hasActiveFilter, activeStatuses, activeAgeBrackets, activeCategories, activeCarriers]);
 
   const sorted = useMemo(() => {
     const items = [...filtered];
@@ -120,6 +156,34 @@ export function PolicyTable({
     });
     return items;
   }, [filtered, sortKey, sortDir]);
+
+  const selectedEmails = useMemo(() => {
+    const emails: string[] = [];
+    policies.forEach((p) => {
+      if (selected.has(p.id) && p.email) emails.push(p.email);
+    });
+    return Array.from(new Set(emails));
+  }, [policies, selected]);
+
+  function toggleSelect(id: number) {
+    setSelected((prev) => toggleInSet(prev, id));
+  }
+
+  function selectAllVisible() {
+    setSelected(new Set(sorted.map((p) => p.id)));
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function sendEmail() {
+    if (selectedEmails.length === 0) {
+      alert("이메일 주소가 있는 사람을 선택해주세요.");
+      return;
+    }
+    window.location.href = buildMailtoUrl(selectedEmails);
+  }
 
   async function toggleReviewed(policy: PolicyDTO, checked: boolean) {
     setSavingId(policy.id);
@@ -161,26 +225,98 @@ export function PolicyTable({
 
   return (
     <div>
-      <div className="filter-chip-row">
-        {STATUS_ORDER.map((key) => (
+      <div className="filter-panel">
+        <div className="filter-group">
+          <div className="filter-group-label">상태</div>
+          <div className="filter-chip-row">
+            {STATUS_ORDER.map((key) => (
+              <button
+                key={key}
+                className={`filter-chip${activeStatuses.has(key) ? " active" : ""}`}
+                onClick={() => setActiveStatuses((prev) => toggleInSet(prev, key))}
+              >
+                {STATUS_LABELS[key]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="filter-group">
+          <div className="filter-group-label">연령대</div>
+          <div className="filter-chip-row">
+            {AGE_BRACKET_ORDER.map((bracket) => (
+              <button
+                key={bracket}
+                className={`filter-chip${activeAgeBrackets.has(bracket) ? " active" : ""}`}
+                onClick={() => setActiveAgeBrackets((prev) => toggleInSet(prev, bracket))}
+              >
+                {bracket}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="filter-group">
+          <div className="filter-group-label">구분</div>
+          <div className="filter-chip-row">
+            {CATEGORY_OPTIONS.map((cat) => (
+              <button
+                key={cat}
+                className={`filter-chip${activeCategories.has(cat) ? " active" : ""}`}
+                onClick={() => setActiveCategories((prev) => toggleInSet(prev, cat))}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+        {carrierOptions.length > 0 && (
+          <div className="filter-group">
+            <div className="filter-group-label">회사</div>
+            <div className="filter-chip-row">
+              {carrierOptions.map((carrier) => (
+                <button
+                  key={carrier}
+                  className={`filter-chip${activeCarriers.has(carrier) ? " active" : ""}`}
+                  onClick={() => setActiveCarriers((prev) => toggleInSet(prev, carrier))}
+                >
+                  {carrier}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {hasActiveFilter && (
           <button
-            key={key}
-            className={`filter-chip${activeStatuses.has(key) ? " active" : ""}`}
-            onClick={() => toggleStatusFilter(key)}
+            className="filter-chip filter-chip-clear"
+            onClick={() => {
+              setActiveStatuses(new Set());
+              setActiveAgeBrackets(new Set());
+              setActiveCategories(new Set());
+              setActiveCarriers(new Set());
+            }}
           >
-            {STATUS_LABELS[key]}
-          </button>
-        ))}
-        {activeStatuses.size > 0 && (
-          <button className="filter-chip filter-chip-clear" onClick={() => setActiveStatuses(new Set())}>
-            전체보기
+            필터 초기화
           </button>
         )}
       </div>
+
+      <div className="selection-bar">
+        <span className="selection-count">{selected.size}명 선택됨</span>
+        <button className="btn-mini" onClick={selectAllVisible}>
+          화면 전체 선택
+        </button>
+        <button className="btn-mini" onClick={clearSelection}>
+          선택 해제
+        </button>
+        <button className="btn-primary" disabled={selectedEmails.length === 0} onClick={sendEmail}>
+          이메일 보내기 ({selectedEmails.length})
+        </button>
+      </div>
+
       <div className="table-scroll">
         <table className="data-table">
           <thead>
             <tr>
+              <th className="sticky-col-left"></th>
               <th className="sortable" onClick={() => toggleSort("lastName")}>
                 성{sortArrow("lastName")}
               </th>
@@ -207,6 +343,13 @@ export function PolicyTable({
               const pill = pillFor(p);
               return (
                 <tr key={p.id}>
+                  <td className="sticky-col-left">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(p.id)}
+                      onChange={() => toggleSelect(p.id)}
+                    />
+                  </td>
                   <td className="link-cell" onClick={() => onOpenPerson(p.personId)}>
                     {p.lastName}
                   </td>
