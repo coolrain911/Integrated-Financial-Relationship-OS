@@ -10,7 +10,7 @@ import { PolicyModal } from "@/components/PolicyModal";
 import { ProspectModal } from "@/components/ProspectModal";
 import { ColumnModal } from "@/components/ColumnModal";
 import type { ColumnDTO, PersonDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
-import { buildMailtoUrl } from "@/lib/mailto";
+import { buildGmailComposeUrl } from "@/lib/email";
 
 type Tab = "today" | "clients" | "prospects" | "columns";
 
@@ -293,7 +293,7 @@ export default function Home() {
                         className="btn-mini"
                         disabled={reviewEmails.length === 0}
                         onClick={() => {
-                          window.location.href = buildMailtoUrl(reviewEmails);
+                          window.open(buildGmailComposeUrl(reviewEmails), "_blank");
                         }}
                       >
                         이메일 보내기 ({reviewEmails.length})
@@ -322,7 +322,7 @@ export default function Home() {
                         className="btn-mini"
                         disabled={annivEmails.length === 0}
                         onClick={() => {
-                          window.location.href = buildMailtoUrl(annivEmails);
+                          window.open(buildGmailComposeUrl(annivEmails), "_blank");
                         }}
                       >
                         이메일 보내기 ({annivEmails.length})

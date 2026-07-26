@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { AgeBracket, PolicyDTO } from "@/lib/types";
 import { compareByLastName } from "@/lib/mapping";
-import { buildMailtoUrl } from "@/lib/mailto";
+import { buildGmailComposeUrl } from "@/lib/email";
 import { CATEGORY_OPTIONS } from "@/lib/options";
 
 type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status";
@@ -182,7 +182,7 @@ export function PolicyTable({
       alert("이메일 주소가 있는 사람을 선택해주세요.");
       return;
     }
-    window.location.href = buildMailtoUrl(selectedEmails);
+    window.open(buildGmailComposeUrl(selectedEmails), "_blank");
   }
 
   async function toggleReviewed(policy: PolicyDTO, checked: boolean) {
