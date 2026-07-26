@@ -24,12 +24,15 @@
    `korean_name`에 그대로 보존되고, `last_name`/`first_name`은 한글 이름은 통째로
    `last_name`에, 영문 이름("Luke Chung" 같은 First-Last 순서)은 자연스러운 순서로
    분리해 넣습니다 — 자동 분리가 애매한 경우 나중에 직접 수정하시면 됩니다.
+4. **`supabase/migrate_add_calendar_events.sql`** — Dashboard Today 캘린더에 쓰는
+   `calendar_events` 테이블(사용자가 직접 추가하는 일정)을 만듭니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 
 1. [supabase.com](https://supabase.com)에서 새 프로젝트를 생성합니다.
 2. Supabase 대시보드의 SQL Editor에서 `supabase/schema.sql`을 실행해 테이블
-   (`people`, `policies`, `prospects`, `columns_lib`)과 `convert_prospect` 함수를 만듭니다.
+   (`people`, `policies`, `prospects`, `columns_lib`, `calendar_events`)과
+   `convert_prospect` 함수를 만듭니다.
 3. 이어서 `supabase/seed.sql`을 실행하면 초기 데이터(people 133명, policies 163건,
    prospects 227명, columns 104편)가 채워집니다. 빈 DB에 한 번만 실행하세요.
 4. `.env.local.example`을 `.env.local`로 복사하고, Supabase 대시보드의
@@ -90,6 +93,11 @@
     열리고, 내용을 쓴 뒤 실제 발송은 Gmail에서 마지막으로 직접 누릅니다. Today 탭의
     "검토 필요"/"다가오는 Anniversary" 카드에도 각각 체크박스와 "이메일 보내기" 버튼이
     있어 그날 챙길 사람들에게 바로 메일을 보낼 수 있습니다.
+12. **캘린더 (Dashboard Today)** — 작은 월간 캘린더가 있습니다. 정책 Issued Date를
+    기준으로 매년 돌아오는 기념일에 파란 점이 자동으로 찍히고, 날짜를 클릭하면 그날의
+    기념일 목록과 직접 추가한 일정이 아래에 나옵니다. 일정은 제목/메모를 입력해 추가할 수
+    있고, 각 일정에 수정·삭제 버튼이 있습니다. 자동 기념일 점은 정책 데이터에서 계산만
+    할 뿐 별도로 저장되지 않고, 직접 추가한 일정만 DB(`calendar_events`)에 저장됩니다.
 
 아직 구현되지 않은 것 (다음 순서로 예정): 엑셀처럼 프린트하는 기능, 앱에서 직접 자동으로
 이메일을 발송하는 기능(현재는 Gmail 새 창을 열어주는 방식).

@@ -70,6 +70,15 @@ create table if not exists columns_lib (
   file text
 );
 
+-- User-added calendar entries (personal reminders/appointments), shown on
+-- Dashboard Today's calendar alongside auto-generated policy anniversaries.
+create table if not exists calendar_events (
+  id bigint generated always as identity primary key,
+  event_date date not null,
+  title text not null,
+  note text
+);
+
 -- No RLS policies are defined below, so once RLS is enabled, anon/authenticated
 -- roles have zero access to these tables. The app talks to Supabase only from
 -- Next.js server routes using the service role key, which bypasses RLS
@@ -78,6 +87,7 @@ alter table people enable row level security;
 alter table policies enable row level security;
 alter table prospects enable row level security;
 alter table columns_lib enable row level security;
+alter table calendar_events enable row level security;
 
 -- Splits a "LastName FirstName [MiddleInitial]" string (the convention used
 -- throughout this app) into (last_name, first_name). Falls back to a

@@ -1,0 +1,234 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import type { CalendarEventDTO, PolicyDTO } from "@/lib/types";
+
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+function pad2(n: number): string {
+  return n < 10 ? `0${n}` : `${n}`;
+}
+
+function ymd(y: number, m: number, d: number): string {
+  return `${y}-${pad2(m)}-${pad2(d)}`;
+}
+
+export function Calendar({
+  policies,
+  events,
+  onOpenPerson,
+  onCreateEvent,
+  onUpdateEvent,
+  onDeleteEvent,
+}: {
+  policies: PolicyDTO[];
+  events: CalendarEventDTO[];
+  onOpenPerson: (personId: number) => void;
+  onCreateEvent: (body: { date: string; title: string; note: string | null }) => Promise<void>;
+  onUpdateEvent: (id: number, body: { title: string; note: string | null }) => Promise<void>;
+  onDeleteEvent: (id: number) => Promise<void>;
+}) {
+  const today = useMemo(() => new Date(), []);
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState("");
+  const [newNote, setNewNote] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editNote, setEditNote] = useState("");
+
+  const annivByMonthDay = useMemo(() => {
+    const map = new Map<string, PolicyDTO[]>();
+    policies.forEach((p) => {
+      if (!p.issueDate) return;
+      const key = p.issueDate.slice(5, 10); // "MM-DD"
+      const list = map.get(key);
+      if (list) list.push(p);
+      else map.set(key, [p]);
+    });
+    return map;
+  }, [policies]);
+
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, CalendarEventDTO[]>();
+    events.forEach((e) => {
+      const list = map.get(e.date);
+      if (list) list.push(e);
+      else map.set(e.date, [e]);
+    });
+    return map;
+  }, [events]);
+
+  function shiftMonth(delta: number) {
+    let m = viewMonth + delta;
+    let y = viewYear;
+    if (m < 1) {
+      m = 12;
+      y -= 1;
+    } else if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+    setViewYear(y);
+    setViewMonth(m);
+    setSelectedDate(null);
+    setEditingId(null);
+  }
+
+  const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+  const firstWeekday = new Date(viewYear, viewMonth - 1, 1).getDay();
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const todayStr = ymd(today.getFullYear(), today.getMonth() + 1, today.getDate());
+  const selectedAnniv = selectedDate ? annivByMonthDay.get(selectedDate.slice(5, 10)) ?? [] : [];
+  const selectedEvents = selectedDate ? eventsByDate.get(selectedDate) ?? [] : [];
+
+  async function submitNewEvent() {
+    if (!selectedDate || !newTitle.trim()) return;
+    await onCreateEvent({ date: selectedDate, title: newTitle.trim(), note: newNote.trim() || null });
+    setNewTitle("");
+    setNewNote("");
+  }
+
+  function startEdit(ev: CalendarEventDTO) {
+    setEditingId(ev.id);
+    setEditTitle(ev.title);
+    setEditNote(ev.note ?? "");
+  }
+
+  async function submitEdit() {
+    if (editingId === null || !editTitle.trim()) return;
+    await onUpdateEvent(editingId, { title: editTitle.trim(), note: editNote.trim() || null });
+    setEditingId(null);
+  }
+
+  async function removeEvent(id: number) {
+    if (!confirm("이 일정을 삭제하시겠습니까?")) return;
+    await onDeleteEvent(id);
+  }
+
+  return (
+    <div className="calendar">
+      <div className="calendar-header">
+        <button className="calendar-nav" onClick={() => shiftMonth(-1)}>
+          ‹
+        </button>
+        <div className="calendar-title">
+          {viewYear}년 {viewMonth}월
+        </div>
+        <button className="calendar-nav" onClick={() => shiftMonth(1)}>
+          ›
+        </button>
+      </div>
+      <div className="calendar-grid">
+        {WEEKDAYS.map((w) => (
+          <div key={w} className="calendar-weekday">
+            {w}
+          </div>
+        ))}
+        {cells.map((d, i) => {
+          if (d === null) {
+            return <div key={`blank-${i}`} className="calendar-cell calendar-cell-empty" />;
+          }
+          const dateStr = ymd(viewYear, viewMonth, d);
+          const monthDay = dateStr.slice(5, 10);
+          const hasAnniv = annivByMonthDay.has(monthDay);
+          const hasEvent = eventsByDate.has(dateStr);
+          const isToday = dateStr === todayStr;
+          const isSelected = dateStr === selectedDate;
+          return (
+            <div
+              key={dateStr}
+              className={`calendar-cell${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+              onClick={() => {
+                setSelectedDate(dateStr);
+                setEditingId(null);
+              }}
+            >
+              <span className="calendar-day-num">{d}</span>
+              <span className="calendar-dots">
+                {hasAnniv && <span className="calendar-dot dot-anniv" title="정책 기념일" />}
+                {hasEvent && <span className="calendar-dot dot-event" title="일정" />}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedDate && (
+        <div className="calendar-detail">
+          <div className="calendar-detail-title">{selectedDate}</div>
+
+          {selectedAnniv.length > 0 && (
+            <div className="calendar-detail-section">
+              <div className="calendar-detail-label">정책 기념일</div>
+              {selectedAnniv.map((p) => (
+                <div
+                  key={p.id}
+                  className="calendar-detail-item link-cell"
+                  onClick={() => onOpenPerson(p.personId)}
+                >
+                  {p.lastName} {p.firstName} — {p.carrier || "-"} {p.policyNumber || ""}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="calendar-detail-section">
+            <div className="calendar-detail-label">일정</div>
+            {selectedEvents.length === 0 && <div className="row-note">등록된 일정 없음</div>}
+            {selectedEvents.map((ev) =>
+              editingId === ev.id ? (
+                <div key={ev.id} className="calendar-edit-row">
+                  <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                  <input
+                    placeholder="메모 (선택)"
+                    value={editNote}
+                    onChange={(e) => setEditNote(e.target.value)}
+                  />
+                  <button className="btn-mini" onClick={submitEdit}>
+                    저장
+                  </button>
+                  <button className="btn-danger-mini" onClick={() => setEditingId(null)}>
+                    취소
+                  </button>
+                </div>
+              ) : (
+                <div key={ev.id} className="calendar-event-row">
+                  <div>
+                    <div className="calendar-event-title">{ev.title}</div>
+                    {ev.note && <div className="row-note">{ev.note}</div>}
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button className="btn-mini" onClick={() => startEdit(ev)}>
+                      수정
+                    </button>
+                    <button className="btn-danger-mini" onClick={() => removeEvent(ev.id)}>
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
+          <div className="calendar-add-row">
+            <input
+              placeholder="새 일정 제목"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+            />
+            <input placeholder="메모 (선택)" value={newNote} onChange={(e) => setNewNote(e.target.value)} />
+            <button className="btn-primary" disabled={!newTitle.trim()} onClick={submitNewEvent}>
+              추가
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

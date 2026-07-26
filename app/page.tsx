@@ -5,11 +5,12 @@ import { PolicyRow } from "@/components/PolicyRow";
 import { PolicyTable } from "@/components/PolicyTable";
 import { ProspectTable } from "@/components/ProspectTable";
 import { ColumnRow } from "@/components/ColumnRow";
+import { Calendar } from "@/components/Calendar";
 import { PersonModal } from "@/components/PersonModal";
 import { PolicyModal } from "@/components/PolicyModal";
 import { ProspectModal } from "@/components/ProspectModal";
 import { ColumnModal } from "@/components/ColumnModal";
-import type { ColumnDTO, PersonDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
+import type { CalendarEventDTO, ColumnDTO, PersonDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
 import { buildGmailComposeUrl } from "@/lib/email";
 
 type Tab = "today" | "clients" | "prospects" | "columns";
@@ -33,6 +34,7 @@ export default function Home() {
   const [policies, setPolicies] = useState<PolicyDTO[]>([]);
   const [prospects, setProspects] = useState<ProspectDTO[]>([]);
   const [columns, setColumns] = useState<ColumnDTO[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEventDTO[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [search, setSearch] = useState("");
@@ -62,14 +64,16 @@ export default function Home() {
   }, []);
 
   const loadAll = useCallback(async () => {
-    const [pol, p, col] = await Promise.all([
+    const [pol, p, col, cal] = await Promise.all([
       fetch("/api/policies").then((r) => r.json()),
       fetch("/api/prospects").then((r) => r.json()),
       fetch("/api/columns").then((r) => r.json()),
+      fetch("/api/calendar-events").then((r) => r.json()),
     ]);
     setPolicies(pol);
     setProspects(p);
     setColumns(col);
+    setCalendarEvents(cal);
     setLoaded(true);
   }, []);
 
@@ -143,6 +147,49 @@ export default function Home() {
 
   const handleColumnDeleted = useCallback((id: number) => {
     setColumns((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
+  const handleCalendarEventCreate = useCallback(
+    async (body: { date: string; title: string; note: string | null }) => {
+      const res = await fetch("/api/calendar-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        alert("일정 추가에 실패했습니다.");
+        return;
+      }
+      const created: CalendarEventDTO = await res.json();
+      setCalendarEvents((prev) => [...prev, created]);
+    },
+    []
+  );
+
+  const handleCalendarEventUpdate = useCallback(
+    async (id: number, body: { title: string; note: string | null }) => {
+      const res = await fetch(`/api/calendar-events/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        alert("일정 수정에 실패했습니다.");
+        return;
+      }
+      const updated: CalendarEventDTO = await res.json();
+      setCalendarEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    },
+    []
+  );
+
+  const handleCalendarEventDelete = useCallback(async (id: number) => {
+    const res = await fetch(`/api/calendar-events/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      alert("일정 삭제에 실패했습니다.");
+      return;
+    }
+    setCalendarEvents((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
   function switchTab(tab: Tab) {
@@ -284,6 +331,17 @@ export default function Home() {
                       <div className="l">{k.l}</div>
                     </div>
                   ))}
+                </div>
+                <div className="section calendar-section">
+                  <div className="section-title">캘린더</div>
+                  <Calendar
+                    policies={policies}
+                    events={calendarEvents}
+                    onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                    onCreateEvent={handleCalendarEventCreate}
+                    onUpdateEvent={handleCalendarEventUpdate}
+                    onDeleteEvent={handleCalendarEventDelete}
+                  />
                 </div>
                 <div className="two-col">
                   <div className="section">

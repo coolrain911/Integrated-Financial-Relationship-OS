@@ -1,6 +1,7 @@
 import type {
   AgeBracket,
   AnnuityType,
+  CalendarEventDTO,
   ColumnDTO,
   Gender,
   LifeType,
@@ -78,6 +79,13 @@ export type ColumnRow = {
   title: string;
   category: string | null;
   file: string | null;
+};
+
+export type CalendarEventRow = {
+  id: number;
+  event_date: string;
+  title: string;
+  note: string | null;
 };
 
 function toNumberOrStr(raw: string | null): number | string | null {
@@ -242,6 +250,15 @@ export function columnRowToDto(row: ColumnRow): ColumnDTO {
     title: row.title,
     category: row.category,
     file: row.file,
+  };
+}
+
+export function calendarEventRowToDto(row: CalendarEventRow): CalendarEventDTO {
+  return {
+    id: row.id,
+    date: row.event_date,
+    title: row.title,
+    note: row.note,
   };
 }
 

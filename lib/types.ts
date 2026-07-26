@@ -171,3 +171,20 @@ export type ColumnCreateBody = { title: string } & Partial<{
   category: string | null;
   file: string | null;
 }>;
+
+export type CalendarEventDTO = {
+  id: number;
+  date: string;
+  title: string;
+  note: string | null;
+};
+
+export type CalendarEventUpdateBody = Partial<{
+  date: string;
+  title: string;
+  note: string | null;
+}>;
+
+export type CalendarEventCreateBody = { date: string; title: string } & Partial<{
+  note: string | null;
+}>;
