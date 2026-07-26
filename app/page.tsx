@@ -477,6 +477,7 @@ export default function Home() {
                     onCreateEvent={handleCalendarEventCreate}
                     onUpdateEvent={handleCalendarEventUpdate}
                     onDeleteEvent={handleCalendarEventDelete}
+                    monthCount={2}
                   />
                 </div>
               </div>

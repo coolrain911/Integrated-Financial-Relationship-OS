@@ -230,7 +230,7 @@ body {
 }
 
 .calendar-page {
-  max-width: 480px;
+  max-width: 760px;
 }
 
 .calendar-page .calendar-cell {
@@ -250,14 +250,27 @@ body {
 
 .calendar-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.calendar-months {
+  display: flex;
+  flex: 1;
+  gap: 28px;
+  justify-content: center;
+}
+
+.calendar-month {
+  flex: 1;
+  min-width: 0;
 }
 
 .calendar-title {
   font-size: 13px;
   font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .calendar-nav {
@@ -270,6 +283,8 @@ body {
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .calendar-nav:hover {

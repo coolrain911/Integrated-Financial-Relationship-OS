@@ -27,6 +27,20 @@ function ymd(y: number, m: number, d: number): string {
   return `${y}-${pad2(m)}-${pad2(d)}`;
 }
 
+function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
+  let m = month + delta;
+  let y = year;
+  while (m < 1) {
+    m += 12;
+    y -= 1;
+  }
+  while (m > 12) {
+    m -= 12;
+    y += 1;
+  }
+  return { year: y, month: m };
+}
+
 export function Calendar({
   policies,
   events,
@@ -34,6 +48,7 @@ export function Calendar({
   onCreateEvent,
   onUpdateEvent,
   onDeleteEvent,
+  monthCount = 1,
 }: {
   policies: PolicyDTO[];
   events: CalendarEventDTO[];
@@ -41,6 +56,7 @@ export function Calendar({
   onCreateEvent: (body: { date: string; title: string; note: string | null }) => Promise<void>;
   onUpdateEvent: (id: number, body: { title: string; note: string | null }) => Promise<void>;
   onDeleteEvent: (id: number) => Promise<void>;
+  monthCount?: number;
 }) {
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -75,27 +91,12 @@ export function Calendar({
   }, [events]);
 
   function shiftMonth(delta: number) {
-    let m = viewMonth + delta;
-    let y = viewYear;
-    if (m < 1) {
-      m = 12;
-      y -= 1;
-    } else if (m > 12) {
-      m = 1;
-      y += 1;
-    }
-    setViewYear(y);
-    setViewMonth(m);
+    const next = addMonths(viewYear, viewMonth, delta);
+    setViewYear(next.year);
+    setViewMonth(next.month);
     setSelectedDate(null);
     setEditingId(null);
   }
-
-  const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
-  const firstWeekday = new Date(viewYear, viewMonth - 1, 1).getDay();
-
-  const cells: (number | null)[] = [];
-  for (let i = 0; i < firstWeekday; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   const todayStr = ymd(today.getFullYear(), today.getMonth() + 1, today.getDate());
   const selectedAnniv = selectedDate ? annivByMonthDay.get(selectedDate.slice(5, 10)) ?? [] : [];
@@ -125,52 +126,72 @@ export function Calendar({
     await onDeleteEvent(id);
   }
 
+  const months = useMemo(() => {
+    return Array.from({ length: monthCount }, (_, i) => addMonths(viewYear, viewMonth, i));
+  }, [viewYear, viewMonth, monthCount]);
+
+  function renderMonth(year: number, month: number) {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const firstWeekday = new Date(year, month - 1, 1).getDay();
+    const cells: (number | null)[] = [];
+    for (let i = 0; i < firstWeekday; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    return (
+      <div className="calendar-month" key={`${year}-${month}`}>
+        <div className="calendar-title">
+          {MONTH_NAMES[month - 1]} {year}
+        </div>
+        <div className="calendar-grid">
+          {WEEKDAYS.map((w) => (
+            <div key={w} className="calendar-weekday">
+              {w}
+            </div>
+          ))}
+          {cells.map((d, i) => {
+            if (d === null) {
+              return <div key={`blank-${i}`} className="calendar-cell calendar-cell-empty" />;
+            }
+            const dateStr = ymd(year, month, d);
+            const monthDay = dateStr.slice(5, 10);
+            const hasAnniv = annivByMonthDay.has(monthDay);
+            const hasEvent = eventsByDate.has(dateStr);
+            const isToday = dateStr === todayStr;
+            const isSelected = dateStr === selectedDate;
+            return (
+              <div
+                key={dateStr}
+                className={`calendar-cell${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+                onClick={() => {
+                  setSelectedDate(dateStr);
+                  setEditingId(null);
+                }}
+              >
+                <span className="calendar-day-num">{d}</span>
+                <span className="calendar-dots">
+                  {hasAnniv && <span className="calendar-dot dot-anniv" title="Policy anniversary" />}
+                  {hasEvent && <span className="calendar-dot dot-event" title="Event" />}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="calendar">
       <div className="calendar-header">
         <button className="calendar-nav" onClick={() => shiftMonth(-1)}>
           ‹
         </button>
-        <div className="calendar-title">
-          {MONTH_NAMES[viewMonth - 1]} {viewYear}
+        <div className="calendar-months">
+          {months.map(({ year, month }) => renderMonth(year, month))}
         </div>
         <button className="calendar-nav" onClick={() => shiftMonth(1)}>
           ›
         </button>
-      </div>
-      <div className="calendar-grid">
-        {WEEKDAYS.map((w) => (
-          <div key={w} className="calendar-weekday">
-            {w}
-          </div>
-        ))}
-        {cells.map((d, i) => {
-          if (d === null) {
-            return <div key={`blank-${i}`} className="calendar-cell calendar-cell-empty" />;
-          }
-          const dateStr = ymd(viewYear, viewMonth, d);
-          const monthDay = dateStr.slice(5, 10);
-          const hasAnniv = annivByMonthDay.has(monthDay);
-          const hasEvent = eventsByDate.has(dateStr);
-          const isToday = dateStr === todayStr;
-          const isSelected = dateStr === selectedDate;
-          return (
-            <div
-              key={dateStr}
-              className={`calendar-cell${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
-              onClick={() => {
-                setSelectedDate(dateStr);
-                setEditingId(null);
-              }}
-            >
-              <span className="calendar-day-num">{d}</span>
-              <span className="calendar-dots">
-                {hasAnniv && <span className="calendar-dot dot-anniv" title="Policy anniversary" />}
-                {hasEvent && <span className="calendar-dot dot-event" title="Event" />}
-              </span>
-            </div>
-          );
-        })}
       </div>
 
       {selectedDate && (
