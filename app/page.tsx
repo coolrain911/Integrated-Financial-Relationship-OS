@@ -327,8 +327,8 @@ export default function Home() {
                 <div className="greeting-eyebrow">{dateStr}</div>
                 <div className="greeting">Good morning, Chanwoo.</div>
                 <div className="greeting-sub">오늘 챙겨야 할 사람과 일이 정리되어 있습니다.</div>
-                <div className="today-layout">
-                  <div className="today-main">
+                <div className="today-top-row">
+                  <div className="today-kpi-col">
                     <div className="kpi-grid">
                       {kpisTop.map((k) => (
                         <div key={k.l} className={`kpi ${k.cls}`}>
@@ -345,68 +345,8 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-                    <div className="two-col">
-                      <div className="section">
-                        <div className="section-title-row">
-                          <div className="section-title">검토 필요</div>
-                          <button
-                            className="btn-mini"
-                            disabled={reviewEmails.length === 0}
-                            onClick={() => {
-                              window.open(buildGmailComposeUrl(reviewEmails), "_blank");
-                            }}
-                          >
-                            이메일 보내기 ({reviewEmails.length})
-                          </button>
-                        </div>
-                        {reviewItems.length ? (
-                          reviewItems.map((p) => (
-                            <PolicyRow
-                              key={p.id}
-                              policy={p}
-                              onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
-                              onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
-                              onSaved={handlePolicySaved}
-                              selected={!reviewUnselected.has(p.id)}
-                              onToggleSelect={() => toggleReviewSelect(p.id)}
-                            />
-                          ))
-                        ) : (
-                          <div className="empty">검토 필요 항목 없음</div>
-                        )}
-                      </div>
-                      <div className="section">
-                        <div className="section-title-row">
-                          <div className="section-title">다가오는 Anniversary (30일 이내)</div>
-                          <button
-                            className="btn-mini"
-                            disabled={annivEmails.length === 0}
-                            onClick={() => {
-                              window.open(buildGmailComposeUrl(annivEmails), "_blank");
-                            }}
-                          >
-                            이메일 보내기 ({annivEmails.length})
-                          </button>
-                        </div>
-                        {annivItems.length ? (
-                          annivItems.map((p) => (
-                            <PolicyRow
-                              key={p.id}
-                              policy={p}
-                              onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
-                              onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
-                              onSaved={handlePolicySaved}
-                              selected={!annivUnselected.has(p.id)}
-                              onToggleSelect={() => toggleAnnivSelect(p.id)}
-                            />
-                          ))
-                        ) : (
-                          <div className="empty">30일 이내 anniversary 없음</div>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                  <div className="section calendar-section">
+                  <div className="calendar-section">
                     <div className="section-title">Calendar</div>
                     <Calendar
                       policies={policies}
@@ -416,6 +356,66 @@ export default function Home() {
                       onUpdateEvent={handleCalendarEventUpdate}
                       onDeleteEvent={handleCalendarEventDelete}
                     />
+                  </div>
+                </div>
+                <div className="two-col">
+                  <div className="section">
+                    <div className="section-title-row">
+                      <div className="section-title">검토 필요</div>
+                      <button
+                        className="btn-mini"
+                        disabled={reviewEmails.length === 0}
+                        onClick={() => {
+                          window.open(buildGmailComposeUrl(reviewEmails), "_blank");
+                        }}
+                      >
+                        이메일 보내기 ({reviewEmails.length})
+                      </button>
+                    </div>
+                    {reviewItems.length ? (
+                      reviewItems.map((p) => (
+                        <PolicyRow
+                          key={p.id}
+                          policy={p}
+                          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
+                          onSaved={handlePolicySaved}
+                          selected={!reviewUnselected.has(p.id)}
+                          onToggleSelect={() => toggleReviewSelect(p.id)}
+                        />
+                      ))
+                    ) : (
+                      <div className="empty">검토 필요 항목 없음</div>
+                    )}
+                  </div>
+                  <div className="section">
+                    <div className="section-title-row">
+                      <div className="section-title">다가오는 Anniversary (30일 이내)</div>
+                      <button
+                        className="btn-mini"
+                        disabled={annivEmails.length === 0}
+                        onClick={() => {
+                          window.open(buildGmailComposeUrl(annivEmails), "_blank");
+                        }}
+                      >
+                        이메일 보내기 ({annivEmails.length})
+                      </button>
+                    </div>
+                    {annivItems.length ? (
+                      annivItems.map((p) => (
+                        <PolicyRow
+                          key={p.id}
+                          policy={p}
+                          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
+                          onSaved={handlePolicySaved}
+                          selected={!annivUnselected.has(p.id)}
+                          onToggleSelect={() => toggleAnnivSelect(p.id)}
+                        />
+                      ))
+                    ) : (
+                      <div className="empty">30일 이내 anniversary 없음</div>
+                    )}
                   </div>
                 </div>
               </div>
