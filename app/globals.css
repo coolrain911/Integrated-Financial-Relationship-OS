@@ -148,9 +148,9 @@ body {
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .kpi {
@@ -180,9 +180,20 @@ body {
   color: var(--accent);
 }
 
-@media (max-width: 1000px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
+.today-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.today-main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .today-layout {
+    flex-direction: column;
   }
 }
 
@@ -191,7 +202,14 @@ body {
 }
 
 .calendar-section {
-  max-width: 360px;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .calendar-section {
+    width: 100%;
+  }
 }
 
 .calendar {
