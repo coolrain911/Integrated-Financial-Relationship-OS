@@ -212,6 +212,18 @@ body {
   }
 }
 
+.calendar-page {
+  max-width: 480px;
+}
+
+.calendar-page .calendar-cell {
+  font-size: 13px;
+}
+
+.calendar-page .calendar-day-num {
+  font-size: 13px;
+}
+
 .calendar {
   background: var(--card);
   border: 1px solid var(--line);

@@ -13,12 +13,13 @@ import { ColumnModal } from "@/components/ColumnModal";
 import type { CalendarEventDTO, ColumnDTO, PersonDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
 import { buildGmailComposeUrl } from "@/lib/email";
 
-type Tab = "today" | "clients" | "prospects" | "columns";
+type Tab = "today" | "clients" | "prospects" | "calendar" | "columns";
 
 const NAV_ITEMS: { tab: Tab; label: string }[] = [
   { tab: "today", label: "Dashboard Today" },
   { tab: "clients", label: "Current Client" },
   { tab: "prospects", label: "Potential Client" },
+  { tab: "calendar", label: "Calendar" },
   { tab: "columns", label: "Columns" },
 ];
 
@@ -281,13 +282,13 @@ export default function Home() {
   );
 
   const kpisTop = [
-    { n: uniquePeople, l: "전체 고객", cls: "" },
-    { n: policies.length, l: "전체 정책", cls: "" },
-    { n: prospects.length, l: "잠재고객", cls: "accent" },
+    { n: uniquePeople, l: "Total Client", cls: "" },
+    { n: policies.length, l: "Total Policy", cls: "" },
+    { n: prospects.length, l: "Potential Client", cls: "accent" },
   ];
   const kpisBottom = [
-    { n: weekAnniv, l: "이번주 anniversary", cls: "accent" },
-    { n: reviewCount, l: "검토 필요", cls: "danger" },
+    { n: weekAnniv, l: "Weekly Anniversary", cls: "accent" },
+    { n: reviewCount, l: "Attention", cls: "danger" },
   ];
 
   return (
@@ -406,7 +407,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="section calendar-section">
-                    <div className="section-title">캘린더</div>
+                    <div className="section-title">Calendar</div>
                     <Calendar
                       policies={policies}
                       events={calendarEvents}
@@ -460,6 +461,24 @@ export default function Home() {
                 ) : (
                   <div className="empty">검색 결과 없음</div>
                 )}
+              </div>
+            )}
+
+            {activeTab === "calendar" && (
+              <div className="tab-panel active">
+                <div className="section-title-row">
+                  <div className="section-title">Calendar</div>
+                </div>
+                <div className="calendar-page">
+                  <Calendar
+                    policies={policies}
+                    events={calendarEvents}
+                    onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                    onCreateEvent={handleCalendarEventCreate}
+                    onUpdateEvent={handleCalendarEventUpdate}
+                    onDeleteEvent={handleCalendarEventDelete}
+                  />
+                </div>
               </div>
             )}
 

@@ -3,7 +3,21 @@
 import { useMemo, useState } from "react";
 import type { CalendarEventDTO, PolicyDTO } from "@/lib/types";
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : `${n}`;
@@ -107,7 +121,7 @@ export function Calendar({
   }
 
   async function removeEvent(id: number) {
-    if (!confirm("이 일정을 삭제하시겠습니까?")) return;
+    if (!confirm("Delete this event?")) return;
     await onDeleteEvent(id);
   }
 
@@ -118,7 +132,7 @@ export function Calendar({
           ‹
         </button>
         <div className="calendar-title">
-          {viewYear}년 {viewMonth}월
+          {MONTH_NAMES[viewMonth - 1]} {viewYear}
         </div>
         <button className="calendar-nav" onClick={() => shiftMonth(1)}>
           ›
@@ -151,8 +165,8 @@ export function Calendar({
             >
               <span className="calendar-day-num">{d}</span>
               <span className="calendar-dots">
-                {hasAnniv && <span className="calendar-dot dot-anniv" title="정책 기념일" />}
-                {hasEvent && <span className="calendar-dot dot-event" title="일정" />}
+                {hasAnniv && <span className="calendar-dot dot-anniv" title="Policy anniversary" />}
+                {hasEvent && <span className="calendar-dot dot-event" title="Event" />}
               </span>
             </div>
           );
@@ -165,7 +179,7 @@ export function Calendar({
 
           {selectedAnniv.length > 0 && (
             <div className="calendar-detail-section">
-              <div className="calendar-detail-label">정책 기념일</div>
+              <div className="calendar-detail-label">Policy Anniversary</div>
               {selectedAnniv.map((p) => (
                 <div
                   key={p.id}
@@ -179,22 +193,22 @@ export function Calendar({
           )}
 
           <div className="calendar-detail-section">
-            <div className="calendar-detail-label">일정</div>
-            {selectedEvents.length === 0 && <div className="row-note">등록된 일정 없음</div>}
+            <div className="calendar-detail-label">Events</div>
+            {selectedEvents.length === 0 && <div className="row-note">No events</div>}
             {selectedEvents.map((ev) =>
               editingId === ev.id ? (
                 <div key={ev.id} className="calendar-edit-row">
                   <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
                   <input
-                    placeholder="메모 (선택)"
+                    placeholder="Note (optional)"
                     value={editNote}
                     onChange={(e) => setEditNote(e.target.value)}
                   />
                   <button className="btn-mini" onClick={submitEdit}>
-                    저장
+                    Save
                   </button>
                   <button className="btn-danger-mini" onClick={() => setEditingId(null)}>
-                    취소
+                    Cancel
                   </button>
                 </div>
               ) : (
@@ -205,10 +219,10 @@ export function Calendar({
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button className="btn-mini" onClick={() => startEdit(ev)}>
-                      수정
+                      Edit
                     </button>
                     <button className="btn-danger-mini" onClick={() => removeEvent(ev.id)}>
-                      삭제
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -218,13 +232,17 @@ export function Calendar({
 
           <div className="calendar-add-row">
             <input
-              placeholder="새 일정 제목"
+              placeholder="New event title"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
-            <input placeholder="메모 (선택)" value={newNote} onChange={(e) => setNewNote(e.target.value)} />
+            <input
+              placeholder="Note (optional)"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+            />
             <button className="btn-primary" disabled={!newTitle.trim()} onClick={submitNewEvent}>
-              추가
+              Add
             </button>
           </div>
         </div>
