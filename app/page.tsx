@@ -347,7 +347,6 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="calendar-section">
-                    <div className="section-title">Calendar</div>
                     <Calendar
                       policies={policies}
                       events={calendarEvents}
@@ -382,6 +381,7 @@ export default function Home() {
                           onSaved={handlePolicySaved}
                           selected={!reviewUnselected.has(p.id)}
                           onToggleSelect={() => toggleReviewSelect(p.id)}
+                          compact
                         />
                       ))
                     ) : (
@@ -411,6 +411,7 @@ export default function Home() {
                           onSaved={handlePolicySaved}
                           selected={!annivUnselected.has(p.id)}
                           onToggleSelect={() => toggleAnnivSelect(p.id)}
+                          compact
                         />
                       ))
                     ) : (

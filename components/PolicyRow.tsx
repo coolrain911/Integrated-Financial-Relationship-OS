@@ -28,6 +28,7 @@ export function PolicyRow({
   onSaved,
   selected,
   onToggleSelect,
+  compact,
 }: {
   policy: PolicyDTO;
   onOpenPerson: (personId: number) => void;
@@ -35,6 +36,7 @@ export function PolicyRow({
   onSaved: (updated: PolicyDTO) => void;
   selected?: boolean;
   onToggleSelect?: () => void;
+  compact?: boolean;
 }) {
   const [reviewed, setReviewed] = useState(policy.reviewed);
   const [note, setNote] = useState(policy.note ?? "");
@@ -68,7 +70,7 @@ export function PolicyRow({
   const meta = [policy.carrier, policy.product, fmtMoney(policy.deathBenefit)].filter(Boolean).join(" · ");
 
   return (
-    <div className="row-card">
+    <div className={`row-card${compact ? " row-card-compact" : ""}`}>
       <div className="row-card-top">
         {onToggleSelect && (
           <input
@@ -78,42 +80,62 @@ export function PolicyRow({
             title="이메일 보낼 대상으로 선택"
           />
         )}
-        <div>
+        <div className="row-card-main">
           <div className="row-name link-cell" onClick={() => onOpenPerson(policy.personId)}>
             {policy.lastName} {policy.firstName}
           </div>
           <div className="row-meta link-cell" onClick={() => onOpenPolicy(policy.id)}>
             {meta}
           </div>
-          {policy.reviewReason && (
+          {!compact && policy.reviewReason && (
             <div className="row-note" style={{ color: "var(--danger)" }}>
               {policy.reviewReason}
             </div>
           )}
         </div>
-        {pill && <span className={`pill ${pill.cls}`}>{pill.label}</span>}
+        {compact ? (
+          <div className="row-card-side">
+            {pill && <span className={`pill ${pill.cls}`}>{pill.label}</span>}
+            <label className="row-check row-check-compact">
+              <input
+                type="checkbox"
+                checked={reviewed}
+                disabled={saving}
+                onChange={(e) => {
+                  setReviewed(e.target.checked);
+                  patch({ reviewed: e.target.checked });
+                }}
+              />
+              검토 완료
+            </label>
+          </div>
+        ) : (
+          pill && <span className={`pill ${pill.cls}`}>{pill.label}</span>
+        )}
       </div>
-      <div className="row-actions">
-        <label className="row-check">
+      {!compact && (
+        <div className="row-actions">
+          <label className="row-check">
+            <input
+              type="checkbox"
+              checked={reviewed}
+              disabled={saving}
+              onChange={(e) => {
+                setReviewed(e.target.checked);
+                patch({ reviewed: e.target.checked });
+              }}
+            />
+            검토 완료
+          </label>
           <input
-            type="checkbox"
-            checked={reviewed}
-            disabled={saving}
-            onChange={(e) => {
-              setReviewed(e.target.checked);
-              patch({ reviewed: e.target.checked });
-            }}
+            className="row-note-input"
+            placeholder="메모 추가..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onBlur={() => patch({ note })}
           />
-          검토 완료
-        </label>
-        <input
-          className="row-note-input"
-          placeholder="메모 추가..."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onBlur={() => patch({ note })}
-        />
-      </div>
+        </div>
+      )}
     </div>
   );
 }
