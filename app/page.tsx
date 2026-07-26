@@ -15,7 +15,7 @@ import { buildGmailComposeUrl } from "@/lib/email";
 type Tab = "today" | "clients" | "prospects" | "columns";
 
 const NAV_ITEMS: { tab: Tab; label: string }[] = [
-  { tab: "today", label: "Today" },
+  { tab: "today", label: "Dashboard Today" },
   { tab: "clients", label: "Current Client" },
   { tab: "prospects", label: "Potential Client" },
   { tab: "columns", label: "Columns" },
