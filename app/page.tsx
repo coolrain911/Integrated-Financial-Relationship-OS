@@ -310,7 +310,20 @@ export default function Home() {
 
       <div className="main">
         <div className="searchbar">
-          <span>Search</span>
+          <svg
+            className="search-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
           <input
             placeholder="고객, 잠재고객, 칼럼 이름으로 검색..."
             value={search}
@@ -325,7 +338,9 @@ export default function Home() {
             {activeTab === "today" && (
               <div className="tab-panel active">
                 <div className="greeting-eyebrow">{dateStr}</div>
-                <div className="greeting">Good morning, Chanwoo.</div>
+                <div className="greeting">
+                  <span aria-hidden="true">☀️</span> Good Morning, Chanwoo
+                </div>
                 <div className="greeting-sub">오늘 챙겨야 할 사람과 일이 정리되어 있습니다.</div>
                 <div className="today-top-row">
                   <div className="today-kpi-col">
