@@ -54,6 +54,8 @@ export async function PATCH(
     title: "title",
     category: "category",
     file: "file",
+    content: "content",
+    link: "link",
   };
 
   const updates: Record<string, unknown> = {};

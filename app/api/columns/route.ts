@@ -35,6 +35,8 @@ export async function POST(request: NextRequest) {
       title: body.title,
       category: body.category ?? null,
       file: body.file ?? null,
+      content: body.content ?? null,
+      link: body.link ?? null,
     })
     .select("*")
     .single();

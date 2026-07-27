@@ -79,6 +79,8 @@ export type ColumnRow = {
   title: string;
   category: string | null;
   file: string | null;
+  content: string | null;
+  link: string | null;
 };
 
 export type CalendarEventRow = {
@@ -250,6 +252,8 @@ export function columnRowToDto(row: ColumnRow): ColumnDTO {
     title: row.title,
     category: row.category,
     file: row.file,
+    content: row.content,
+    link: row.link,
   };
 }
 

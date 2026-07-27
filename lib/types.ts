@@ -157,6 +157,8 @@ export type ColumnDTO = {
   title: string;
   category: string | null;
   file: string | null;
+  content: string | null;
+  link: string | null;
 };
 
 export type ColumnUpdateBody = Partial<{
@@ -164,12 +166,16 @@ export type ColumnUpdateBody = Partial<{
   title: string;
   category: string | null;
   file: string | null;
+  content: string | null;
+  link: string | null;
 }>;
 
 export type ColumnCreateBody = { title: string } & Partial<{
   num: number | null;
   category: string | null;
   file: string | null;
+  content: string | null;
+  link: string | null;
 }>;
 
 export type CalendarEventDTO = {

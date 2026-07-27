@@ -67,7 +67,9 @@ create table if not exists columns_lib (
   num numeric,
   title text not null,
   category text,
-  file text
+  file text,
+  content text,
+  link text
 );
 
 -- User-added calendar entries (personal reminders/appointments), shown on

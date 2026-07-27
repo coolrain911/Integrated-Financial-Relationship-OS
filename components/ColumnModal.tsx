@@ -26,6 +26,8 @@ export function ColumnModal({
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [file, setFile] = useState("");
+  const [content, setContent] = useState("");
+  const [link, setLink] = useState("");
 
   useEffect(() => {
     if (isNew) return;
@@ -36,6 +38,8 @@ export function ColumnModal({
       setTitle(data.title ?? "");
       setCategory(data.category ?? "");
       setFile(data.file ?? "");
+      setContent(data.content ?? "");
+      setLink(data.link ?? "");
       setLoading(false);
     })();
   }, [columnId, isNew]);
@@ -52,6 +56,8 @@ export function ColumnModal({
         title,
         category: category || null,
         file: file || null,
+        content: content || null,
+        link: link || null,
       };
       const res = await fetch(isNew ? "/api/columns" : `/api/columns/${columnId}`, {
         method: isNew ? "POST" : "PATCH",
@@ -110,6 +116,30 @@ export function ColumnModal({
             <label className="form-field">
               <span>파일명</span>
               <input value={file} onChange={(e) => setFile(e.target.value)} />
+            </label>
+            <label className="form-field form-field-wide">
+              <span>
+                링크 (선택){" "}
+                {link && (
+                  <a href={link} target="_blank" rel="noreferrer" className="link-cell">
+                    새 탭에서 열기 ↗
+                  </a>
+                )}
+              </span>
+              <input
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                placeholder="https://..."
+              />
+            </label>
+            <label className="form-field form-field-wide">
+              <span>본문</span>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={12}
+                placeholder="칼럼 본문 내용을 붙여넣어 주세요."
+              />
             </label>
           </div>
 
