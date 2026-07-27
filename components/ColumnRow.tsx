@@ -28,8 +28,6 @@ export function ColumnRow({
     }
   }
 
-  const snippet = (column.content || "").trim().slice(0, 80);
-
   return (
     <div className="row-card">
       <div className="row-card-top">
@@ -38,12 +36,6 @@ export function ColumnRow({
             {column.num !== null ? `${column.num}. ` : ""}
             {column.title}
           </div>
-          {snippet && (
-            <div className="row-note">
-              {snippet}
-              {(column.content || "").trim().length > 80 ? "…" : ""}
-            </div>
-          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span className="pill success">{(column.category || "").split(",")[0]}</span>
