@@ -38,6 +38,7 @@ export default function Home() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEventDTO[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("today");
+  const [navOpen, setNavOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [dateStr, setDateStr] = useState("");
 
@@ -196,6 +197,7 @@ export default function Home() {
   function switchTab(tab: Tab) {
     setActiveTab(tab);
     setSearch("");
+    setNavOpen(false);
   }
 
   const filteredPolicies = useMemo(() => {
@@ -306,6 +308,46 @@ export default function Home() {
             {item.label}
           </div>
         ))}
+      </div>
+
+      <div className="topbar">
+        <button
+          type="button"
+          className="topbar-bar"
+          onClick={() => setNavOpen((v) => !v)}
+          aria-expanded={navOpen}
+        >
+          <span className="topbar-current">
+            {NAV_ITEMS.find((i) => i.tab === activeTab)?.label}
+          </span>
+          <svg
+            className={`topbar-chevron${navOpen ? " open" : ""}`}
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        {navOpen && (
+          <div className="topbar-dropdown">
+            {NAV_ITEMS.map((item) => (
+              <div
+                key={item.tab}
+                className={`nav-item${activeTab === item.tab ? " active" : ""}`}
+                onClick={() => switchTab(item.tab)}
+              >
+                <span className="nav-dot" />
+                {item.label}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="main">

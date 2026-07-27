@@ -100,6 +100,106 @@ body {
   flex: 1;
   padding: 32px 40px;
   max-width: 1180px;
+  min-width: 0;
+}
+
+.topbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .topbar {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .topbar-bar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    font: inherit;
+    color: var(--text-1);
+    cursor: pointer;
+  }
+
+  .topbar-current {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .topbar-chevron {
+    flex-shrink: 0;
+    color: var(--text-2);
+    transition: transform 0.15s ease;
+  }
+
+  .topbar-chevron.open {
+    transform: rotate(180deg);
+  }
+
+  .topbar-dropdown {
+    border-top: 1px solid var(--line);
+    padding: 8px;
+    background: var(--card);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  .topbar-dropdown .nav-item {
+    padding: 11px 12px;
+    font-size: 15px;
+  }
+
+  .main {
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  .searchbar {
+    margin-bottom: 16px;
+  }
+
+  .greeting {
+    font-size: 22px;
+  }
+
+  .greeting-sub {
+    margin-bottom: 18px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .kpi {
+    padding: 8px 10px;
+  }
+
+  .kpi .n {
+    font-size: 19px;
+  }
+
+  .section {
+    margin-bottom: 20px;
+  }
 }
 
 .searchbar {
