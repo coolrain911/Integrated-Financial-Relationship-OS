@@ -4,6 +4,9 @@ import type {
   CalendarEventDTO,
   ColumnDTO,
   Gender,
+  KnowledgeItemDTO,
+  LicenseCertCategory,
+  LicenseCertDTO,
   LifeType,
   OptionType,
   PersonDTO,
@@ -81,6 +84,27 @@ export type ColumnRow = {
   file: string | null;
   content: string | null;
   link: string | null;
+};
+
+export type KnowledgeItemRow = {
+  id: number;
+  title: string;
+  category: string | null;
+  item_date: string | null;
+  content: string | null;
+  link: string | null;
+};
+
+export type LicenseCertRow = {
+  id: number;
+  title: string;
+  category: string;
+  issuer: string | null;
+  issue_date: string | null;
+  expiry_date: string | null;
+  reference_no: string | null;
+  link: string | null;
+  note: string | null;
 };
 
 export type CalendarEventRow = {
@@ -254,6 +278,31 @@ export function columnRowToDto(row: ColumnRow): ColumnDTO {
     file: row.file,
     content: row.content,
     link: row.link,
+  };
+}
+
+export function knowledgeItemRowToDto(row: KnowledgeItemRow): KnowledgeItemDTO {
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    itemDate: row.item_date,
+    content: row.content,
+    link: row.link,
+  };
+}
+
+export function licenseCertRowToDto(row: LicenseCertRow): LicenseCertDTO {
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category as LicenseCertCategory,
+    issuer: row.issuer,
+    issueDate: row.issue_date,
+    expiryDate: row.expiry_date,
+    referenceNo: row.reference_no,
+    link: row.link,
+    note: row.note,
   };
 }
 

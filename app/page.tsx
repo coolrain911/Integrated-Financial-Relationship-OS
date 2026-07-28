@@ -10,10 +10,29 @@ import { PersonModal } from "@/components/PersonModal";
 import { PolicyModal } from "@/components/PolicyModal";
 import { ProspectModal } from "@/components/ProspectModal";
 import { ColumnModal } from "@/components/ColumnModal";
-import type { CalendarEventDTO, ColumnDTO, PersonDTO, PolicyDTO, ProspectDTO } from "@/lib/types";
+import { KnowledgeItemTable } from "@/components/KnowledgeItemTable";
+import { KnowledgeItemModal } from "@/components/KnowledgeItemModal";
+import { LicenseCertTable } from "@/components/LicenseCertTable";
+import { LicenseCertModal } from "@/components/LicenseCertModal";
+import type {
+  CalendarEventDTO,
+  ColumnDTO,
+  KnowledgeItemDTO,
+  LicenseCertDTO,
+  PersonDTO,
+  PolicyDTO,
+  ProspectDTO,
+} from "@/lib/types";
 import { buildGmailComposeUrl } from "@/lib/email";
 
-type Tab = "today" | "clients" | "prospects" | "calendar" | "columns";
+type Tab =
+  | "today"
+  | "clients"
+  | "prospects"
+  | "calendar"
+  | "columns"
+  | "knowledge"
+  | "licenses";
 
 const NAV_ITEMS: { tab: Tab; label: string }[] = [
   { tab: "today", label: "Dashboard Today" },
@@ -21,6 +40,8 @@ const NAV_ITEMS: { tab: Tab; label: string }[] = [
   { tab: "prospects", label: "Potential Client" },
   { tab: "calendar", label: "Calendar" },
   { tab: "columns", label: "Columns" },
+  { tab: "knowledge", label: "Knowledge Vault" },
+  { tab: "licenses", label: "License & Certificate" },
 ];
 
 type PersonModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
@@ -30,11 +51,15 @@ type PolicyModalState =
   | { mode: "create"; personId: number };
 type ProspectModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
 type ColumnModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
+type KnowledgeItemModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
+type LicenseCertModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
 
 export default function Home() {
   const [policies, setPolicies] = useState<PolicyDTO[]>([]);
   const [prospects, setProspects] = useState<ProspectDTO[]>([]);
   const [columns, setColumns] = useState<ColumnDTO[]>([]);
+  const [knowledgeItems, setKnowledgeItems] = useState<KnowledgeItemDTO[]>([]);
+  const [licenses, setLicenses] = useState<LicenseCertDTO[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEventDTO[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("today");
@@ -49,6 +74,12 @@ export default function Home() {
   const [policyModal, setPolicyModal] = useState<PolicyModalState>({ mode: "closed" });
   const [prospectModal, setProspectModal] = useState<ProspectModalState>({ mode: "closed" });
   const [columnModal, setColumnModal] = useState<ColumnModalState>({ mode: "closed" });
+  const [knowledgeItemModal, setKnowledgeItemModal] = useState<KnowledgeItemModalState>({
+    mode: "closed",
+  });
+  const [licenseCertModal, setLicenseCertModal] = useState<LicenseCertModalState>({
+    mode: "closed",
+  });
 
   useEffect(() => {
     // Deliberately deferred to an effect: the page is statically prerendered,
@@ -66,15 +97,19 @@ export default function Home() {
   }, []);
 
   const loadAll = useCallback(async () => {
-    const [pol, p, col, cal] = await Promise.all([
+    const [pol, p, col, know, lic, cal] = await Promise.all([
       fetch("/api/policies").then((r) => r.json()),
       fetch("/api/prospects").then((r) => r.json()),
       fetch("/api/columns").then((r) => r.json()),
+      fetch("/api/knowledge-items").then((r) => r.json()),
+      fetch("/api/licenses").then((r) => r.json()),
       fetch("/api/calendar-events").then((r) => r.json()),
     ]);
     setPolicies(pol);
     setProspects(p);
     setColumns(col);
+    setKnowledgeItems(know);
+    setLicenses(lic);
     setCalendarEvents(cal);
     setLoaded(true);
   }, []);
@@ -151,6 +186,30 @@ export default function Home() {
     setColumns((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
+  const handleKnowledgeItemSaved = useCallback((updated: KnowledgeItemDTO) => {
+    setKnowledgeItems((prev) => prev.map((k) => (k.id === updated.id ? updated : k)));
+  }, []);
+
+  const handleKnowledgeItemCreated = useCallback((created: KnowledgeItemDTO) => {
+    setKnowledgeItems((prev) => [...prev, created]);
+  }, []);
+
+  const handleKnowledgeItemDeleted = useCallback((id: number) => {
+    setKnowledgeItems((prev) => prev.filter((k) => k.id !== id));
+  }, []);
+
+  const handleLicenseCertSaved = useCallback((updated: LicenseCertDTO) => {
+    setLicenses((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+  }, []);
+
+  const handleLicenseCertCreated = useCallback((created: LicenseCertDTO) => {
+    setLicenses((prev) => [...prev, created]);
+  }, []);
+
+  const handleLicenseCertDeleted = useCallback((id: number) => {
+    setLicenses((prev) => prev.filter((l) => l.id !== id));
+  }, []);
+
   const handleCalendarEventCreate = useCallback(
     async (body: { date: string; title: string; note: string | null }) => {
       const res = await fetch("/api/calendar-events", {
@@ -220,6 +279,27 @@ export default function Home() {
     const f = search.toLowerCase();
     return columns.filter((c) => !f || (c.title || "").toLowerCase().includes(f));
   }, [columns, search]);
+
+  const filteredKnowledgeItems = useMemo(() => {
+    const f = search.toLowerCase();
+    return knowledgeItems.filter(
+      (k) =>
+        !f ||
+        k.title.toLowerCase().includes(f) ||
+        (k.category || "").toLowerCase().includes(f)
+    );
+  }, [knowledgeItems, search]);
+
+  const filteredLicenses = useMemo(() => {
+    const f = search.toLowerCase();
+    return licenses.filter(
+      (l) =>
+        !f ||
+        l.title.toLowerCase().includes(f) ||
+        l.category.toLowerCase().includes(f) ||
+        (l.issuer || "").toLowerCase().includes(f)
+    );
+  }, [licenses, search]);
 
   const uniquePeople = useMemo(() => new Set(policies.map((p) => p.personId)).size, [policies]);
   const reviewCount = useMemo(
@@ -367,7 +447,7 @@ export default function Home() {
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <input
-            placeholder="고객, 잠재고객, 칼럼 이름으로 검색..."
+            placeholder="고객, 잠재고객, 칼럼, 지식 창고, 자격증 이름으로 검색..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -565,6 +645,52 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            {activeTab === "knowledge" && (
+              <div className="tab-panel active">
+                <div className="section-title-row">
+                  <div className="section-title">Knowledge Vault · {filteredKnowledgeItems.length}건</div>
+                  <button
+                    className="btn-mini"
+                    onClick={() => setKnowledgeItemModal({ mode: "create" })}
+                  >
+                    + 새 항목
+                  </button>
+                </div>
+                {filteredKnowledgeItems.length ? (
+                  <KnowledgeItemTable
+                    items={filteredKnowledgeItems}
+                    onOpen={(id) => setKnowledgeItemModal({ mode: "edit", id })}
+                    onDeleted={handleKnowledgeItemDeleted}
+                  />
+                ) : (
+                  <div className="empty">검색 결과 없음</div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "licenses" && (
+              <div className="tab-panel active">
+                <div className="section-title-row">
+                  <div className="section-title">License & Certificate · {filteredLicenses.length}건</div>
+                  <button
+                    className="btn-mini"
+                    onClick={() => setLicenseCertModal({ mode: "create" })}
+                  >
+                    + 새 항목
+                  </button>
+                </div>
+                {filteredLicenses.length ? (
+                  <LicenseCertTable
+                    items={filteredLicenses}
+                    onOpen={(id) => setLicenseCertModal({ mode: "edit", id })}
+                    onDeleted={handleLicenseCertDeleted}
+                  />
+                ) : (
+                  <div className="empty">검색 결과 없음</div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -613,6 +739,24 @@ export default function Home() {
           onSaved={handleColumnSaved}
           onCreated={handleColumnCreated}
           onDeleted={handleColumnDeleted}
+        />
+      )}
+      {knowledgeItemModal.mode !== "closed" && (
+        <KnowledgeItemModal
+          itemId={knowledgeItemModal.mode === "edit" ? knowledgeItemModal.id : null}
+          onClose={() => setKnowledgeItemModal({ mode: "closed" })}
+          onSaved={handleKnowledgeItemSaved}
+          onCreated={handleKnowledgeItemCreated}
+          onDeleted={handleKnowledgeItemDeleted}
+        />
+      )}
+      {licenseCertModal.mode !== "closed" && (
+        <LicenseCertModal
+          itemId={licenseCertModal.mode === "edit" ? licenseCertModal.id : null}
+          onClose={() => setLicenseCertModal({ mode: "closed" })}
+          onSaved={handleLicenseCertSaved}
+          onCreated={handleLicenseCertCreated}
+          onDeleted={handleLicenseCertDeleted}
         />
       )}
     </div>

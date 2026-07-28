@@ -25,3 +25,7 @@ export const LIFE_TYPE_OPTIONS = ["Term", "UL", "IUL"] as const;
 export const OPTION_TYPE_OPTIONS = ["A", "B", "B->A"] as const;
 export const PREMIUM_METHOD_OPTIONS = ["월납", "분기납", "반기납", "연납", "일시납"] as const;
 export const ANNUITY_TYPE_OPTIONS = ["IRA", "Roth IRA", "Non-Qualified"] as const;
+
+export const KNOWLEDGE_CATEGORY_PRESETS = ["부동산", "해외자산", "세금", "FAFSA", "기타"];
+
+export const LICENSE_CERT_CATEGORY_OPTIONS = ["License", "Register", "CE", "E&O"] as const;

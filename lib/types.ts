@@ -178,6 +178,64 @@ export type ColumnCreateBody = { title: string } & Partial<{
   link: string | null;
 }>;
 
+export type KnowledgeItemDTO = {
+  id: number;
+  title: string;
+  category: string | null;
+  itemDate: string | null;
+  content: string | null;
+  link: string | null;
+};
+
+export type KnowledgeItemUpdateBody = Partial<{
+  title: string;
+  category: string | null;
+  itemDate: string | null;
+  content: string | null;
+  link: string | null;
+}>;
+
+export type KnowledgeItemCreateBody = { title: string } & Partial<{
+  category: string | null;
+  itemDate: string | null;
+  content: string | null;
+  link: string | null;
+}>;
+
+export type LicenseCertCategory = "License" | "Register" | "CE" | "E&O";
+
+export type LicenseCertDTO = {
+  id: number;
+  title: string;
+  category: LicenseCertCategory;
+  issuer: string | null;
+  issueDate: string | null;
+  expiryDate: string | null;
+  referenceNo: string | null;
+  link: string | null;
+  note: string | null;
+};
+
+export type LicenseCertUpdateBody = Partial<{
+  title: string;
+  category: LicenseCertCategory;
+  issuer: string | null;
+  issueDate: string | null;
+  expiryDate: string | null;
+  referenceNo: string | null;
+  link: string | null;
+  note: string | null;
+}>;
+
+export type LicenseCertCreateBody = { title: string; category: LicenseCertCategory } & Partial<{
+  issuer: string | null;
+  issueDate: string | null;
+  expiryDate: string | null;
+  referenceNo: string | null;
+  link: string | null;
+  note: string | null;
+}>;
+
 export type CalendarEventDTO = {
   id: number;
   date: string;

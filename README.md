@@ -32,13 +32,16 @@
    뒤에 한 번 실행하세요. 업로드해주신 칼럼 원문 파일(.docx/.pdf) 104개를
    기존 `file` 컬럼 값으로 매칭해 `content`에 채워 넣는 일회성 스크립트입니다.
    이미 `content`가 채워진 행은 건드리지 않으므로 다시 실행해도 안전합니다.
+7. **`supabase/migrate_add_knowledge_and_licenses.sql`** — Columns와 같은 레벨의
+   새 탭 두 개, `knowledge_items`(Knowledge Vault/지식 창고)와
+   `licenses_certificates`(License & Certificate) 테이블을 만듭니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 
 1. [supabase.com](https://supabase.com)에서 새 프로젝트를 생성합니다.
 2. Supabase 대시보드의 SQL Editor에서 `supabase/schema.sql`을 실행해 테이블
-   (`people`, `policies`, `prospects`, `columns_lib`, `calendar_events`)과
-   `convert_prospect` 함수를 만듭니다.
+   (`people`, `policies`, `prospects`, `columns_lib`, `calendar_events`,
+   `knowledge_items`, `licenses_certificates`)과 `convert_prospect` 함수를 만듭니다.
 3. 이어서 `supabase/seed.sql`을 실행하면 초기 데이터(people 133명, policies 163건,
    prospects 227명, columns 104편)가 채워집니다. 빈 DB에 한 번만 실행하세요.
 4. `.env.local.example`을 `.env.local`로 복사하고, Supabase 대시보드의
@@ -114,6 +117,13 @@
     스크립트로 한 번에 채워 넣을 수 있습니다 (자세한 내용은 위 6번 참고). 사진으로만
     남아있던 14번 칼럼("잘 모르면 낭패보는 은퇴연금 규정들")은 스캔 이미지를
     직접 읽어 옮겨 적었습니다.
+14. **Knowledge Vault (지식 창고)** — Columns와 같은 레벨의 새 탭. 부동산/해외자산/
+    세금/FAFSA 등 자주 답변하는 질문에 대한 답변이나 관련 정보를 제목/분류/날짜와 함께
+    저장해두고, 표 헤더(제목/분류/날짜)를 클릭해 정렬·검색할 수 있습니다.
+15. **License & Certificate** — 라이선스·Register 증거·CE·E&O 문서를 분류
+    (License/Register/CE/E&O)·발급기관·발급일·만료일·번호와 함께 한 곳에 보관합니다.
+    만료일이 지났거나 60일 이내로 다가오면 표에서 색으로 강조되고, 표 헤더(제목/분류/
+    만료일)를 클릭해 정렬할 수 있습니다.
 
 아직 구현되지 않은 것 (다음 순서로 예정): 엑셀처럼 프린트하는 기능, 앱에서 직접 자동으로
 이메일을 발송하는 기능(현재는 Gmail 새 창을 열어주는 방식).

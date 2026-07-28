@@ -81,6 +81,32 @@ create table if not exists calendar_events (
   note text
 );
 
+-- 지식 창고 (Knowledge Vault) — reusable answers to recurring client
+-- questions (real estate, overseas assets, tax, FAFSA...) and related
+-- reference material, sortable by title/category/date.
+create table if not exists knowledge_items (
+  id bigint generated always as identity primary key,
+  title text not null,
+  category text,
+  item_date date,
+  content text,
+  link text
+);
+
+-- License & Certificate — the advisor's own license/registration/CE/E&O
+-- records kept in one searchable place.
+create table if not exists licenses_certificates (
+  id bigint generated always as identity primary key,
+  title text not null,
+  category text not null check (category in ('License', 'Register', 'CE', 'E&O')),
+  issuer text,
+  issue_date date,
+  expiry_date date,
+  reference_no text,
+  link text,
+  note text
+);
+
 -- No RLS policies are defined below, so once RLS is enabled, anon/authenticated
 -- roles have zero access to these tables. The app talks to Supabase only from
 -- Next.js server routes using the service role key, which bypasses RLS
@@ -90,6 +116,8 @@ alter table policies enable row level security;
 alter table prospects enable row level security;
 alter table columns_lib enable row level security;
 alter table calendar_events enable row level security;
+alter table knowledge_items enable row level security;
+alter table licenses_certificates enable row level security;
 
 -- Splits a "LastName FirstName [MiddleInitial]" string (the convention used
 -- throughout this app) into (last_name, first_name). Falls back to a
