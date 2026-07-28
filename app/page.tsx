@@ -54,6 +54,20 @@ type ColumnModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mo
 type KnowledgeItemModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
 type LicenseCertModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
 
+// Checked first: browser-provided "neural"/"online (natural)" voices (mainly
+// Edge's built-in Microsoft voices) sound noticeably more human than the
+// classic system voices below, and are still free — no API key involved.
+const PREMIUM_YOUNG_FEMALE_VOICE_NAME_HINTS = [
+  "aria", // Microsoft AriaNeural — young, bright American English
+  "jenny", // Microsoft JennyNeural — warm American English
+  "michelle", // Microsoft MichelleNeural
+  "sunhi", // Microsoft SunHiNeural — Korean
+  "jimin", // Microsoft JiMinNeural — Korean, younger-sounding
+  "natural",
+  "neural",
+  "online (natural)",
+];
+
 const FEMALE_VOICE_NAME_HINTS = [
   "female",
   "여성",
@@ -74,7 +88,6 @@ const FEMALE_VOICE_NAME_HINTS = [
   "google uk english female",
   "yuna",
   "heami",
-  "sunhi",
   "google 한국의",
 ];
 
@@ -121,6 +134,10 @@ function pickCheerfulFemaleVoice(
 ): SpeechSynthesisVoice | undefined {
   const inLang = voices.filter((v) => v.lang.toLowerCase().startsWith(langPrefix));
   const candidates = inLang.length ? inLang : voices;
+  const byPremiumName = candidates.find((v) =>
+    PREMIUM_YOUNG_FEMALE_VOICE_NAME_HINTS.some((hint) => v.name.toLowerCase().includes(hint))
+  );
+  if (byPremiumName) return byPremiumName;
   const byFemaleName = candidates.find((v) =>
     FEMALE_VOICE_NAME_HINTS.some((hint) => v.name.toLowerCase().includes(hint))
   );
@@ -165,19 +182,21 @@ export default function Home() {
     window.speechSynthesis.cancel();
     const voices = await loadVoices();
 
-    // Bright, upbeat delivery for a morning greeting: a female voice where
-    // available, a touch higher pitch, and a slightly brisk pace.
+    // A warm, conversational delivery rather than a robotic-cheerful one:
+    // a young female voice where available (preferring a browser-native
+    // "neural"/"natural" voice, which sounds far more human than the classic
+    // system voices), a near-normal pace, and only a slight pitch lift.
     const en = new SpeechSynthesisUtterance("Good morning, Chanwoo!");
     en.lang = "en-US";
-    en.pitch = 1.3;
-    en.rate = 1.05;
+    en.pitch = 1.08;
+    en.rate = 0.98;
     const enVoice = pickCheerfulFemaleVoice(voices, "en");
     if (enVoice) en.voice = enVoice;
 
     const ko = new SpeechSynthesisUtterance("오늘 챙겨야 할 사람과 일이 정리되어 있습니다.");
     ko.lang = "ko-KR";
-    ko.pitch = 1.3;
-    ko.rate = 1.05;
+    ko.pitch = 1.08;
+    ko.rate = 0.98;
     const koVoice = pickCheerfulFemaleVoice(voices, "ko");
     if (koVoice) ko.voice = koVoice;
 
