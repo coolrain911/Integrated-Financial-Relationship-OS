@@ -220,13 +220,27 @@ export default function Home() {
       })
     );
 
-    // Speak the morning greeting once per page load. Some browsers hold off
-    // playing audio (including speech synthesis) until the user has
-    // interacted with the page at least once — if that blocks it, the 🔊
-    // button next to the greeting lets them trigger it manually instead.
+    // Chrome silently drops speechSynthesis.speak() calls made before the
+    // page has seen any user gesture, and whether that blocks a given load
+    // is inconsistent — so rather than call it directly here, wait for the
+    // user's very first click/tap/keypress anywhere on the page (which
+    // counts as a gesture) and speak then. In practice this fires the
+    // instant they start using the app. The 🔊 button next to the greeting
+    // still works any time afterward for a replay.
     if (!spokenGreetingRef.current) {
       spokenGreetingRef.current = true;
-      speakGreeting();
+      const speakOnFirstInteraction = () => {
+        speakGreeting();
+      };
+      const interactionEvents: (keyof DocumentEventMap)[] = ["pointerdown", "keydown"];
+      interactionEvents.forEach((ev) =>
+        document.addEventListener(ev, speakOnFirstInteraction, { once: true })
+      );
+      return () => {
+        interactionEvents.forEach((ev) =>
+          document.removeEventListener(ev, speakOnFirstInteraction)
+        );
+      };
     }
   }, []);
 
