@@ -525,7 +525,7 @@ export default function Home() {
     <div className="app">
       <div className="sidebar">
         <div className="logo">
-          Financial Relationship <span className="logo-os">OS</span>
+          Chan&apos;s Financial Relationship <span className="logo-os">OS</span>
         </div>
         {NAV_ITEMS.map((item) => (
           <div

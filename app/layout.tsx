@@ -16,8 +16,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Financial Relationship OS",
-  description: "Financial Relationship OS",
+  title: "Chan's Financial Relationship OS",
+  description: "Chan's Financial Relationship OS",
 };
 
 export default function RootLayout({

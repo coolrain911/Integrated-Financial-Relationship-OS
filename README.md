@@ -1,4 +1,4 @@
-# Financial Relationship OS
+# Chan's Financial Relationship OS
 
 `financial_os_app.html`의 디자인/레이아웃/탭 구성을 그대로 유지하면서, 데이터가 실제로 영속되는
 앱으로 만든 버전입니다. **Next.js (App Router) + Supabase** 스택으로, SDWGA-APP과 동일한
