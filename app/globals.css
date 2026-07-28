@@ -79,8 +79,8 @@ body {
   padding: 9px 12px;
   border-radius: 9px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--text-2);
+  font-weight: 600;
+  color: var(--text-1);
   cursor: pointer;
   margin-bottom: 2px;
 }
