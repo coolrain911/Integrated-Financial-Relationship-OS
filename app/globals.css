@@ -59,11 +59,17 @@ body {
   line-height: 1.15;
   padding: 0 10px;
   margin-bottom: 28px;
+  text-align: center;
   background: linear-gradient(135deg, var(--accent), var(--caution));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+}
+
+.logo-os {
+  color: var(--warn);
+  -webkit-text-fill-color: var(--warn);
 }
 
 .nav-item {

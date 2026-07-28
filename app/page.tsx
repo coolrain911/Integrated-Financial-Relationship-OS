@@ -491,7 +491,9 @@ export default function Home() {
   return (
     <div className="app">
       <div className="sidebar">
-        <div className="logo">Financial Relationship OS</div>
+        <div className="logo">
+          Financial Relationship <span className="logo-os">OS</span>
+        </div>
         {NAV_ITEMS.map((item) => (
           <div
             key={item.tab}
