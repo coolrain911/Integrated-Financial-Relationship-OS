@@ -373,6 +373,55 @@ body {
   font-size: 13px;
 }
 
+.calendar-page-year {
+  max-width: 1180px;
+}
+
+.calendar-year-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.calendar-year-title {
+  font-size: 20px;
+  font-weight: 800;
+  min-width: 70px;
+  text-align: center;
+}
+
+.calendar-nav-year {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
+.calendar-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .calendar-year-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .calendar-year-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-year-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .calendar {
   background: var(--card);
   border: 2px solid var(--accent);
@@ -416,6 +465,18 @@ body {
 
 .calendar-month:not(:only-child):nth-child(3) {
   border-color: var(--caution);
+}
+
+/* Twelve equal months read as one year, not a 2-3 month comparison, so
+   override the color-rotation above with a single neutral border and just
+   highlight whichever month is the current one. */
+.calendar-year-grid .calendar-month:not(:only-child) {
+  border-color: var(--line);
+}
+
+.calendar-year-grid .calendar-month-current:not(:only-child) {
+  border-color: var(--accent);
+  border-width: 2px;
 }
 
 .calendar-title {

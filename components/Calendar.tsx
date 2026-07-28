@@ -49,6 +49,7 @@ export function Calendar({
   onUpdateEvent,
   onDeleteEvent,
   monthCount = 1,
+  yearView = false,
 }: {
   policies: PolicyDTO[];
   events: CalendarEventDTO[];
@@ -57,6 +58,9 @@ export function Calendar({
   onUpdateEvent: (id: number, body: { title: string; note: string | null }) => Promise<void>;
   onDeleteEvent: (id: number) => Promise<void>;
   monthCount?: number;
+  /** Show all 12 months of viewYear at once (a diary-style year overview),
+   * with prev/next paging by year instead of by month. */
+  yearView?: boolean;
 }) {
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -94,6 +98,12 @@ export function Calendar({
     const next = addMonths(viewYear, viewMonth, delta);
     setViewYear(next.year);
     setViewMonth(next.month);
+    setSelectedDate(null);
+    setEditingId(null);
+  }
+
+  function shiftYear(delta: number) {
+    setViewYear((y) => y + delta);
     setSelectedDate(null);
     setEditingId(null);
   }
@@ -137,8 +147,13 @@ export function Calendar({
     for (let i = 0; i < firstWeekday; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
+    const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
+
     return (
-      <div className="calendar-month" key={`${year}-${month}`}>
+      <div
+        className={`calendar-month${isCurrentMonth ? " calendar-month-current" : ""}`}
+        key={`${year}-${month}`}
+      >
         <div className="calendar-title">
           {MONTH_NAMES[month - 1]} {year}
         </div>
@@ -182,17 +197,34 @@ export function Calendar({
 
   return (
     <div className="calendar">
-      <div className="calendar-header">
-        <button className="calendar-nav" onClick={() => shiftMonth(-1)}>
-          ‹
-        </button>
-        <div className="calendar-months">
-          {months.map(({ year, month }) => renderMonth(year, month))}
+      {yearView ? (
+        <>
+          <div className="calendar-year-header">
+            <button className="calendar-nav calendar-nav-year" onClick={() => shiftYear(-1)}>
+              ‹
+            </button>
+            <div className="calendar-year-title">{viewYear}</div>
+            <button className="calendar-nav calendar-nav-year" onClick={() => shiftYear(1)}>
+              ›
+            </button>
+          </div>
+          <div className="calendar-year-grid">
+            {Array.from({ length: 12 }, (_, i) => renderMonth(viewYear, i + 1))}
+          </div>
+        </>
+      ) : (
+        <div className="calendar-header">
+          <button className="calendar-nav" onClick={() => shiftMonth(-1)}>
+            ‹
+          </button>
+          <div className="calendar-months">
+            {months.map(({ year, month }) => renderMonth(year, month))}
+          </div>
+          <button className="calendar-nav" onClick={() => shiftMonth(1)}>
+            ›
+          </button>
         </div>
-        <button className="calendar-nav" onClick={() => shiftMonth(1)}>
-          ›
-        </button>
-      </div>
+      )}
 
       {selectedDate && (
         <div className="calendar-detail">

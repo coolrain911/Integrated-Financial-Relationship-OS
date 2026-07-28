@@ -731,7 +731,7 @@ export default function Home() {
                 <div className="section-title-row">
                   <div className="section-title">Calendar</div>
                 </div>
-                <div className="calendar-page">
+                <div className="calendar-page calendar-page-year">
                   <Calendar
                     policies={policies}
                     events={calendarEvents}
@@ -739,7 +739,7 @@ export default function Home() {
                     onCreateEvent={handleCalendarEventCreate}
                     onUpdateEvent={handleCalendarEventUpdate}
                     onDeleteEvent={handleCalendarEventDelete}
-                    monthCount={2}
+                    yearView
                   />
                 </div>
               </div>
