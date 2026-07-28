@@ -54,6 +54,83 @@ type ColumnModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mo
 type KnowledgeItemModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
 type LicenseCertModalState = { mode: "closed" } | { mode: "edit"; id: number } | { mode: "create" };
 
+const FEMALE_VOICE_NAME_HINTS = [
+  "female",
+  "여성",
+  "samantha",
+  "victoria",
+  "karen",
+  "moira",
+  "tessa",
+  "fiona",
+  "zira",
+  "susan",
+  "linda",
+  "heera",
+  "salli",
+  "joanna",
+  "kimberly",
+  "google us english",
+  "google uk english female",
+  "yuna",
+  "heami",
+  "sunhi",
+  "google 한국의",
+];
+
+const MALE_VOICE_NAME_HINTS = [
+  "male",
+  "남성",
+  "david",
+  "mark",
+  "daniel",
+  "alex",
+  "fred",
+  "george",
+  "james",
+  "google uk english male",
+  "injoon",
+];
+
+// speechSynthesis.getVoices() often returns an empty list on the very first
+// call — most browsers load the voice list asynchronously and only fire
+// "voiceschanged" once it's ready.
+function loadVoices(): Promise<SpeechSynthesisVoice[]> {
+  return new Promise((resolve) => {
+    const existing = window.speechSynthesis.getVoices();
+    if (existing.length) {
+      resolve(existing);
+      return;
+    }
+    const handleVoicesChanged = () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
+      resolve(window.speechSynthesis.getVoices());
+    };
+    window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged);
+    // Some browsers never fire voiceschanged; don't wait forever for them.
+    setTimeout(() => {
+      window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
+      resolve(window.speechSynthesis.getVoices());
+    }, 500);
+  });
+}
+
+function pickCheerfulFemaleVoice(
+  voices: SpeechSynthesisVoice[],
+  langPrefix: string
+): SpeechSynthesisVoice | undefined {
+  const inLang = voices.filter((v) => v.lang.toLowerCase().startsWith(langPrefix));
+  const candidates = inLang.length ? inLang : voices;
+  const byFemaleName = candidates.find((v) =>
+    FEMALE_VOICE_NAME_HINTS.some((hint) => v.name.toLowerCase().includes(hint))
+  );
+  if (byFemaleName) return byFemaleName;
+  const notObviouslyMale = candidates.find(
+    (v) => !MALE_VOICE_NAME_HINTS.some((hint) => v.name.toLowerCase().includes(hint))
+  );
+  return notObviouslyMale ?? candidates[0];
+}
+
 export default function Home() {
   const [policies, setPolicies] = useState<PolicyDTO[]>([]);
   const [prospects, setProspects] = useState<ProspectDTO[]>([]);
@@ -83,12 +160,31 @@ export default function Home() {
 
   const spokenGreetingRef = useRef(false);
 
-  function speakGreeting() {
+  async function speakGreeting() {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("Good morning, Chanwoo.");
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
+    const voices = await loadVoices();
+
+    // Bright, upbeat delivery for a morning greeting: a female voice where
+    // available, a touch higher pitch, and a slightly brisk pace.
+    const en = new SpeechSynthesisUtterance("Good morning, Chanwoo!");
+    en.lang = "en-US";
+    en.pitch = 1.3;
+    en.rate = 1.05;
+    const enVoice = pickCheerfulFemaleVoice(voices, "en");
+    if (enVoice) en.voice = enVoice;
+
+    const ko = new SpeechSynthesisUtterance("오늘 챙겨야 할 사람과 일이 정리되어 있습니다.");
+    ko.lang = "ko-KR";
+    ko.pitch = 1.3;
+    ko.rate = 1.05;
+    const koVoice = pickCheerfulFemaleVoice(voices, "ko");
+    if (koVoice) ko.voice = koVoice;
+
+    // Queued utterances play back to back, so each segment is spoken with
+    // its own language's voice instead of one voice mispronouncing the other.
+    window.speechSynthesis.speak(en);
+    window.speechSynthesis.speak(ko);
   }
 
   useEffect(() => {
