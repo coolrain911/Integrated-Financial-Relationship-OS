@@ -104,6 +104,8 @@ export type LicenseCertRow = {
   expiry_date: string | null;
   reference_no: string | null;
   link: string | null;
+  file_path: string | null;
+  file_name: string | null;
   note: string | null;
 };
 
@@ -302,6 +304,8 @@ export function licenseCertRowToDto(row: LicenseCertRow): LicenseCertDTO {
     expiryDate: row.expiry_date,
     referenceNo: row.reference_no,
     link: row.link,
+    filePath: row.file_path,
+    fileName: row.file_name,
     note: row.note,
   };
 }

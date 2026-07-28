@@ -90,6 +90,18 @@ export function LicenseCertTable({
             <tr key={item.id}>
               <td className="link-cell" onClick={() => onOpen(item.id)}>
                 {item.title}
+                {item.fileName && (
+                  <a
+                    href={`/api/licenses/${item.id}/file`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={item.fileName}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ marginLeft: 6 }}
+                  >
+                    📎
+                  </a>
+                )}
               </td>
               <td>
                 <span className="pill accent">{item.category}</span>

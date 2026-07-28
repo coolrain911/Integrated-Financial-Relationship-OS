@@ -103,7 +103,17 @@ export async function DELETE(
     return NextResponse.json({ detail: "invalid id" }, { status: 400 });
   }
 
-  const { error, count } = await getSupabaseAdmin()
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // Clean up any attached file first so deleting the record never leaves an
+  // orphaned object behind in storage.
+  const { data: existing } = await loadLicenseCert(itemId);
+  const filePath = (existing as LicenseCertRow | null)?.file_path;
+  if (filePath) {
+    await supabaseAdmin.storage.from("licenses").remove([filePath]);
+  }
+
+  const { error, count } = await supabaseAdmin
     .from("licenses_certificates")
     .delete({ count: "exact" })
     .eq("id", itemId);

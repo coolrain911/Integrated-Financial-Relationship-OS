@@ -213,6 +213,8 @@ export type LicenseCertDTO = {
   expiryDate: string | null;
   referenceNo: string | null;
   link: string | null;
+  filePath: string | null;
+  fileName: string | null;
   note: string | null;
 };
 

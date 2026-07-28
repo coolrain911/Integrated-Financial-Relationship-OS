@@ -31,6 +31,8 @@ export function LicenseCertModal({
   const [referenceNo, setReferenceNo] = useState("");
   const [link, setLink] = useState("");
   const [note, setNote] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileBusy, setFileBusy] = useState(false);
 
   useEffect(() => {
     if (isNew) return;
@@ -45,6 +47,7 @@ export function LicenseCertModal({
       setReferenceNo(data.referenceNo ?? "");
       setLink(data.link ?? "");
       setNote(data.note ?? "");
+      setFileName(data.fileName ?? null);
       setLoading(false);
     })();
   }, [itemId, isNew]);
@@ -98,6 +101,47 @@ export function LicenseCertModal({
     } catch {
       alert("삭제에 실패했습니다.");
       setDeleting(false);
+    }
+  }
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || isNew) return;
+
+    setFileBusy(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/api/licenses/${itemId}/file`, { method: "POST", body: form });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail || "업로드 실패");
+      }
+      const data: LicenseCertDTO = await res.json();
+      setFileName(data.fileName);
+      onSaved(data);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "파일 업로드에 실패했습니다.");
+    } finally {
+      setFileBusy(false);
+    }
+  }
+
+  async function handleFileDelete() {
+    if (isNew) return;
+    if (!confirm("첨부 파일을 삭제하시겠습니까?")) return;
+    setFileBusy(true);
+    try {
+      const res = await fetch(`/api/licenses/${itemId}/file`, { method: "DELETE" });
+      if (!res.ok) throw new Error("삭제 실패");
+      const data: LicenseCertDTO = await res.json();
+      setFileName(data.fileName);
+      onSaved(data);
+    } catch {
+      alert("파일 삭제에 실패했습니다.");
+    } finally {
+      setFileBusy(false);
     }
   }
 
@@ -155,6 +199,43 @@ export function LicenseCertModal({
                 onChange={(e) => setLink(e.target.value)}
                 placeholder="https://... (스캔본/드라이브 링크)"
               />
+            </label>
+            <label className="form-field form-field-wide">
+              <span>첨부 파일 (PDF, PNG, JPEG · 15MB 이하)</span>
+              {isNew ? (
+                <div className="empty" style={{ padding: "8px 0" }}>
+                  먼저 저장한 뒤에 파일을 첨부할 수 있습니다.
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  {fileName && (
+                    <a
+                      href={`/api/licenses/${itemId}/file`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link-cell"
+                    >
+                      {fileName} ↗
+                    </a>
+                  )}
+                  <input
+                    type="file"
+                    accept="application/pdf,image/png,image/jpeg"
+                    disabled={fileBusy}
+                    onChange={handleFileSelect}
+                  />
+                  {fileName && (
+                    <button
+                      type="button"
+                      className="btn-danger-mini"
+                      disabled={fileBusy}
+                      onClick={handleFileDelete}
+                    >
+                      {fileBusy ? "처리 중..." : "파일 삭제"}
+                    </button>
+                  )}
+                </div>
+              )}
             </label>
             <label className="form-field form-field-wide">
               <span>비고</span>

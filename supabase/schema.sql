@@ -94,7 +94,9 @@ create table if not exists knowledge_items (
 );
 
 -- License & Certificate — the advisor's own license/registration/CE/E&O
--- records kept in one searchable place.
+-- records kept in one searchable place. file_path/file_name point at an
+-- uploaded PDF/image scan in the private "licenses" storage bucket below;
+-- link is for a plain external URL (e.g. a Google Drive link) instead.
 create table if not exists licenses_certificates (
   id bigint generated always as identity primary key,
   title text not null,
@@ -104,8 +106,17 @@ create table if not exists licenses_certificates (
   expiry_date date,
   reference_no text,
   link text,
+  file_path text,
+  file_name text,
   note text
 );
+
+-- Private bucket for uploaded license/certificate files. Never made public —
+-- the app serves these only through its own /api routes using the service
+-- role key, same as every other table here.
+insert into storage.buckets (id, name, public)
+values ('licenses', 'licenses', false)
+on conflict (id) do nothing;
 
 -- No RLS policies are defined below, so once RLS is enabled, anon/authenticated
 -- roles have zero access to these tables. The app talks to Supabase only from

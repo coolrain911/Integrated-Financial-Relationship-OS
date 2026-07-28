@@ -35,6 +35,9 @@
 7. **`supabase/migrate_add_knowledge_and_licenses.sql`** — Columns와 같은 레벨의
    새 탭 두 개, `knowledge_items`(Knowledge Vault/지식 창고)와
    `licenses_certificates`(License & Certificate) 테이블을 만듭니다.
+8. **`supabase/migrate_add_license_file_upload.sql`** — `licenses_certificates`에
+   PDF/이미지 스캔본을 첨부할 수 있도록 `file_path`/`file_name` 컬럼과, 파일을 저장할
+   비공개 Storage 버킷(`licenses`)을 만듭니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 
@@ -123,7 +126,10 @@
 15. **License & Certificate** — 라이선스·Register 증거·CE·E&O 문서를 분류
     (License/Register/CE/E&O)·발급기관·발급일·만료일·번호와 함께 한 곳에 보관합니다.
     만료일이 지났거나 60일 이내로 다가오면 표에서 색으로 강조되고, 표 헤더(제목/분류/
-    만료일)를 클릭해 정렬할 수 있습니다.
+    만료일)를 클릭해 정렬할 수 있습니다. PDF/PNG/JPEG 파일(15MB 이하)을 직접 첨부할
+    수 있고, 비공개 Storage 버킷에 저장되어 이 앱의 서버를 통해서만(서비스 롤 키로만)
+    열람·다운로드됩니다 — 브라우저가 Supabase에 직접 접속하지 않는다는 원칙은 그대로
+    유지됩니다.
 
 아직 구현되지 않은 것 (다음 순서로 예정): 엑셀처럼 프린트하는 기능, 앱에서 직접 자동으로
 이메일을 발송하는 기능(현재는 Gmail 새 창을 열어주는 방식).
