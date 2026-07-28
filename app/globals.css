@@ -608,8 +608,12 @@ body {
 .row-card-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+}
+
+.row-card-top > input[type="checkbox"] {
+  margin-top: 3px;
 }
 
 .row-card-main {
