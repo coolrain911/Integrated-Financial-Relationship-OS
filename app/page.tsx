@@ -491,8 +491,7 @@ export default function Home() {
   return (
     <div className="app">
       <div className="sidebar">
-        <div className="logo">Financial Relationship</div>
-        <div className="logo-sub">OS · 실제 데이터 연동</div>
+        <div className="logo">Financial Relationship OS</div>
         {NAV_ITEMS.map((item) => (
           <div
             key={item.tab}

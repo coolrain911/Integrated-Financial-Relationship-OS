@@ -52,18 +52,18 @@ body {
 }
 
 .logo {
-  font-size: 17px;
+  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  font-size: 25px;
   font-weight: 700;
-  letter-spacing: -0.3px;
-  padding: 0 10px;
-  margin-bottom: 2px;
-}
-
-.logo-sub {
-  font-size: 11px;
-  color: var(--text-3);
+  letter-spacing: -0.5px;
+  line-height: 1.15;
   padding: 0 10px;
   margin-bottom: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--caution));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .nav-item {
