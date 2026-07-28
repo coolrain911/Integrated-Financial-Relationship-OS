@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PolicyRow } from "@/components/PolicyRow";
 import { PolicyTable } from "@/components/PolicyTable";
 import { ProspectTable } from "@/components/ProspectTable";
@@ -81,6 +81,16 @@ export default function Home() {
     mode: "closed",
   });
 
+  const spokenGreetingRef = useRef(false);
+
+  function speakGreeting() {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance("Good morning, Chanwoo.");
+    utterance.lang = "en-US";
+    window.speechSynthesis.speak(utterance);
+  }
+
   useEffect(() => {
     // Deliberately deferred to an effect: the page is statically prerendered,
     // so computing "today" during render would bake the build-time date into
@@ -94,6 +104,15 @@ export default function Home() {
         weekday: "long",
       })
     );
+
+    // Speak the morning greeting once per page load. Some browsers hold off
+    // playing audio (including speech synthesis) until the user has
+    // interacted with the page at least once — if that blocks it, the 🔊
+    // button next to the greeting lets them trigger it manually instead.
+    if (!spokenGreetingRef.current) {
+      spokenGreetingRef.current = true;
+      speakGreeting();
+    }
   }, []);
 
   const loadAll = useCallback(async () => {
@@ -462,6 +481,15 @@ export default function Home() {
                 <div className="greeting-eyebrow">{dateStr}</div>
                 <div className="greeting">
                   <span aria-hidden="true">☀️</span> Good Morning, Chanwoo
+                  <button
+                    type="button"
+                    className="greeting-speak-btn"
+                    onClick={speakGreeting}
+                    aria-label="인사말 다시 듣기"
+                    title="다시 듣기"
+                  >
+                    🔊
+                  </button>
                 </div>
                 <div className="greeting-sub">오늘 챙겨야 할 사람과 일이 정리되어 있습니다.</div>
                 <div className="today-top-row">
