@@ -607,7 +607,7 @@ body {
 
 .row-card-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 12px;
 }
@@ -618,6 +618,7 @@ body {
 
 .row-card-main {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .row-card-side {
