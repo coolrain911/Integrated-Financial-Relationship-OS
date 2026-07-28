@@ -29,3 +29,13 @@ export const ANNUITY_TYPE_OPTIONS = ["IRA", "Roth IRA", "Non-Qualified"] as cons
 export const KNOWLEDGE_CATEGORY_PRESETS = ["부동산", "해외자산", "세금", "FAFSA", "기타"];
 
 export const LICENSE_CERT_CATEGORY_OPTIONS = ["License", "Register", "CE", "E&O"] as const;
+
+// 백화점 VVIP/VIP 등급을 응용한 고객 등급. 이름(A/B/C/D)은 우선 고정하고, 의미는
+// 나중에 바뀔 수 있어 설명 문구만 별도로 둔다.
+export const PERSON_GRADE_OPTIONS = ["A", "B", "C", "D"] as const;
+export const PERSON_GRADE_DESCRIPTIONS: Record<(typeof PERSON_GRADE_OPTIONS)[number], string> = {
+  A: "가장 충성도 높은 고객",
+  B: "충성 고객은 아니지만 관리하면 좋아질 고객",
+  C: "보통",
+  D: "신경을 덜 써도 되는 고객",
+};

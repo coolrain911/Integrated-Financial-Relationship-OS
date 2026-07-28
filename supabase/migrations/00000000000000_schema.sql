@@ -11,6 +11,10 @@ create table if not exists people (
   medicare boolean,
   email text,
   phone text,
+  -- Client tier (A/B/C/D, department-store VVIP/VIP style). Lives on the
+  -- person rather than the policy, so grading someone once applies to every
+  -- policy of theirs shown in Current Client.
+  grade text check (grade in ('A', 'B', 'C', 'D')),
   note text
 );
 

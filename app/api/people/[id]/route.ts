@@ -7,6 +7,7 @@ import {
   type PolicyWithNameRow,
 } from "@/lib/mapping";
 import type { PersonUpdateBody } from "@/lib/types";
+import { PERSON_GRADE_OPTIONS } from "@/lib/options";
 
 const GENDER_VALUES = ["남", "여"];
 
@@ -16,7 +17,7 @@ async function loadPersonWithPolicies(id: number) {
     supabaseAdmin.from("people").select("*").eq("id", id).maybeSingle(),
     supabaseAdmin
       .from("policies")
-      .select("*, people(last_name, first_name, dob, email)")
+      .select("*, people(last_name, first_name, dob, email, grade)")
       .eq("person_id", id),
   ]);
   return { personRes, policiesRes };
@@ -76,6 +77,16 @@ export async function PATCH(
     );
   }
   if (
+    body.grade !== null &&
+    body.grade !== undefined &&
+    !PERSON_GRADE_OPTIONS.includes(body.grade)
+  ) {
+    return NextResponse.json(
+      { detail: `grade must be one of: ${PERSON_GRADE_OPTIONS.join(", ")}` },
+      { status: 400 }
+    );
+  }
+  if (
     Object.prototype.hasOwnProperty.call(body, "lastName") &&
     (!body.lastName || !body.lastName.trim())
   ) {
@@ -91,6 +102,7 @@ export async function PATCH(
     medicare: "medicare",
     email: "email",
     phone: "phone",
+    grade: "grade",
     note: "note",
   };
 

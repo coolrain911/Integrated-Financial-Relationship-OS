@@ -20,7 +20,7 @@ function checkEnum(value: unknown, allowed: string[], field: string): string | n
 async function loadPolicy(id: number) {
   return getSupabaseAdmin()
     .from("policies")
-    .select("*, people(last_name, first_name, dob, email)")
+    .select("*, people(last_name, first_name, dob, email, grade)")
     .eq("id", id)
     .maybeSingle();
 }

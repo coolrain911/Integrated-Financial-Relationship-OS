@@ -13,7 +13,7 @@ import {
 export async function GET() {
   const { data, error } = await getSupabaseAdmin()
     .from("policies")
-    .select("*, people(last_name, first_name, dob, email)");
+    .select("*, people(last_name, first_name, dob, email, grade)");
 
   if (error) {
     return NextResponse.json({ detail: error.message }, { status: 500 });
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       comment: body.comment ?? null,
       note: body.note ?? null,
     })
-    .select("*, people(last_name, first_name, dob, email)")
+    .select("*, people(last_name, first_name, dob, email, grade)")
     .single();
 
   if (error) {

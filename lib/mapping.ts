@@ -10,6 +10,7 @@ import type {
   LifeType,
   OptionType,
   PersonDTO,
+  PersonGrade,
   PolicyCategory,
   PolicyDTO,
   PremiumMethod,
@@ -26,6 +27,7 @@ export type PersonRow = {
   medicare: boolean | null;
   email: string | null;
   phone: string | null;
+  grade: string | null;
   note: string | null;
 };
 
@@ -62,7 +64,13 @@ export type PolicyRow = {
 // PolicyRow joined with its person's name, as returned by the
 // policies-list query used for the Current Client table.
 export type PolicyWithNameRow = PolicyRow & {
-  people: { last_name: string; first_name: string | null; dob: string | null; email: string | null } | null;
+  people: {
+    last_name: string;
+    first_name: string | null;
+    dob: string | null;
+    email: string | null;
+    grade: string | null;
+  } | null;
 };
 
 export type ProspectRow = {
@@ -211,6 +219,7 @@ export function personRowToDto(row: PersonRow, today: Date): PersonDTO {
     medicare: row.medicare,
     email: row.email,
     phone: row.phone,
+    grade: (row.grade as PersonGrade | null) ?? null,
     note: row.note,
   };
 }
@@ -224,6 +233,7 @@ export function policyRowToDto(row: PolicyWithNameRow, today: Date): PolicyDTO {
     firstName: row.people?.first_name ?? null,
     email: row.people?.email ?? null,
     ageBracket: computeAgeBracket(row.people?.dob ?? null, today),
+    grade: (row.people?.grade as PersonGrade | null) ?? null,
     policyNumber: row.policy_number,
     issueDate: row.issue_date,
     anniv,

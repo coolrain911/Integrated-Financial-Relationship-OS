@@ -1,12 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { AgeBracket, PolicyDTO } from "@/lib/types";
+import type { AgeBracket, PersonGrade, PolicyDTO } from "@/lib/types";
 import { compareByLastName } from "@/lib/mapping";
 import { buildGmailComposeUrl } from "@/lib/email";
-import { CATEGORY_OPTIONS } from "@/lib/options";
+import { CATEGORY_OPTIONS, PERSON_GRADE_OPTIONS } from "@/lib/options";
 
-type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status";
+type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status" | "grade";
+
+const GRADE_PILL_CLASS: Record<PersonGrade, string> = {
+  A: "success",
+  B: "accent",
+  C: "warn",
+  D: "muted",
+};
 
 type StatusKey =
   | "surrendered"
@@ -104,6 +111,7 @@ export function PolicyTable({
   const [activeAgeBrackets, setActiveAgeBrackets] = useState<Set<AgeBracket>>(new Set());
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
   const [activeCarriers, setActiveCarriers] = useState<Set<string>>(new Set());
+  const [activeGrades, setActiveGrades] = useState<Set<PersonGrade>>(new Set());
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
@@ -128,7 +136,8 @@ export function PolicyTable({
     activeStatuses.size > 0 ||
     activeAgeBrackets.size > 0 ||
     activeCategories.size > 0 ||
-    activeCarriers.size > 0;
+    activeCarriers.size > 0 ||
+    activeGrades.size > 0;
 
   const filtered = useMemo(() => {
     if (!hasActiveFilter) return policies;
@@ -137,9 +146,18 @@ export function PolicyTable({
       if (activeAgeBrackets.size && (!p.ageBracket || !activeAgeBrackets.has(p.ageBracket))) return false;
       if (activeCategories.size && !activeCategories.has(p.category)) return false;
       if (activeCarriers.size && (!p.carrier || !activeCarriers.has(p.carrier))) return false;
+      if (activeGrades.size && (!p.grade || !activeGrades.has(p.grade))) return false;
       return true;
     });
-  }, [policies, hasActiveFilter, activeStatuses, activeAgeBrackets, activeCategories, activeCarriers]);
+  }, [
+    policies,
+    hasActiveFilter,
+    activeStatuses,
+    activeAgeBrackets,
+    activeCategories,
+    activeCarriers,
+    activeGrades,
+  ]);
 
   const sorted = useMemo(() => {
     const items = [...filtered];
@@ -149,6 +167,7 @@ export function PolicyTable({
       else if (sortKey === "issueDate") cmp = (a.issueDate || "").localeCompare(b.issueDate || "");
       else if (sortKey === "category") cmp = (a.category || "").localeCompare(b.category || "");
       else if (sortKey === "carrier") cmp = (a.carrier || "").localeCompare(b.carrier || "");
+      else if (sortKey === "grade") cmp = (a.grade || "").localeCompare(b.grade || "");
       else if (sortKey === "status") {
         cmp = STATUS_ORDER.indexOf(statusKeyFor(a)) - STATUS_ORDER.indexOf(statusKeyFor(b));
       }
@@ -255,6 +274,20 @@ export function PolicyTable({
           </div>
         </div>
         <div className="filter-group">
+          <div className="filter-group-label">등급</div>
+          <div className="filter-chip-row">
+            {PERSON_GRADE_OPTIONS.map((g) => (
+              <button
+                key={g}
+                className={`filter-chip${activeGrades.has(g) ? " active" : ""}`}
+                onClick={() => setActiveGrades((prev) => toggleInSet(prev, g))}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="filter-group">
           <div className="filter-group-label">구분</div>
           <div className="filter-chip-row">
             {CATEGORY_OPTIONS.map((cat) => (
@@ -292,6 +325,7 @@ export function PolicyTable({
               setActiveAgeBrackets(new Set());
               setActiveCategories(new Set());
               setActiveCarriers(new Set());
+              setActiveGrades(new Set());
             }}
           >
             필터 초기화
@@ -321,6 +355,9 @@ export function PolicyTable({
                 성{sortArrow("lastName")}
               </th>
               <th>이름</th>
+              <th className="sortable" onClick={() => toggleSort("grade")}>
+                등급{sortArrow("grade")}
+              </th>
               <th>Policy</th>
               <th className="sortable" onClick={() => toggleSort("issueDate")}>
                 Issued Date{sortArrow("issueDate")}
@@ -355,6 +392,13 @@ export function PolicyTable({
                   </td>
                   <td className="link-cell" onClick={() => onOpenPerson(p.personId)}>
                     {p.firstName}
+                  </td>
+                  <td>
+                    {p.grade ? (
+                      <span className={`pill ${GRADE_PILL_CLASS[p.grade]}`}>{p.grade}</span>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td className="link-cell" onClick={() => onOpenPolicy(p.id)}>
                     {p.policyNumber || "-"}

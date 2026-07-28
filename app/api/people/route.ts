@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { personRowToDto, type PersonRow } from "@/lib/mapping";
 import type { PersonCreateBody } from "@/lib/types";
+import { PERSON_GRADE_OPTIONS } from "@/lib/options";
 
 const GENDER_VALUES = ["남", "여"];
 
@@ -22,6 +23,16 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+  if (
+    body.grade !== null &&
+    body.grade !== undefined &&
+    !PERSON_GRADE_OPTIONS.includes(body.grade)
+  ) {
+    return NextResponse.json(
+      { detail: `grade must be one of: ${PERSON_GRADE_OPTIONS.join(", ")}` },
+      { status: 400 }
+    );
+  }
 
   const { data, error } = await getSupabaseAdmin()
     .from("people")
@@ -34,6 +45,7 @@ export async function POST(request: NextRequest) {
       medicare: body.medicare ?? null,
       email: body.email ?? null,
       phone: body.phone ?? null,
+      grade: body.grade ?? null,
       note: body.note ?? null,
     })
     .select("*")

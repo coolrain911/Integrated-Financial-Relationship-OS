@@ -5,6 +5,7 @@ export type LifeType = "Term" | "UL" | "IUL";
 export type OptionType = "A" | "B" | "B->A";
 export type PremiumMethod = "월납" | "분기납" | "반기납" | "연납" | "일시납";
 export type AnnuityType = "IRA" | "Roth IRA" | "Non-Qualified";
+export type PersonGrade = "A" | "B" | "C" | "D";
 
 export type PersonDTO = {
   id: number;
@@ -17,6 +18,7 @@ export type PersonDTO = {
   medicare: boolean | null;
   email: string | null;
   phone: string | null;
+  grade: PersonGrade | null;
   note: string | null;
 };
 
@@ -29,6 +31,7 @@ export type PersonUpdateBody = Partial<{
   medicare: boolean | null;
   email: string | null;
   phone: string | null;
+  grade: PersonGrade | null;
   note: string | null;
 }>;
 
@@ -40,6 +43,7 @@ export type PersonCreateBody = { lastName: string } & Partial<{
   medicare: boolean | null;
   email: string | null;
   phone: string | null;
+  grade: PersonGrade | null;
   note: string | null;
 }>;
 
@@ -50,6 +54,7 @@ export type PolicyDTO = {
   firstName: string | null;
   email: string | null;
   ageBracket: AgeBracket | null;
+  grade: PersonGrade | null;
   policyNumber: string | null;
   issueDate: string | null;
   anniv: string | null;

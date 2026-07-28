@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import type { PersonDTO, PolicyDTO } from "@/lib/types";
-import { GENDER_OPTIONS, OCCUPATION_PRESETS } from "@/lib/options";
+import { GENDER_OPTIONS, OCCUPATION_PRESETS, PERSON_GRADE_DESCRIPTIONS, PERSON_GRADE_OPTIONS } from "@/lib/options";
+import type { PersonGrade } from "@/lib/types";
 import { computeAgeBracket } from "@/lib/mapping";
 
 export function PersonModal({
@@ -38,6 +39,7 @@ export function PersonModal({
   const [medicare, setMedicare] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [grade, setGrade] = useState("");
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export function PersonModal({
       setMedicare(Boolean(data.person.medicare));
       setEmail(data.person.email ?? "");
       setPhone(data.person.phone ?? "");
+      setGrade(data.person.grade ?? "");
       setNote(data.person.note ?? "");
       setLoading(false);
     })();
@@ -82,6 +85,7 @@ export function PersonModal({
         medicare,
         email: email || null,
         phone: phone || null,
+        grade: (grade || null) as PersonGrade | null,
         note: note || null,
       };
       const res = await fetch(isNew ? "/api/people" : `/api/people/${personId}`, {
@@ -183,6 +187,17 @@ export function PersonModal({
             <label className="form-field">
               <span>전화</span>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </label>
+            <label className="form-field">
+              <span>등급{grade ? ` — ${PERSON_GRADE_DESCRIPTIONS[grade as PersonGrade]}` : ""}</span>
+              <select value={grade} onChange={(e) => setGrade(e.target.value)}>
+                <option value="">미입력</option>
+                {PERSON_GRADE_OPTIONS.map((g) => (
+                  <option key={g} value={g}>
+                    {g} — {PERSON_GRADE_DESCRIPTIONS[g]}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="form-field form-field-wide">
               <span>기타 중요 정보</span>
