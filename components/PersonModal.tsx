@@ -156,7 +156,7 @@ export function PersonModal({
               <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
             </label>
             <label className="form-field">
-              <span>연령대</span>
+              <span>연령</span>
               <input value={ageBracket ?? "-"} disabled />
             </label>
             <label className="form-field">

@@ -260,7 +260,7 @@ export function PolicyTable({
           </div>
         </div>
         <div className="filter-group">
-          <div className="filter-group-label">연령대</div>
+          <div className="filter-group-label">연령</div>
           <div className="filter-chip-row">
             {AGE_BRACKET_ORDER.map((bracket) => (
               <button
