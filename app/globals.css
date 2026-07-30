@@ -359,6 +359,33 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  background: #f7f0e3;
+  border-color: #c9b48c;
+}
+
+.calendar-section .calendar-title {
+  color: #93764a;
+}
+
+.calendar-section .calendar-nav:hover {
+  background: #ece0c8;
+  color: #93764a;
+}
+
+.calendar-section .calendar-cell:not(.calendar-cell-empty):hover {
+  background: #ece0c8;
+}
+
+.calendar-section .calendar-cell.today .calendar-day-num {
+  color: #93764a;
+}
+
+.calendar-section .calendar-cell.selected {
+  background: #e6d8ba;
+}
+
+.calendar-section .dot-anniv {
+  background: #a9814b;
 }
 
 @media (max-width: 900px) {
