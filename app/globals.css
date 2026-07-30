@@ -1071,9 +1071,9 @@ body {
 .year-divider-row td.year-divider-cell {
   max-width: none;
   background: var(--bg);
-  color: var(--text-2);
-  font-weight: 700;
-  font-size: 12px;
+  color: var(--text-1);
+  font-weight: 800;
+  font-size: 13px;
   padding: 6px 14px;
   border-bottom: 1px solid var(--line-strong);
 }
