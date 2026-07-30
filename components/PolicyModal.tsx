@@ -17,6 +17,8 @@ function toInputStr(v: number | string | null): string {
   return String(v);
 }
 
+const OTHER = "기타 (직접 입력)";
+
 export function PolicyModal({
   policyId,
   personId,
@@ -24,6 +26,8 @@ export function PolicyModal({
   onSaved,
   onCreated,
   onDeleted,
+  carrierOptions,
+  productOptions,
 }: {
   policyId: number | null;
   personId?: number;
@@ -31,6 +35,8 @@ export function PolicyModal({
   onSaved: (policy: PolicyDTO) => void;
   onCreated: (policy: PolicyDTO) => void;
   onDeleted: (policyId: number) => void;
+  carrierOptions: string[];
+  productOptions: string[];
 }) {
   const isNew = policyId === null;
   const [policy, setPolicy] = useState<PolicyDTO | null>(null);
@@ -40,8 +46,10 @@ export function PolicyModal({
 
   const [policyNumber, setPolicyNumber] = useState("");
   const [issueDate, setIssueDate] = useState("");
-  const [carrier, setCarrier] = useState("");
-  const [product, setProduct] = useState("");
+  const [carrierChoice, setCarrierChoice] = useState("");
+  const [carrierCustom, setCarrierCustom] = useState("");
+  const [productChoice, setProductChoice] = useState("");
+  const [productCustom, setProductCustom] = useState("");
   const [category, setCategory] = useState<string>("Life");
   const [lifeType, setLifeType] = useState("");
   const [optionType, setOptionType] = useState("");
@@ -70,8 +78,22 @@ export function PolicyModal({
       setPolicy(data);
       setPolicyNumber(data.policyNumber ?? "");
       setIssueDate(data.issueDate ?? "");
-      setCarrier(data.carrier ?? "");
-      setProduct(data.product ?? "");
+      const carrierVal = data.carrier;
+      if (carrierVal && !carrierOptions.includes(carrierVal)) {
+        setCarrierChoice(OTHER);
+        setCarrierCustom(carrierVal);
+      } else {
+        setCarrierChoice(carrierVal ?? "");
+        setCarrierCustom("");
+      }
+      const productVal = data.product;
+      if (productVal && !productOptions.includes(productVal)) {
+        setProductChoice(OTHER);
+        setProductCustom(productVal);
+      } else {
+        setProductChoice(productVal ?? "");
+        setProductCustom("");
+      }
       setCategory(data.category);
       setLifeType(data.lifeType ?? "");
       setOptionType(data.optionType ?? "");
@@ -93,16 +115,22 @@ export function PolicyModal({
       setReviewed(data.reviewed);
       setLoading(false);
     })();
+    // Deliberately excludes carrierOptions/productOptions: this should only
+    // re-run when a different policy is opened, not whenever the parent's
+    // derived option lists change (e.g. right after this same save).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [policyId, isNew]);
 
   async function handleSave() {
     setSaving(true);
     try {
+      const carrier = carrierChoice === OTHER ? carrierCustom.trim() || null : carrierChoice || null;
+      const product = productChoice === OTHER ? productCustom.trim() || null : productChoice || null;
       const payload = {
         policyNumber: policyNumber || null,
         issueDate: issueDate || null,
-        carrier: carrier || null,
-        product: product || null,
+        carrier,
+        product,
         category,
         lifeType: category === "Life" ? lifeType || null : null,
         optionType: category === "Life" ? optionType || null : null,
@@ -184,12 +212,40 @@ export function PolicyModal({
             </label>
             <label className="form-field">
               <span>회사 (Carrier)</span>
-              <input value={carrier} onChange={(e) => setCarrier(e.target.value)} />
+              <select value={carrierChoice} onChange={(e) => setCarrierChoice(e.target.value)}>
+                <option value="">미입력</option>
+                {carrierOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+                <option value={OTHER}>{OTHER}</option>
+              </select>
             </label>
+            {carrierChoice === OTHER && (
+              <label className="form-field">
+                <span>회사 (직접 입력)</span>
+                <input value={carrierCustom} onChange={(e) => setCarrierCustom(e.target.value)} />
+              </label>
+            )}
             <label className="form-field">
               <span>플랜 이름 (Product)</span>
-              <input value={product} onChange={(e) => setProduct(e.target.value)} />
+              <select value={productChoice} onChange={(e) => setProductChoice(e.target.value)}>
+                <option value="">미입력</option>
+                {productOptions.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+                <option value={OTHER}>{OTHER}</option>
+              </select>
             </label>
+            {productChoice === OTHER && (
+              <label className="form-field">
+                <span>플랜 이름 (직접 입력)</span>
+                <input value={productCustom} onChange={(e) => setProductCustom(e.target.value)} />
+              </label>
+            )}
             <label className="form-field">
               <span>구분</span>
               <select value={category} onChange={(e) => setCategory(e.target.value)}>

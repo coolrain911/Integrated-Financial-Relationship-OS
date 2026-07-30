@@ -453,6 +453,22 @@ export default function Home() {
     );
   }, [licenses, search]);
 
+  const carrierOptions = useMemo(() => {
+    const s = new Set<string>();
+    policies.forEach((p) => {
+      if (p.carrier) s.add(p.carrier);
+    });
+    return Array.from(s).sort();
+  }, [policies]);
+
+  const productOptions = useMemo(() => {
+    const s = new Set<string>();
+    policies.forEach((p) => {
+      if (p.product) s.add(p.product);
+    });
+    return Array.from(s).sort();
+  }, [policies]);
+
   const uniquePeople = useMemo(() => new Set(policies.map((p) => p.personId)).size, [policies]);
   const reviewCount = useMemo(
     () => policies.filter((p) => p.needsReview && !p.reviewed).length,
@@ -882,6 +898,8 @@ export default function Home() {
           onSaved={handlePolicySaved}
           onCreated={handlePolicyCreated}
           onDeleted={handlePolicyDeleted}
+          carrierOptions={carrierOptions}
+          productOptions={productOptions}
         />
       )}
       {prospectModal.mode !== "closed" && (
