@@ -68,6 +68,10 @@ const PREMIUM_YOUNG_FEMALE_VOICE_NAME_HINTS = [
   "online (natural)",
 ];
 
+// Turned off for now at Chanwoo's request — flip back to true (and the 🔊
+// button reappears, auto-play on first interaction resumes) to re-enable.
+const GREETING_VOICE_ENABLED = false;
+
 const FEMALE_VOICE_NAME_HINTS = [
   "female",
   "여성",
@@ -227,7 +231,7 @@ export default function Home() {
     // counts as a gesture) and speak then. In practice this fires the
     // instant they start using the app. The 🔊 button next to the greeting
     // still works any time afterward for a replay.
-    if (!spokenGreetingRef.current) {
+    if (GREETING_VOICE_ENABLED && !spokenGreetingRef.current) {
       spokenGreetingRef.current = true;
       const speakOnFirstInteraction = () => {
         speakGreeting();
@@ -611,15 +615,17 @@ export default function Home() {
                 <div className="greeting-eyebrow">{dateStr}</div>
                 <div className="greeting">
                   <span aria-hidden="true">☀️</span> Good Morning, Chanwoo
-                  <button
-                    type="button"
-                    className="greeting-speak-btn"
-                    onClick={speakGreeting}
-                    aria-label="인사말 다시 듣기"
-                    title="다시 듣기"
-                  >
-                    🔊
-                  </button>
+                  {GREETING_VOICE_ENABLED && (
+                    <button
+                      type="button"
+                      className="greeting-speak-btn"
+                      onClick={speakGreeting}
+                      aria-label="인사말 다시 듣기"
+                      title="다시 듣기"
+                    >
+                      🔊
+                    </button>
+                  )}
                 </div>
                 <div className="greeting-sub">오늘 챙겨야 할 사람과 일이 정리되어 있습니다.</div>
                 <div className="today-top-row">
