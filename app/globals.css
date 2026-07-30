@@ -1066,6 +1066,22 @@ body {
   background: var(--bg);
 }
 
+/* Marks where the Issued Date year changes when the table is sorted by
+   Issued Date, so long lists read as year-by-year groups. */
+.year-divider-row td.year-divider-cell {
+  max-width: none;
+  background: var(--bg);
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.data-table tbody tr.year-divider-row:hover {
+  background: var(--bg);
+}
+
 /* Pins action buttons (전환/삭제) to the visible right edge of the table,
    so they're never scrolled out of view regardless of how many columns
    come before them. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import type { AgeBracket, PersonGrade, PolicyDTO } from "@/lib/types";
 import { compareByLastName } from "@/lib/mapping";
 import { buildGmailComposeUrl } from "@/lib/email";
@@ -428,55 +428,68 @@ export function PolicyTable({
             </tr>
           </thead>
           <tbody>
-            {sorted.map((p) => {
+            {sorted.map((p, idx) => {
               const pill = pillFor(p);
+              const year = p.issueDate ? p.issueDate.slice(0, 4) : null;
+              const prevYear =
+                idx > 0 && sorted[idx - 1].issueDate ? sorted[idx - 1].issueDate!.slice(0, 4) : null;
+              const showYearDivider = sortKey === "issueDate" && year !== null && year !== prevYear;
               return (
-                <tr key={p.id}>
-                  <td className="sticky-col-left">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(p.id)}
-                      onChange={() => toggleSelect(p.id)}
-                    />
-                  </td>
-                  <td className="link-cell" onClick={() => onOpenPerson(p.personId)}>
-                    {p.lastName}
-                  </td>
-                  <td className="link-cell" onClick={() => onOpenPerson(p.personId)}>
-                    {p.firstName}
-                  </td>
-                  <td>
-                    {p.grade ? (
-                      <span className={`pill ${GRADE_PILL_CLASS[p.grade]}`}>{p.grade}</span>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="link-cell" onClick={() => onOpenPolicy(p.id)}>
-                    {p.policyNumber || "-"}
-                  </td>
-                  <td>{p.issueDate || "-"}</td>
-                  <td>{p.category}</td>
-                  <td>{p.carrier || "-"}</td>
-                  <td>{pill ? <span className={`pill ${pill.cls}`}>{pill.label}</span> : "-"}</td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={p.reviewed}
-                      disabled={savingId === p.id}
-                      onChange={(e) => toggleReviewed(p, e.target.checked)}
-                    />
-                  </td>
-                  <td className="sticky-col-right">
-                    <button
-                      className="btn-danger-mini"
-                      disabled={deletingId === p.id}
-                      onClick={() => remove(p)}
-                    >
-                      {deletingId === p.id ? "삭제 중..." : "삭제"}
-                    </button>
-                  </td>
-                </tr>
+                <Fragment key={p.id}>
+                  {showYearDivider && (
+                    <tr className="year-divider-row">
+                      <td className="year-divider-cell" colSpan={11}>
+                        {year}년
+                      </td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td className="sticky-col-left">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(p.id)}
+                        onChange={() => toggleSelect(p.id)}
+                      />
+                    </td>
+                    <td className="link-cell" onClick={() => onOpenPerson(p.personId)}>
+                      {p.lastName}
+                    </td>
+                    <td className="link-cell" onClick={() => onOpenPerson(p.personId)}>
+                      {p.firstName}
+                    </td>
+                    <td>
+                      {p.grade ? (
+                        <span className={`pill ${GRADE_PILL_CLASS[p.grade]}`}>{p.grade}</span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="link-cell" onClick={() => onOpenPolicy(p.id)}>
+                      {p.policyNumber || "-"}
+                    </td>
+                    <td>{p.issueDate || "-"}</td>
+                    <td>{p.category}</td>
+                    <td>{p.carrier || "-"}</td>
+                    <td>{pill ? <span className={`pill ${pill.cls}`}>{pill.label}</span> : "-"}</td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={p.reviewed}
+                        disabled={savingId === p.id}
+                        onChange={(e) => toggleReviewed(p, e.target.checked)}
+                      />
+                    </td>
+                    <td className="sticky-col-right">
+                      <button
+                        className="btn-danger-mini"
+                        disabled={deletingId === p.id}
+                        onClick={() => remove(p)}
+                      >
+                        {deletingId === p.id ? "삭제 중..." : "삭제"}
+                      </button>
+                    </td>
+                  </tr>
+                </Fragment>
               );
             })}
           </tbody>
