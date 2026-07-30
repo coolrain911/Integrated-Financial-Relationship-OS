@@ -107,12 +107,14 @@ export function PolicyTable({
   onOpenPolicy,
   onPolicySaved,
   onPolicyDeleted,
+  onAddPerson,
 }: {
   policies: PolicyDTO[];
   onOpenPerson: (personId: number) => void;
   onOpenPolicy: (policyId: number) => void;
   onPolicySaved: (updated: PolicyDTO) => void;
   onPolicyDeleted: (policyId: number) => void;
+  onAddPerson: () => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("lastName");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -377,6 +379,9 @@ export function PolicyTable({
         </button>
         <button className="btn-primary" disabled={selectedEmails.length === 0} onClick={sendEmail}>
           이메일 보내기 ({selectedEmails.length})
+        </button>
+        <button className="btn-mini" style={{ marginLeft: "auto" }} onClick={onAddPerson}>
+          + 새 고객
         </button>
       </div>
 

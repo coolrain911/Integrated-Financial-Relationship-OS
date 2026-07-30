@@ -721,9 +721,6 @@ export default function Home() {
               <div className="tab-panel active">
                 <div className="section-title-row">
                   <div className="section-title">전체 고객 · {filteredPolicies.length}건</div>
-                  <button className="btn-mini" onClick={() => setPersonModal({ mode: "create" })}>
-                    + 새 고객
-                  </button>
                 </div>
                 {filteredPolicies.length ? (
                   <PolicyTable
@@ -732,6 +729,7 @@ export default function Home() {
                     onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
                     onPolicySaved={handlePolicySaved}
                     onPolicyDeleted={handlePolicyDeleted}
+                    onAddPerson={() => setPersonModal({ mode: "create" })}
                   />
                 ) : (
                   <div className="empty">검색 결과 없음</div>
