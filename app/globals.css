@@ -1265,6 +1265,25 @@ body {
   resize: vertical;
 }
 
+.input-money-wrap {
+  position: relative;
+}
+
+.input-money-prefix {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-2);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.form-field .input-money-wrap input {
+  width: 100%;
+  padding-left: 20px;
+}
+
 .form-field-checkbox {
   flex-direction: row;
   align-items: center;

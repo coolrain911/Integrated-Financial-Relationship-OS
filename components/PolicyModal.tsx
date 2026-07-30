@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import type { PolicyDTO } from "@/lib/types";
 import { computePeriodYears } from "@/lib/mapping";
+import { formatMoneyInput, parseMoneyInput } from "@/lib/format";
 import {
   ANNUITY_TYPE_OPTIONS,
   CATEGORY_OPTIONS,
@@ -15,6 +16,26 @@ import {
 function toInputStr(v: number | string | null): string {
   if (v === null || v === undefined) return "";
   return String(v);
+}
+
+function toMoneyInputStr(v: number | string | null): string {
+  return formatMoneyInput(toInputStr(v));
+}
+
+function MoneyField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const isNA = value.trim().toLowerCase() === "na";
+  return (
+    <div className="input-money-wrap">
+      {!isNA && <span className="input-money-prefix">$</span>}
+      <input value={value} onChange={(e) => onChange(formatMoneyInput(e.target.value))} />
+    </div>
+  );
 }
 
 const OTHER = "기타 (직접 입력)";
@@ -97,15 +118,15 @@ export function PolicyModal({
       setCategory(data.category);
       setLifeType(data.lifeType ?? "");
       setOptionType(data.optionType ?? "");
-      setDeathBenefit(toInputStr(data.deathBenefit));
-      setTotalPremium(toInputStr(data.totalPremium));
+      setDeathBenefit(toMoneyInputStr(data.deathBenefit));
+      setTotalPremium(toMoneyInputStr(data.totalPremium));
       setPremiumMethod(data.premiumMethod ?? "");
-      setAnnualPremium(toInputStr(data.annualPremium));
+      setAnnualPremium(toMoneyInputStr(data.annualPremium));
       setAnnuityType(data.annuityType ?? "");
-      setInitialPremium(toInputStr(data.initialPremium));
-      setAdditionalPremium(toInputStr(data.additionalPremium));
-      setAccountValue(toInputStr(data.accountValue));
-      setSurrenderValue(toInputStr(data.surrenderValue));
+      setInitialPremium(toMoneyInputStr(data.initialPremium));
+      setAdditionalPremium(toMoneyInputStr(data.additionalPremium));
+      setAccountValue(toMoneyInputStr(data.accountValue));
+      setSurrenderValue(toMoneyInputStr(data.surrenderValue));
       setLoanOrWithdrawal(Boolean(data.loanOrWithdrawal));
       setSurrendered(data.surrendered);
       setNeedsAttention(data.needsAttention);
@@ -134,15 +155,16 @@ export function PolicyModal({
         category,
         lifeType: category === "Life" ? lifeType || null : null,
         optionType: category === "Life" ? optionType || null : null,
-        deathBenefit: category === "Life" ? deathBenefit || null : null,
-        totalPremium: category === "Life" ? totalPremium || null : null,
+        deathBenefit: category === "Life" ? parseMoneyInput(deathBenefit) || null : null,
+        totalPremium: category === "Life" ? parseMoneyInput(totalPremium) || null : null,
         premiumMethod: category === "Life" ? premiumMethod || null : null,
-        annualPremium: category === "Life" ? annualPremium || null : null,
+        annualPremium: category === "Life" ? parseMoneyInput(annualPremium) || null : null,
         annuityType: category === "Annuity" ? annuityType || null : null,
-        initialPremium: category === "Annuity" ? initialPremium || null : null,
-        additionalPremium: category === "Annuity" ? additionalPremium || null : null,
-        accountValue: accountValue || null,
-        surrenderValue: surrenderValue || null,
+        initialPremium: category === "Annuity" ? parseMoneyInput(initialPremium) || null : null,
+        additionalPremium:
+          category === "Annuity" ? parseMoneyInput(additionalPremium) || null : null,
+        accountValue: parseMoneyInput(accountValue) || null,
+        surrenderValue: parseMoneyInput(surrenderValue) || null,
         loanOrWithdrawal,
         comment: comment || null,
         note: note || null,
@@ -286,11 +308,11 @@ export function PolicyModal({
                 </label>
                 <label className="form-field">
                   <span>Death Benefit</span>
-                  <input value={deathBenefit} onChange={(e) => setDeathBenefit(e.target.value)} />
+                  <MoneyField value={deathBenefit} onChange={setDeathBenefit} />
                 </label>
                 <label className="form-field">
                   <span>Total Premium</span>
-                  <input value={totalPremium} onChange={(e) => setTotalPremium(e.target.value)} />
+                  <MoneyField value={totalPremium} onChange={setTotalPremium} />
                 </label>
                 <label className="form-field">
                   <span>Premium Method</span>
@@ -305,7 +327,7 @@ export function PolicyModal({
                 </label>
                 <label className="form-field">
                   <span>Annual Premium</span>
-                  <input value={annualPremium} onChange={(e) => setAnnualPremium(e.target.value)} />
+                  <MoneyField value={annualPremium} onChange={setAnnualPremium} />
                 </label>
               </div>
             </>
@@ -326,11 +348,11 @@ export function PolicyModal({
                 </label>
                 <label className="form-field">
                   <span>Initial Premium</span>
-                  <input value={initialPremium} onChange={(e) => setInitialPremium(e.target.value)} />
+                  <MoneyField value={initialPremium} onChange={setInitialPremium} />
                 </label>
                 <label className="form-field">
                   <span>Additional Premium</span>
-                  <input value={additionalPremium} onChange={(e) => setAdditionalPremium(e.target.value)} />
+                  <MoneyField value={additionalPremium} onChange={setAdditionalPremium} />
                 </label>
               </div>
             </>
@@ -340,11 +362,11 @@ export function PolicyModal({
           <div className="form-grid">
             <label className="form-field">
               <span>Account Value</span>
-              <input value={accountValue} onChange={(e) => setAccountValue(e.target.value)} />
+              <MoneyField value={accountValue} onChange={setAccountValue} />
             </label>
             <label className="form-field">
               <span>Surrender Value</span>
-              <input value={surrenderValue} onChange={(e) => setSurrenderValue(e.target.value)} />
+              <MoneyField value={surrenderValue} onChange={setSurrenderValue} />
             </label>
             <label className="form-field form-field-checkbox">
               <input
