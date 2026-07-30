@@ -116,7 +116,7 @@ export function PolicyTable({
   onPolicyDeleted: (policyId: number) => void;
   onAddPerson: () => void;
 }) {
-  const [sortKey, setSortKey] = useState<SortKey>("lastName");
+  const [sortKey, setSortKey] = useState<SortKey>("issueDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [savingId, setSavingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
