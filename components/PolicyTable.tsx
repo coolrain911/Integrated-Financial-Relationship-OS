@@ -65,6 +65,18 @@ const AGE_BRACKET_ORDER: AgeBracket[] = [
   "70대 이상",
 ];
 
+type PeriodBucket = "5년 미만" | "5-10년" | "10-15년" | "15년 초과";
+
+const PERIOD_BUCKET_ORDER: PeriodBucket[] = ["5년 미만", "5-10년", "10-15년", "15년 초과"];
+
+function periodBucketFor(p: PolicyDTO): PeriodBucket | null {
+  if (p.periodYears === null) return null;
+  if (p.periodYears < 5) return "5년 미만";
+  if (p.periodYears < 10) return "5-10년";
+  if (p.periodYears < 15) return "10-15년";
+  return "15년 초과";
+}
+
 function statusKeyFor(p: PolicyDTO): StatusKey {
   if (p.surrendered) return "surrendered";
   if (p.needsAttention) return "attention";
@@ -112,6 +124,7 @@ export function PolicyTable({
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
   const [activeCarriers, setActiveCarriers] = useState<Set<string>>(new Set());
   const [activeGrades, setActiveGrades] = useState<Set<PersonGrade>>(new Set());
+  const [activePeriods, setActivePeriods] = useState<Set<PeriodBucket>>(new Set());
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
@@ -137,7 +150,8 @@ export function PolicyTable({
     activeAgeBrackets.size > 0 ||
     activeCategories.size > 0 ||
     activeCarriers.size > 0 ||
-    activeGrades.size > 0;
+    activeGrades.size > 0 ||
+    activePeriods.size > 0;
 
   const filtered = useMemo(() => {
     if (!hasActiveFilter) return policies;
@@ -147,6 +161,10 @@ export function PolicyTable({
       if (activeCategories.size && !activeCategories.has(p.category)) return false;
       if (activeCarriers.size && (!p.carrier || !activeCarriers.has(p.carrier))) return false;
       if (activeGrades.size && (!p.grade || !activeGrades.has(p.grade))) return false;
+      if (activePeriods.size) {
+        const bucket = periodBucketFor(p);
+        if (!bucket || !activePeriods.has(bucket)) return false;
+      }
       return true;
     });
   }, [
@@ -157,6 +175,7 @@ export function PolicyTable({
     activeCategories,
     activeCarriers,
     activeGrades,
+    activePeriods,
   ]);
 
   const sorted = useMemo(() => {
@@ -301,6 +320,20 @@ export function PolicyTable({
             ))}
           </div>
         </div>
+        <div className="filter-group">
+          <div className="filter-group-label">가입기간</div>
+          <div className="filter-chip-row">
+            {PERIOD_BUCKET_ORDER.map((bucket) => (
+              <button
+                key={bucket}
+                className={`filter-chip${activePeriods.has(bucket) ? " active" : ""}`}
+                onClick={() => setActivePeriods((prev) => toggleInSet(prev, bucket))}
+              >
+                {bucket}
+              </button>
+            ))}
+          </div>
+        </div>
         {carrierOptions.length > 0 && (
           <div className="filter-group">
             <div className="filter-group-label">회사</div>
@@ -326,6 +359,7 @@ export function PolicyTable({
               setActiveCategories(new Set());
               setActiveCarriers(new Set());
               setActiveGrades(new Set());
+              setActivePeriods(new Set());
             }}
           >
             필터 초기화
