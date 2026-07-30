@@ -127,6 +127,7 @@ export function PolicyTable({
   const [activeCarriers, setActiveCarriers] = useState<Set<string>>(new Set());
   const [activeGrades, setActiveGrades] = useState<Set<PersonGrade>>(new Set());
   const [activePeriods, setActivePeriods] = useState<Set<PeriodBucket>>(new Set());
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
@@ -147,13 +148,14 @@ export function PolicyTable({
     }
   }
 
-  const hasActiveFilter =
-    activeStatuses.size > 0 ||
-    activeAgeBrackets.size > 0 ||
-    activeCategories.size > 0 ||
-    activeCarriers.size > 0 ||
-    activeGrades.size > 0 ||
-    activePeriods.size > 0;
+  const activeFilterCount =
+    activeStatuses.size +
+    activeAgeBrackets.size +
+    activeCategories.size +
+    activeCarriers.size +
+    activeGrades.size +
+    activePeriods.size;
+  const hasActiveFilter = activeFilterCount > 0;
 
   const filtered = useMemo(() => {
     if (!hasActiveFilter) return policies;
@@ -265,6 +267,16 @@ export function PolicyTable({
 
   return (
     <div>
+      <div className="filter-toggle-row">
+        <button
+          type="button"
+          className={`btn-mini${hasActiveFilter ? " filter-toggle-active" : ""}`}
+          onClick={() => setFilterOpen((v) => !v)}
+        >
+          필터{hasActiveFilter ? ` (${activeFilterCount})` : ""} {filterOpen ? "▲" : "▼"}
+        </button>
+      </div>
+      {filterOpen && (
       <div className="filter-panel">
         <div className="filter-group">
           <div className="filter-group-label">상태</div>
@@ -368,6 +380,7 @@ export function PolicyTable({
           </button>
         )}
       </div>
+      )}
 
       <div className="selection-bar">
         <span className="selection-count">{selected.size}명 선택됨</span>

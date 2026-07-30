@@ -899,6 +899,15 @@ body {
   color: var(--danger);
 }
 
+.filter-toggle-row {
+  margin-bottom: 10px;
+}
+
+.filter-toggle-active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .filter-panel {
   background: var(--card);
   border: 1px solid var(--line);
