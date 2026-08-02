@@ -52,14 +52,17 @@ body {
 }
 
 .logo {
-  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
-  font-size: 25px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
   padding: 0 10px;
   margin-bottom: 28px;
   text-align: center;
+}
+
+.logo-main {
+  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.1;
   background: linear-gradient(135deg, var(--accent), var(--caution));
   -webkit-background-clip: text;
   background-clip: text;
@@ -67,9 +70,12 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.logo-os {
-  color: var(--warn);
-  -webkit-text-fill-color: var(--warn);
+.logo-sub {
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.1px;
 }
 
 .nav-item {
