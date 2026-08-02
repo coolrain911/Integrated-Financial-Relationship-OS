@@ -59,9 +59,9 @@ body {
 
 .logo-main {
   font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
-  font-size: 40px;
-  font-weight: 800;
-  letter-spacing: -1px;
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
   line-height: 1.1;
   background: linear-gradient(135deg, var(--accent), var(--caution));
   -webkit-background-clip: text;
