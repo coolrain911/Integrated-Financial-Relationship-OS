@@ -19,6 +19,7 @@ type StatusKey =
   | "surrendered"
   | "attention"
   | "policyChanged"
+  | "changeNeeded"
   | "reviewed"
   | "needsReview"
   | "upcoming"
@@ -29,6 +30,7 @@ const STATUS_ORDER: StatusKey[] = [
   "surrendered",
   "attention",
   "policyChanged",
+  "changeNeeded",
   "needsReview",
   "upcoming",
   "reviewed",
@@ -39,6 +41,7 @@ const STATUS_LABELS: Record<StatusKey, string> = {
   surrendered: "계약해지",
   attention: "주의요망",
   policyChanged: "정책변경",
+  changeNeeded: "변경필요",
   reviewed: "완료",
   needsReview: "검토 필요",
   upcoming: "D-day 임박",
@@ -49,6 +52,7 @@ const STATUS_PILL_CLASS: Record<StatusKey, string> = {
   surrendered: "muted",
   attention: "caution",
   policyChanged: "accent",
+  changeNeeded: "info",
   reviewed: "success",
   needsReview: "danger",
   upcoming: "warn",
@@ -81,6 +85,7 @@ function statusKeyFor(p: PolicyDTO): StatusKey {
   if (p.surrendered) return "surrendered";
   if (p.needsAttention) return "attention";
   if (p.policyChanged) return "policyChanged";
+  if (p.changeNeeded) return "changeNeeded";
   if (p.needsReview) return "needsReview";
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) return "upcoming";
   if (p.reviewed) return "reviewed";
