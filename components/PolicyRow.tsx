@@ -106,7 +106,7 @@ export function PolicyRow({
                   patch({ reviewed: e.target.checked });
                 }}
               />
-              검토 완료
+              검토완료
             </label>
           </div>
         ) : (
@@ -125,7 +125,7 @@ export function PolicyRow({
                 patch({ reviewed: e.target.checked });
               }}
             />
-            검토 완료
+            검토완료
           </label>
           <input
             className="row-note-input"

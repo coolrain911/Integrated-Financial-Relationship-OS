@@ -87,6 +87,7 @@ export function PolicyModal({
   const [surrendered, setSurrendered] = useState(false);
   const [needsAttention, setNeedsAttention] = useState(false);
   const [policyChanged, setPolicyChanged] = useState(false);
+  const [changeNeeded, setChangeNeeded] = useState(false);
   const [comment, setComment] = useState("");
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
@@ -131,6 +132,7 @@ export function PolicyModal({
       setSurrendered(data.surrendered);
       setNeedsAttention(data.needsAttention);
       setPolicyChanged(data.policyChanged);
+      setChangeNeeded(data.changeNeeded);
       setComment(data.comment ?? "");
       setNote(data.note ?? "");
       setReviewed(data.reviewed);
@@ -173,7 +175,9 @@ export function PolicyModal({
         method: isNew ? "POST" : "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          isNew ? { personId, ...payload } : { ...payload, surrendered, needsAttention, policyChanged, reviewed }
+          isNew
+            ? { personId, ...payload }
+            : { ...payload, surrendered, needsAttention, policyChanged, changeNeeded, reviewed }
         ),
       });
       if (!res.ok) throw new Error("저장 실패");
@@ -405,10 +409,18 @@ export function PolicyModal({
                 <label className="form-field form-field-checkbox">
                   <input
                     type="checkbox"
+                    checked={changeNeeded}
+                    onChange={(e) => setChangeNeeded(e.target.checked)}
+                  />
+                  <span>변경필요</span>
+                </label>
+                <label className="form-field form-field-checkbox">
+                  <input
+                    type="checkbox"
                     checked={reviewed}
                     onChange={(e) => setReviewed(e.target.checked)}
                   />
-                  <span>검토 완료</span>
+                  <span>검토완료</span>
                 </label>
               </>
             )}

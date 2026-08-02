@@ -48,6 +48,7 @@ create table if not exists policies (
   surrendered boolean not null default false,
   needs_attention boolean not null default false,
   policy_changed boolean not null default false,
+  change_needed boolean not null default false,
   needs_review boolean not null default false,
   review_reason text,
   comment text,

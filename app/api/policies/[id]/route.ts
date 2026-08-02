@@ -95,6 +95,7 @@ export async function PATCH(
     surrendered: "surrendered",
     needsAttention: "needs_attention",
     policyChanged: "policy_changed",
+    changeNeeded: "change_needed",
     comment: "comment",
     note: "note",
     reviewed: "reviewed",

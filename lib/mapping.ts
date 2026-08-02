@@ -54,6 +54,7 @@ export type PolicyRow = {
   surrendered: boolean;
   needs_attention: boolean;
   policy_changed: boolean;
+  change_needed: boolean;
   needs_review: boolean;
   review_reason: string | null;
   comment: string | null;
@@ -257,6 +258,7 @@ export function policyRowToDto(row: PolicyWithNameRow, today: Date): PolicyDTO {
     surrendered: row.surrendered,
     needsAttention: row.needs_attention,
     policyChanged: row.policy_changed,
+    changeNeeded: row.change_needed,
     // needsReview/reviewReason are preserved as computed at seed time.
     // Recomputing them requires the raw design-projection inputs, which are
     // not part of the current data source.

@@ -78,6 +78,7 @@ export type PolicyDTO = {
   surrendered: boolean;
   needsAttention: boolean;
   policyChanged: boolean;
+  changeNeeded: boolean;
   needsReview: boolean;
   reviewReason: string | null;
   comment: string | null;
@@ -106,6 +107,7 @@ export type PolicyUpdateBody = Partial<{
   surrendered: boolean;
   needsAttention: boolean;
   policyChanged: boolean;
+  changeNeeded: boolean;
   comment: string | null;
   note: string | null;
   reviewed: boolean;
