@@ -456,7 +456,13 @@ export function PolicyTable({
                     <td>{p.carrier || "-"}</td>
                     <td>{pill ? <span className={`pill ${pill.cls}`}>{pill.label}</span> : "-"}</td>
                     <td>
-                      <input type="checkbox" checked={p.needsAttention || p.changeNeeded} disabled readOnly />
+                      {p.needsAttention || p.changeNeeded ? (
+                        <span className="review-flag-mark" title="주의요망 또는 변경필요">
+                          ✓
+                        </span>
+                      ) : (
+                        <span className="review-flag-empty" />
+                      )}
                     </td>
                     <td className="sticky-col-right">
                       <button

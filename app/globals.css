@@ -820,6 +820,24 @@ body {
   color: var(--info);
 }
 
+.review-flag-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.review-flag-empty {
+  display: inline-block;
+  width: 20px;
+}
+
 .empty {
   font-size: 13px;
   color: var(--text-3);
