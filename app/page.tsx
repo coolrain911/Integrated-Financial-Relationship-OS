@@ -750,7 +750,6 @@ export default function Home() {
                     policies={filteredPolicies}
                     onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
                     onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
-                    onPolicySaved={handlePolicySaved}
                     onPolicyDeleted={handlePolicyDeleted}
                     onAddPerson={() => setPersonModal({ mode: "create" })}
                   />

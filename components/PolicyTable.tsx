@@ -110,20 +110,17 @@ export function PolicyTable({
   policies,
   onOpenPerson,
   onOpenPolicy,
-  onPolicySaved,
   onPolicyDeleted,
   onAddPerson,
 }: {
   policies: PolicyDTO[];
   onOpenPerson: (personId: number) => void;
   onOpenPolicy: (policyId: number) => void;
-  onPolicySaved: (updated: PolicyDTO) => void;
   onPolicyDeleted: (policyId: number) => void;
   onAddPerson: () => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("issueDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [savingId, setSavingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const [activeStatuses, setActiveStatuses] = useState<Set<StatusKey>>(new Set());
@@ -230,24 +227,6 @@ export function PolicyTable({
       return;
     }
     window.open(buildGmailComposeUrl(selectedEmails), "_blank");
-  }
-
-  async function toggleReviewed(policy: PolicyDTO, checked: boolean) {
-    setSavingId(policy.id);
-    try {
-      const res = await fetch(`/api/policies/${policy.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviewed: checked }),
-      });
-      if (!res.ok) throw new Error("저장 실패");
-      const updated = await res.json();
-      onPolicySaved(updated);
-    } catch {
-      alert("저장에 실패했습니다.");
-    } finally {
-      setSavingId(null);
-    }
   }
 
   async function remove(policy: PolicyDTO) {
@@ -477,12 +456,7 @@ export function PolicyTable({
                     <td>{p.carrier || "-"}</td>
                     <td>{pill ? <span className={`pill ${pill.cls}`}>{pill.label}</span> : "-"}</td>
                     <td>
-                      <input
-                        type="checkbox"
-                        checked={p.reviewed}
-                        disabled={savingId === p.id}
-                        onChange={(e) => toggleReviewed(p, e.target.checked)}
-                      />
+                      <input type="checkbox" checked={p.needsAttention || p.changeNeeded} disabled readOnly />
                     </td>
                     <td className="sticky-col-right">
                       <button
