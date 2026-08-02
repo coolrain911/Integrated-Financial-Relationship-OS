@@ -42,7 +42,7 @@ const STATUS_LABELS: Record<StatusKey, string> = {
   attention: "주의요망",
   policyChanged: "정책변경",
   changeNeeded: "변경필요",
-  reviewed: "완료",
+  reviewed: "검토완료",
   needsReview: "검토 필요",
   upcoming: "D-day 임박",
   normal: "정상",

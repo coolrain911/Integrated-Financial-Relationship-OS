@@ -13,7 +13,7 @@ function pillFor(p: {
 }) {
   if (p.surrendered) return { cls: "muted", label: "계약해지" };
   if (p.needsAttention) return { cls: "caution", label: "주의요망" };
-  if (p.reviewed) return { cls: "success", label: "완료" };
+  if (p.reviewed) return { cls: "success", label: "검토완료" };
   if (p.needsReview) return { cls: "danger", label: "검토 필요" };
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) {
     return { cls: "warn", label: `D-${p.daysToAnniv}` };
