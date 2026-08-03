@@ -184,21 +184,42 @@ export function PolicyTable({
     activePeriods,
   ]);
 
-  const sorted = useMemo(() => {
-    const items = [...filtered];
-    items.sort((a, b) => {
+  // Groups same-client policies into a single row: the most recently issued
+  // policy is shown, and any others collapse into a "+N" badge on Policy.
+  const rows = useMemo(() => {
+    const byPerson = new Map<number, PolicyDTO[]>();
+    filtered.forEach((p) => {
+      const list = byPerson.get(p.personId);
+      if (list) list.push(p);
+      else byPerson.set(p.personId, [p]);
+    });
+
+    const groups: { representative: PolicyDTO; otherPolicyNumbers: string[] }[] = [];
+    byPerson.forEach((list) => {
+      const representative = list.reduce((best, cur) =>
+        (cur.issueDate || "") > (best.issueDate || "") ? cur : best
+      );
+      const otherPolicyNumbers = list
+        .filter((p) => p.id !== representative.id)
+        .map((p) => p.policyNumber || "-");
+      groups.push({ representative, otherPolicyNumbers });
+    });
+
+    groups.sort((a, b) => {
+      const pa = a.representative;
+      const pb = b.representative;
       let cmp = 0;
-      if (sortKey === "lastName") cmp = compareByLastName(a, b);
-      else if (sortKey === "issueDate") cmp = (a.issueDate || "").localeCompare(b.issueDate || "");
-      else if (sortKey === "category") cmp = (a.category || "").localeCompare(b.category || "");
-      else if (sortKey === "carrier") cmp = (a.carrier || "").localeCompare(b.carrier || "");
-      else if (sortKey === "grade") cmp = (a.grade || "").localeCompare(b.grade || "");
+      if (sortKey === "lastName") cmp = compareByLastName(pa, pb);
+      else if (sortKey === "issueDate") cmp = (pa.issueDate || "").localeCompare(pb.issueDate || "");
+      else if (sortKey === "category") cmp = (pa.category || "").localeCompare(pb.category || "");
+      else if (sortKey === "carrier") cmp = (pa.carrier || "").localeCompare(pb.carrier || "");
+      else if (sortKey === "grade") cmp = (pa.grade || "").localeCompare(pb.grade || "");
       else if (sortKey === "status") {
-        cmp = STATUS_ORDER.indexOf(statusKeyFor(a)) - STATUS_ORDER.indexOf(statusKeyFor(b));
+        cmp = STATUS_ORDER.indexOf(statusKeyFor(pa)) - STATUS_ORDER.indexOf(statusKeyFor(pb));
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
-    return items;
+    return groups;
   }, [filtered, sortKey, sortDir]);
 
   const selectedEmails = useMemo(() => {
@@ -214,7 +235,7 @@ export function PolicyTable({
   }
 
   function selectAllVisible() {
-    setSelected(new Set(sorted.map((p) => p.id)));
+    setSelected(new Set(rows.map((r) => r.representative.id)));
   }
 
   function clearSelection() {
@@ -412,11 +433,14 @@ export function PolicyTable({
             </tr>
           </thead>
           <tbody>
-            {sorted.map((p, idx) => {
+            {rows.map((row, idx) => {
+              const p = row.representative;
               const pill = pillFor(p);
               const year = p.issueDate ? p.issueDate.slice(0, 4) : null;
               const prevYear =
-                idx > 0 && sorted[idx - 1].issueDate ? sorted[idx - 1].issueDate!.slice(0, 4) : null;
+                idx > 0 && rows[idx - 1].representative.issueDate
+                  ? rows[idx - 1].representative.issueDate!.slice(0, 4)
+                  : null;
               const showYearDivider = sortKey === "issueDate" && year !== null && year !== prevYear;
               return (
                 <Fragment key={p.id}>
@@ -450,6 +474,14 @@ export function PolicyTable({
                     </td>
                     <td className="link-cell" onClick={() => onOpenPolicy(p.id)}>
                       {p.policyNumber || "-"}
+                      {row.otherPolicyNumbers.length > 0 && (
+                        <span
+                          className="policy-extra-badge"
+                          title={`추가 정책: ${row.otherPolicyNumbers.join(", ")}`}
+                        >
+                          +{row.otherPolicyNumbers.length}
+                        </span>
+                      )}
                     </td>
                     <td>{p.issueDate || "-"}</td>
                     <td>{p.category}</td>

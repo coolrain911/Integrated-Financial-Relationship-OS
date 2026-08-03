@@ -418,6 +418,11 @@ export default function Home() {
     );
   }, [policies, search]);
 
+  const filteredClientCount = useMemo(
+    () => new Set(filteredPolicies.map((p) => p.personId)).size,
+    [filteredPolicies]
+  );
+
   const filteredProspects = useMemo(() => {
     const f = search.toLowerCase();
     return prospects.filter(
@@ -743,7 +748,7 @@ export default function Home() {
             {activeTab === "clients" && (
               <div className="tab-panel active">
                 <div className="section-title-row">
-                  <div className="section-title">전체 고객 · {filteredPolicies.length}건</div>
+                  <div className="section-title">전체 고객 · {filteredClientCount}건</div>
                 </div>
                 {filteredPolicies.length ? (
                   <PolicyTable
