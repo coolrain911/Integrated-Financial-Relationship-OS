@@ -355,7 +355,7 @@ export function PolicyModal({
                   <MoneyField value={initialPremium} onChange={setInitialPremium} />
                 </label>
                 <label className="form-field">
-                  <span>Additional Premium</span>
+                  <span>Total Premium</span>
                   <MoneyField value={additionalPremium} onChange={setAdditionalPremium} />
                 </label>
               </div>
