@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { policyRowToDto, type PolicyWithNameRow } from "@/lib/mapping";
 import type { PolicyUpdateBody } from "@/lib/types";
+import {
+  ANNUITY_TYPE_OPTIONS,
+  CATEGORY_OPTIONS,
+  LIFE_TYPE_OPTIONS,
+  OPTION_TYPE_OPTIONS,
+  PREMIUM_METHOD_OPTIONS,
+} from "@/lib/options";
 
-const CATEGORY_VALUES = ["Life", "Annuity"];
-const LIFE_TYPE_VALUES = ["Term", "UL", "IUL"];
-const OPTION_TYPE_VALUES = ["A", "B", "B->A"];
-const PREMIUM_METHOD_VALUES = ["월납", "분기납", "반기납", "연납", "일시납"];
-const ANNUITY_TYPE_VALUES = ["IRA", "Roth IRA", "Non-Qualified"];
+const CATEGORY_VALUES: readonly string[] = CATEGORY_OPTIONS;
+const LIFE_TYPE_VALUES: readonly string[] = LIFE_TYPE_OPTIONS;
+const OPTION_TYPE_VALUES: readonly string[] = OPTION_TYPE_OPTIONS;
+const PREMIUM_METHOD_VALUES: readonly string[] = PREMIUM_METHOD_OPTIONS;
+const ANNUITY_TYPE_VALUES: readonly string[] = ANNUITY_TYPE_OPTIONS;
 
 function checkEnum(value: unknown, allowed: string[], field: string): string | null {
   if (value === null || value === undefined) return null;
