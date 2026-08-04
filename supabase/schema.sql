@@ -38,7 +38,7 @@ create table if not exists policies (
   premium_method text check (premium_method in ('월납', '분기납', '반기납', '연납', '일시납')),
   annual_premium text,
   -- Annuity-only fields
-  annuity_type text check (annuity_type in ('IRA', 'Roth IRA', 'Non-Qualified')),
+  annuity_type text check (annuity_type in ('IRA', 'Roth IRA', 'SEP IRA', 'Non-Qualified')),
   initial_premium text,
   additional_premium text,
   -- Shared fields
