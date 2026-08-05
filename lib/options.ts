@@ -2,13 +2,13 @@ export const GENDER_OPTIONS = ["남", "여"] as const;
 
 export const OCCUPATION_PRESETS = [
   "직장인",
+  "직장인 (서비스업)",
   "자영업/사업",
   "전문직",
   "은퇴",
   "주부",
   "학생",
   "무직",
-  "기타",
 ];
 
 export const CONTACT_CHANNEL_PRESETS = [

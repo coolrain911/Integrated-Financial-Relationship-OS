@@ -35,7 +35,6 @@ export function PersonModal({
   const [gender, setGender] = useState("");
   const [dob, setDob] = useState("");
   const [occupationChoice, setOccupationChoice] = useState("");
-  const [occupationCustom, setOccupationCustom] = useState("");
   const [medicare, setMedicare] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -52,14 +51,7 @@ export function PersonModal({
       setFirstName(data.person.firstName ?? "");
       setGender(data.person.gender ?? "");
       setDob(data.person.dob ?? "");
-      const occ: string | null = data.person.occupation;
-      if (occ && !OCCUPATION_PRESETS.includes(occ as (typeof OCCUPATION_PRESETS)[number])) {
-        setOccupationChoice("기타");
-        setOccupationCustom(occ);
-      } else {
-        setOccupationChoice(occ ?? "");
-        setOccupationCustom("");
-      }
+      setOccupationChoice(data.person.occupation ?? "");
       setMedicare(Boolean(data.person.medicare));
       setEmail(data.person.email ?? "");
       setPhone(data.person.phone ?? "");
@@ -81,7 +73,7 @@ export function PersonModal({
         firstName: firstName || null,
         gender: gender || null,
         dob: dob || null,
-        occupation: occupationChoice === "기타" ? occupationCustom || null : occupationChoice || null,
+        occupation: occupationChoice || null,
         medicare,
         email: email || null,
         phone: phone || null,
@@ -170,12 +162,6 @@ export function PersonModal({
                 ))}
               </select>
             </label>
-            {occupationChoice === "기타" && (
-              <label className="form-field">
-                <span>직업 (직접 입력)</span>
-                <input value={occupationCustom} onChange={(e) => setOccupationCustom(e.target.value)} />
-              </label>
-            )}
             <label className="form-field form-field-checkbox">
               <input type="checkbox" checked={medicare} onChange={(e) => setMedicare(e.target.checked)} />
               <span>Medicare 해당</span>
