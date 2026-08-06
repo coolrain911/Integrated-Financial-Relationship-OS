@@ -8,11 +8,11 @@ import { CATEGORY_OPTIONS, PERSON_GRADE_OPTIONS } from "@/lib/options";
 
 type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status" | "grade";
 
-const GRADE_PILL_CLASS: Record<PersonGrade, string> = {
-  A: "success",
-  B: "accent",
-  C: "warn",
-  D: "muted",
+const GRADE_BADGE_CLASS: Record<PersonGrade, string> = {
+  A: "grade-badge-a",
+  B: "grade-badge-b",
+  C: "grade-badge-c",
+  D: "grade-badge-d",
 };
 
 type StatusKey =
@@ -467,7 +467,7 @@ export function PolicyTable({
                     </td>
                     <td>
                       {p.grade ? (
-                        <span className={`pill ${GRADE_PILL_CLASS[p.grade]}`}>{p.grade}</span>
+                        <span className={`grade-badge ${GRADE_BADGE_CLASS[p.grade]}`}>{p.grade}</span>
                       ) : (
                         "-"
                       )}

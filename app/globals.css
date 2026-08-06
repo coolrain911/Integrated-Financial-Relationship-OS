@@ -820,6 +820,41 @@ body {
   color: var(--info);
 }
 
+/* Client grade (A/B/C/D): solid, high-contrast badges rather than the
+   pastel .pill palette, so the highest-priority clients jump out in a
+   long table instead of blending into the other soft-colored pills. */
+.grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.grade-badge-a {
+  background: var(--accent);
+  color: #ffd60a;
+}
+
+.grade-badge-b {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.grade-badge-c {
+  background: var(--warn);
+  color: #ffffff;
+}
+
+.grade-badge-d {
+  background: var(--text-2);
+  color: #ffffff;
+}
+
 .review-flag-mark {
   display: inline-flex;
   align-items: center;
