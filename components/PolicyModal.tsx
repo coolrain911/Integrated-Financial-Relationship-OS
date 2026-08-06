@@ -436,7 +436,7 @@ export function PolicyModal({
 
           {policy?.reviewReason && (
             <div className="row-note" style={{ color: "var(--danger)" }}>
-              검토 필요 사유: {policy.reviewReason}
+              검토필요 사유: {policy.reviewReason}
             </div>
           )}
 

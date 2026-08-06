@@ -683,7 +683,7 @@ export default function Home() {
                 <div className="two-col">
                   <div className="section">
                     <div className="section-title-row">
-                      <div className="section-title">검토 필요</div>
+                      <div className="section-title">검토필요</div>
                       <button
                         className="btn-mini"
                         disabled={reviewEmails.length === 0}
@@ -708,7 +708,7 @@ export default function Home() {
                         />
                       ))
                     ) : (
-                      <div className="empty">검토 필요 항목 없음</div>
+                      <div className="empty">검토필요 항목 없음</div>
                     )}
                   </div>
                   <div className="section">
