@@ -6,7 +6,7 @@ import { compareByLastName } from "@/lib/mapping";
 import { buildGmailComposeUrl } from "@/lib/email";
 import { CATEGORY_OPTIONS, PERSON_GRADE_OPTIONS } from "@/lib/options";
 
-type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status" | "grade";
+type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status" | "grade" | "policyCount";
 
 const GRADE_BADGE_CLASS: Record<PersonGrade, string> = {
   A: "grade-badge-a",
@@ -216,6 +216,8 @@ export function PolicyTable({
       else if (sortKey === "grade") cmp = (pa.grade || "").localeCompare(pb.grade || "");
       else if (sortKey === "status") {
         cmp = STATUS_ORDER.indexOf(statusKeyFor(pa)) - STATUS_ORDER.indexOf(statusKeyFor(pb));
+      } else if (sortKey === "policyCount") {
+        cmp = a.otherPolicyNumbers.length - b.otherPolicyNumbers.length;
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
@@ -415,7 +417,9 @@ export function PolicyTable({
               <th className="sortable" onClick={() => toggleSort("grade")}>
                 등급{sortArrow("grade")}
               </th>
-              <th>Policy</th>
+              <th className="sortable" onClick={() => toggleSort("policyCount")}>
+                Policy{sortArrow("policyCount")}
+              </th>
               <th className="sortable" onClick={() => toggleSort("issueDate")}>
                 Issued Date{sortArrow("issueDate")}
               </th>
