@@ -836,8 +836,8 @@ body {
 }
 
 .grade-badge-a {
-  background: var(--accent);
-  color: #ffd60a;
+  background: #1d3461;
+  color: #ffffff;
 }
 
 .grade-badge-b {
