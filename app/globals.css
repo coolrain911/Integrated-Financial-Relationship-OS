@@ -855,6 +855,50 @@ body {
   color: #ffffff;
 }
 
+/* Policy status labels (검토필요, 주의요망, 등): same solid, high-contrast
+   treatment as the grade badges instead of the soft pastel .pill palette.
+   Urgent ones (검토필요/주의요망) get a deep red so they read as needing
+   immediate attention rather than blending in with routine statuses. */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-badge-urgent {
+  background: #a61b1b;
+  color: #ffffff;
+}
+
+.status-badge-accent {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.status-badge-info {
+  background: var(--info);
+  color: #ffffff;
+}
+
+.status-badge-warn {
+  background: var(--warn);
+  color: #ffffff;
+}
+
+.status-badge-success {
+  background: var(--success);
+  color: #ffffff;
+}
+
+.status-badge-muted {
+  background: var(--text-2);
+  color: #ffffff;
+}
+
 .review-flag-mark {
   display: inline-flex;
   align-items: center;

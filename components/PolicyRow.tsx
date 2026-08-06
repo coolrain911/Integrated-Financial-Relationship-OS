@@ -11,12 +11,12 @@ function pillFor(p: {
   needsReview: boolean;
   daysToAnniv: number | null;
 }) {
-  if (p.surrendered) return { cls: "muted", label: "계약해지" };
-  if (p.needsAttention) return { cls: "caution", label: "주의요망" };
-  if (p.reviewed) return { cls: "success", label: "검토완료" };
-  if (p.needsReview) return { cls: "danger", label: "검토필요" };
+  if (p.surrendered) return { cls: "status-badge-muted", label: "계약해지" };
+  if (p.needsAttention) return { cls: "status-badge-urgent", label: "주의요망" };
+  if (p.reviewed) return { cls: "status-badge-success", label: "검토완료" };
+  if (p.needsReview) return { cls: "status-badge-urgent", label: "검토필요" };
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) {
-    return { cls: "warn", label: `D-${p.daysToAnniv}` };
+    return { cls: "status-badge-warn", label: `D-${p.daysToAnniv}` };
   }
   return null;
 }
@@ -95,7 +95,7 @@ export function PolicyRow({
         </div>
         {compact ? (
           <div className="row-card-side">
-            {pill && <span className={`pill ${pill.cls}`}>{pill.label}</span>}
+            {pill && <span className={`status-badge ${pill.cls}`}>{pill.label}</span>}
             <label className="row-check row-check-compact">
               <input
                 type="checkbox"
@@ -110,7 +110,7 @@ export function PolicyRow({
             </label>
           </div>
         ) : (
-          pill && <span className={`pill ${pill.cls}`}>{pill.label}</span>
+          pill && <span className={`status-badge ${pill.cls}`}>{pill.label}</span>
         )}
       </div>
       {!compact && (

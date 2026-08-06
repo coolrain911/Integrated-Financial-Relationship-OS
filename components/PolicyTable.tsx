@@ -49,14 +49,14 @@ const STATUS_LABELS: Record<StatusKey, string> = {
 };
 
 const STATUS_PILL_CLASS: Record<StatusKey, string> = {
-  surrendered: "muted",
-  attention: "caution",
-  policyChanged: "accent",
-  changeNeeded: "info",
-  reviewed: "success",
-  needsReview: "danger",
-  upcoming: "warn",
-  normal: "muted",
+  surrendered: "status-badge-muted",
+  attention: "status-badge-urgent",
+  policyChanged: "status-badge-accent",
+  changeNeeded: "status-badge-info",
+  reviewed: "status-badge-success",
+  needsReview: "status-badge-urgent",
+  upcoming: "status-badge-warn",
+  normal: "status-badge-muted",
 };
 
 const AGE_BRACKET_ORDER: AgeBracket[] = [
@@ -490,7 +490,7 @@ export function PolicyTable({
                     <td>{p.issueDate || "-"}</td>
                     <td>{p.category}</td>
                     <td>{p.carrier || "-"}</td>
-                    <td>{pill ? <span className={`pill ${pill.cls}`}>{pill.label}</span> : "-"}</td>
+                    <td>{pill ? <span className={`status-badge ${pill.cls}`}>{pill.label}</span> : "-"}</td>
                     <td>
                       {p.needsAttention || p.changeNeeded ? (
                         <span className="review-flag-mark" title="주의요망 또는 변경필요">
