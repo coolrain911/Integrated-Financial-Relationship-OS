@@ -52,9 +52,9 @@ const STATUS_PILL_CLASS: Record<StatusKey, string> = {
   surrendered: "status-badge-muted",
   attention: "status-badge-urgent",
   policyChanged: "status-badge-accent",
-  changeNeeded: "status-badge-info",
+  changeNeeded: "status-badge-urgent",
   reviewed: "status-badge-success",
-  needsReview: "status-badge-urgent",
+  needsReview: "status-badge-info",
   upcoming: "status-badge-warn",
   normal: "status-badge-muted",
 };

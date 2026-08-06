@@ -14,7 +14,7 @@ function pillFor(p: {
   if (p.surrendered) return { cls: "status-badge-muted", label: "계약해지" };
   if (p.needsAttention) return { cls: "status-badge-urgent", label: "주의요망" };
   if (p.reviewed) return { cls: "status-badge-success", label: "검토완료" };
-  if (p.needsReview) return { cls: "status-badge-urgent", label: "검토필요" };
+  if (p.needsReview) return { cls: "status-badge-info", label: "검토필요" };
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) {
     return { cls: "status-badge-warn", label: `D-${p.daysToAnniv}` };
   }
