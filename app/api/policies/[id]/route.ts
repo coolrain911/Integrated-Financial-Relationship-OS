@@ -103,6 +103,8 @@ export async function PATCH(
     needsAttention: "needs_attention",
     policyChanged: "policy_changed",
     changeNeeded: "change_needed",
+    needsReview: "needs_review",
+    reviewReason: "review_reason",
     comment: "comment",
     note: "note",
     reviewed: "reviewed",

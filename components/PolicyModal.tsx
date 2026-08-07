@@ -91,6 +91,8 @@ export function PolicyModal({
   const [comment, setComment] = useState("");
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
+  const [needsReview, setNeedsReview] = useState(false);
+  const [reviewReason, setReviewReason] = useState<string | null>(null);
 
   const productOptions = useMemo(
     () => productOptionsByCategory[category] ?? [],
@@ -142,6 +144,8 @@ export function PolicyModal({
       setComment(data.comment ?? "");
       setNote(data.note ?? "");
       setReviewed(data.reviewed);
+      setNeedsReview(data.needsReview);
+      setReviewReason(data.reviewReason);
       setLoading(false);
     })();
     // Deliberately excludes carrierOptions/productOptionsByCategory: this should only
@@ -183,7 +187,16 @@ export function PolicyModal({
         body: JSON.stringify(
           isNew
             ? { personId, ...payload }
-            : { ...payload, surrendered, needsAttention, policyChanged, changeNeeded, reviewed }
+            : {
+                ...payload,
+                surrendered,
+                needsAttention,
+                policyChanged,
+                changeNeeded,
+                reviewed,
+                needsReview,
+                reviewReason,
+              }
         ),
       });
       if (!res.ok) throw new Error("저장 실패");
@@ -440,9 +453,22 @@ export function PolicyModal({
             </label>
           </div>
 
-          {policy?.reviewReason && (
-            <div className="row-note" style={{ color: "var(--danger)" }}>
-              검토필요 사유: {policy.reviewReason}
+          {reviewReason && (
+            <div
+              className="row-note"
+              style={{ color: "var(--danger)", display: "flex", alignItems: "center", gap: 8 }}
+            >
+              <span>검토필요 사유: {reviewReason}</span>
+              <button
+                type="button"
+                className="btn-mini"
+                onClick={() => {
+                  setReviewReason(null);
+                  setNeedsReview(false);
+                }}
+              >
+                지우기
+              </button>
             </div>
           )}
 
