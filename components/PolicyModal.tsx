@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal } from "./Modal";
 import type { PolicyDTO } from "@/lib/types";
 import { computePeriodYears } from "@/lib/mapping";
@@ -48,7 +48,7 @@ export function PolicyModal({
   onCreated,
   onDeleted,
   carrierOptions,
-  productOptions,
+  productOptionsByCategory,
 }: {
   policyId: number | null;
   personId?: number;
@@ -57,7 +57,7 @@ export function PolicyModal({
   onCreated: (policy: PolicyDTO) => void;
   onDeleted: (policyId: number) => void;
   carrierOptions: string[];
-  productOptions: string[];
+  productOptionsByCategory: Record<string, string[]>;
 }) {
   const isNew = policyId === null;
   const [policy, setPolicy] = useState<PolicyDTO | null>(null);
@@ -92,6 +92,11 @@ export function PolicyModal({
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
 
+  const productOptions = useMemo(
+    () => productOptionsByCategory[category] ?? [],
+    [productOptionsByCategory, category]
+  );
+
   useEffect(() => {
     if (isNew) return;
     (async () => {
@@ -109,7 +114,8 @@ export function PolicyModal({
         setCarrierCustom("");
       }
       const productVal = data.product;
-      if (productVal && !productOptions.includes(productVal)) {
+      const productOptionsForLoadedCategory = productOptionsByCategory[data.category] ?? [];
+      if (productVal && !productOptionsForLoadedCategory.includes(productVal)) {
         setProductChoice(OTHER);
         setProductCustom(productVal);
       } else {
@@ -138,7 +144,7 @@ export function PolicyModal({
       setReviewed(data.reviewed);
       setLoading(false);
     })();
-    // Deliberately excludes carrierOptions/productOptions: this should only
+    // Deliberately excludes carrierOptions/productOptionsByCategory: this should only
     // re-run when a different policy is opened, not whenever the parent's
     // derived option lists change (e.g. right after this same save).
     // eslint-disable-next-line react-hooks/exhaustive-deps

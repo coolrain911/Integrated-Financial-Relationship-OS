@@ -466,12 +466,15 @@ export default function Home() {
     return Array.from(s).sort();
   }, [policies]);
 
-  const productOptions = useMemo(() => {
-    const s = new Set<string>();
+  const productOptionsByCategory = useMemo(() => {
+    const byCategory: Record<string, Set<string>> = { Life: new Set(), Annuity: new Set() };
     policies.forEach((p) => {
-      if (p.product) s.add(p.product);
+      if (p.product) byCategory[p.category]?.add(p.product);
     });
-    return Array.from(s).sort();
+    return {
+      Life: Array.from(byCategory.Life).sort(),
+      Annuity: Array.from(byCategory.Annuity).sort(),
+    };
   }, [policies]);
 
   const uniquePeople = useMemo(() => new Set(policies.map((p) => p.personId)).size, [policies]);
@@ -904,7 +907,7 @@ export default function Home() {
           onCreated={handlePolicyCreated}
           onDeleted={handlePolicyDeleted}
           carrierOptions={carrierOptions}
-          productOptions={productOptions}
+          productOptionsByCategory={productOptionsByCategory}
         />
       )}
       {prospectModal.mode !== "closed" && (
