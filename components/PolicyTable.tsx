@@ -69,16 +69,16 @@ const AGE_BRACKET_ORDER: AgeBracket[] = [
   "70대 이상",
 ];
 
-type PeriodBucket = "5년 미만" | "5-10년" | "10-15년" | "15년 초과";
+type PeriodBucket = "5년 -" | "5-10년" | "10-15년" | "15년 +";
 
-const PERIOD_BUCKET_ORDER: PeriodBucket[] = ["5년 미만", "5-10년", "10-15년", "15년 초과"];
+const PERIOD_BUCKET_ORDER: PeriodBucket[] = ["5년 -", "5-10년", "10-15년", "15년 +"];
 
 function periodBucketFor(p: PolicyDTO): PeriodBucket | null {
   if (p.periodYears === null) return null;
-  if (p.periodYears < 5) return "5년 미만";
+  if (p.periodYears < 5) return "5년 -";
   if (p.periodYears < 10) return "5-10년";
   if (p.periodYears < 15) return "10-15년";
-  return "15년 초과";
+  return "15년 +";
 }
 
 function statusKeyFor(p: PolicyDTO): StatusKey {
