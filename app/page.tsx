@@ -28,6 +28,7 @@ import { buildGmailComposeUrl } from "@/lib/email";
 type Tab =
   | "today"
   | "clients"
+  | "surrendered"
   | "prospects"
   | "calendar"
   | "columns"
@@ -37,6 +38,7 @@ type Tab =
 const NAV_ITEMS: { tab: Tab; label: string }[] = [
   { tab: "today", label: "Dashboard Today" },
   { tab: "clients", label: "Current Client" },
+  { tab: "surrendered", label: "해지 Plan" },
   { tab: "prospects", label: "Potential Client" },
   { tab: "calendar", label: "Calendar" },
   { tab: "columns", label: "Columns" },
@@ -411,16 +413,34 @@ export default function Home() {
     setNavOpen(false);
   }
 
+  // Surrendered (계약해지) policies live in their own 해지 Plan tab, so they're
+  // excluded from Current Client and from every dashboard count/list below —
+  // those should reflect only active client relationships.
+  const activePolicies = useMemo(() => policies.filter((p) => !p.surrendered), [policies]);
+  const surrenderedPolicies = useMemo(() => policies.filter((p) => p.surrendered), [policies]);
+
   const filteredPolicies = useMemo(() => {
     const f = search.toLowerCase();
-    return policies.filter(
+    return activePolicies.filter(
       (p) => !f || `${p.lastName} ${p.firstName || ""}`.toLowerCase().includes(f)
     );
-  }, [policies, search]);
+  }, [activePolicies, search]);
 
   const filteredClientCount = useMemo(
     () => new Set(filteredPolicies.map((p) => p.personId)).size,
     [filteredPolicies]
+  );
+
+  const filteredSurrenderedPolicies = useMemo(() => {
+    const f = search.toLowerCase();
+    return surrenderedPolicies.filter(
+      (p) => !f || `${p.lastName} ${p.firstName || ""}`.toLowerCase().includes(f)
+    );
+  }, [surrenderedPolicies, search]);
+
+  const filteredSurrenderedCount = useMemo(
+    () => new Set(filteredSurrenderedPolicies.map((p) => p.personId)).size,
+    [filteredSurrenderedPolicies]
   );
 
   const filteredProspects = useMemo(() => {
@@ -477,29 +497,32 @@ export default function Home() {
     };
   }, [policies]);
 
-  const uniquePeople = useMemo(() => new Set(policies.map((p) => p.personId)).size, [policies]);
+  const uniquePeople = useMemo(
+    () => new Set(activePolicies.map((p) => p.personId)).size,
+    [activePolicies]
+  );
   const reviewCount = useMemo(
-    () => policies.filter((p) => p.needsReview && !p.reviewed).length,
-    [policies]
+    () => activePolicies.filter((p) => p.needsReview && !p.reviewed).length,
+    [activePolicies]
   );
   const weekAnniv = useMemo(
     () =>
-      policies.filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 7)
+      activePolicies.filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 7)
         .length,
-    [policies]
+    [activePolicies]
   );
 
   const reviewItems = useMemo(
-    () => policies.filter((p) => p.needsReview && !p.reviewed).slice(0, 6),
-    [policies]
+    () => activePolicies.filter((p) => p.needsReview && !p.reviewed).slice(0, 6),
+    [activePolicies]
   );
   const annivItems = useMemo(
     () =>
-      policies
+      activePolicies
         .filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30)
         .sort((a, b) => (a.daysToAnniv as number) - (b.daysToAnniv as number))
         .slice(0, 6),
-    [policies]
+    [activePolicies]
   );
 
   function toggleReviewSelect(id: number) {
@@ -541,7 +564,7 @@ export default function Home() {
 
   const kpisTop = [
     { n: uniquePeople, l: "Total Client", cls: "" },
-    { n: policies.length, l: "Total Policy", cls: "" },
+    { n: activePolicies.length, l: "Total Policy", cls: "" },
     { n: prospects.length, l: "Potential Client", cls: "accent" },
   ];
   const kpisBottom = [
@@ -763,6 +786,25 @@ export default function Home() {
                   />
                 ) : (
                   <div className="empty">검색 결과 없음</div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "surrendered" && (
+              <div className="tab-panel active">
+                <div className="section-title-row">
+                  <div className="section-title">해지 Plan · {filteredSurrenderedCount}건</div>
+                </div>
+                {filteredSurrenderedPolicies.length ? (
+                  <PolicyTable
+                    policies={filteredSurrenderedPolicies}
+                    onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+                    onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
+                    onPolicyDeleted={handlePolicyDeleted}
+                    onAddPerson={() => setPersonModal({ mode: "create" })}
+                  />
+                ) : (
+                  <div className="empty">해지된 정책 없음</div>
                 )}
               </div>
             )}
