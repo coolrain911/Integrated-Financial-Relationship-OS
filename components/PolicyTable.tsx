@@ -37,6 +37,14 @@ const STATUS_ORDER: StatusKey[] = [
   "normal",
 ];
 
+// 상태 filter chips: excludes "surrendered" (계약해지 policies now live in
+// their own 해지 Plan tab, so this filter would be a no-op here) and
+// "normal" (never actually shown as a badge, so filtering by it is
+// meaningless).
+const STATUS_FILTER_KEYS: StatusKey[] = STATUS_ORDER.filter(
+  (key) => key !== "surrendered" && key !== "normal"
+);
+
 const STATUS_LABELS: Record<StatusKey, string> = {
   surrendered: "계약해지",
   attention: "주의요망",
@@ -129,6 +137,7 @@ export function PolicyTable({
   const [activeCarriers, setActiveCarriers] = useState<Set<string>>(new Set());
   const [activeGrades, setActiveGrades] = useState<Set<PersonGrade>>(new Set());
   const [activePeriods, setActivePeriods] = useState<Set<PeriodBucket>>(new Set());
+  const [loanFilterOn, setLoanFilterOn] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -156,7 +165,8 @@ export function PolicyTable({
     activeCategories.size +
     activeCarriers.size +
     activeGrades.size +
-    activePeriods.size;
+    activePeriods.size +
+    (loanFilterOn ? 1 : 0);
   const hasActiveFilter = activeFilterCount > 0;
 
   const filtered = useMemo(() => {
@@ -171,6 +181,7 @@ export function PolicyTable({
         const bucket = periodBucketFor(p);
         if (!bucket || !activePeriods.has(bucket)) return false;
       }
+      if (loanFilterOn && !p.loanOrWithdrawal) return false;
       return true;
     });
   }, [
@@ -182,6 +193,7 @@ export function PolicyTable({
     activeCarriers,
     activeGrades,
     activePeriods,
+    loanFilterOn,
   ]);
 
   // Groups same-client policies into a single row: the most recently issued
@@ -288,7 +300,7 @@ export function PolicyTable({
         <div className="filter-group">
           <div className="filter-group-label">상태</div>
           <div className="filter-chip-row">
-            {STATUS_ORDER.map((key) => (
+            {STATUS_FILTER_KEYS.map((key) => (
               <button
                 key={key}
                 className={`filter-chip${activeStatuses.has(key) ? " active" : ""}`}
@@ -297,6 +309,12 @@ export function PolicyTable({
                 {STATUS_LABELS[key]}
               </button>
             ))}
+            <button
+              className={`filter-chip${loanFilterOn ? " active" : ""}`}
+              onClick={() => setLoanFilterOn((prev) => !prev)}
+            >
+              Loan / Withdrawal 있음
+            </button>
           </div>
         </div>
         <div className="filter-group">
