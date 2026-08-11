@@ -196,6 +196,19 @@ export function PolicyTable({
     loanFilterOn,
   ]);
 
+  // Counts every individual policy issued per year (not just the
+  // representative row shown per client), so the year divider can report
+  // how many policies were actually issued that year.
+  const policyCountByYear = useMemo(() => {
+    const counts = new Map<string, number>();
+    filtered.forEach((p) => {
+      if (!p.issueDate) return;
+      const year = p.issueDate.slice(0, 4);
+      counts.set(year, (counts.get(year) ?? 0) + 1);
+    });
+    return counts;
+  }, [filtered]);
+
   // Groups same-client policies into a single row: the most recently issued
   // policy is shown, and any others collapse into a "+N" badge on Policy.
   const rows = useMemo(() => {
@@ -206,15 +219,23 @@ export function PolicyTable({
       else byPerson.set(p.personId, [p]);
     });
 
-    const groups: { representative: PolicyDTO; otherPolicyNumbers: string[] }[] = [];
+    const groups: { representative: PolicyDTO; otherPolicyNumbers: string[]; otherYears: string[] }[] =
+      [];
     byPerson.forEach((list) => {
       const representative = list.reduce((best, cur) =>
         (cur.issueDate || "") > (best.issueDate || "") ? cur : best
       );
-      const otherPolicyNumbers = list
-        .filter((p) => p.id !== representative.id)
-        .map((p) => p.policyNumber || "-");
-      groups.push({ representative, otherPolicyNumbers });
+      const others = list.filter((p) => p.id !== representative.id);
+      const otherPolicyNumbers = others.map((p) => p.policyNumber || "-");
+      const repYear = representative.issueDate ? representative.issueDate.slice(0, 4) : null;
+      const otherYears = Array.from(
+        new Set(
+          others
+            .map((p) => (p.issueDate ? p.issueDate.slice(0, 4) : null))
+            .filter((y): y is string => y !== null && y !== repYear)
+        )
+      ).sort();
+      groups.push({ representative, otherPolicyNumbers, otherYears });
     });
 
     groups.sort((a, b) => {
@@ -469,7 +490,7 @@ export function PolicyTable({
                   {showYearDivider && (
                     <tr className="year-divider-row">
                       <td className="year-divider-cell" colSpan={11}>
-                        {year}년
+                        {year}년 · 정책 {policyCountByYear.get(year) ?? 0}건
                       </td>
                     </tr>
                   )}
@@ -505,7 +526,14 @@ export function PolicyTable({
                         </span>
                       )}
                     </td>
-                    <td>{p.issueDate || "-"}</td>
+                    <td>
+                      {p.issueDate || "-"}
+                      {row.otherYears.length > 0 && (
+                        <div className="issue-date-other-years">
+                          +{row.otherYears.join(", ")}
+                        </div>
+                      )}
+                    </td>
                     <td>{p.category}</td>
                     <td>{p.carrier || "-"}</td>
                     <td>{pill ? <span className={`status-badge ${pill.cls}`}>{pill.label}</span> : "-"}</td>

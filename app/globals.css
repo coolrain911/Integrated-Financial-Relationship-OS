@@ -929,6 +929,16 @@ body {
   vertical-align: middle;
 }
 
+/* Other issue years for a client's collapsed extra policies, shown right
+   under the Issued Date cell so the year-spread is visible at a glance
+   without needing to hover the Policy column's +N badge. */
+.issue-date-other-years {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
 .empty {
   font-size: 13px;
   color: var(--text-3);

@@ -774,7 +774,9 @@ export default function Home() {
             {activeTab === "clients" && (
               <div className="tab-panel active">
                 <div className="section-title-row">
-                  <div className="section-title">전체 고객 · {filteredClientCount}건</div>
+                  <div className="section-title">
+                    전체 고객 · {filteredClientCount}명 (정책 {filteredPolicies.length}건)
+                  </div>
                 </div>
                 {filteredPolicies.length ? (
                   <PolicyTable
@@ -793,7 +795,9 @@ export default function Home() {
             {activeTab === "surrendered" && (
               <div className="tab-panel active">
                 <div className="section-title-row">
-                  <div className="section-title">해지 Plan · {filteredSurrenderedCount}건</div>
+                  <div className="section-title">
+                    해지 Plan · {filteredSurrenderedCount}명 (정책 {filteredSurrenderedPolicies.length}건)
+                  </div>
                 </div>
                 {filteredSurrenderedPolicies.length ? (
                   <PolicyTable
