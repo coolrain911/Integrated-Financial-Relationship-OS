@@ -490,7 +490,7 @@ export function PolicyTable({
                   {showYearDivider && (
                     <tr className="year-divider-row">
                       <td className="year-divider-cell" colSpan={11}>
-                        {year}년 · 정책 {policyCountByYear.get(year) ?? 0}건
+                        {year}년 · Policy {policyCountByYear.get(year) ?? 0}건
                       </td>
                     </tr>
                   )}
@@ -520,7 +520,7 @@ export function PolicyTable({
                       {row.otherPolicyNumbers.length > 0 && (
                         <span
                           className="policy-extra-badge"
-                          title={`추가 정책: ${row.otherPolicyNumbers.join(", ")}`}
+                          title={`추가 Policy: ${row.otherPolicyNumbers.join(", ")}`}
                         >
                           +{row.otherPolicyNumbers.length}
                         </span>
