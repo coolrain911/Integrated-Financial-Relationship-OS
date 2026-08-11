@@ -216,7 +216,7 @@ export function PolicyModal({
 
   async function handleDelete() {
     if (isNew) return;
-    if (!confirm("이 정책을 삭제하시겠습니까?")) return;
+    if (!confirm("이 Policy를 삭제하시겠습니까?")) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/policies/${policyId}`, { method: "DELETE" });
@@ -232,7 +232,7 @@ export function PolicyModal({
   const periodYears = computePeriodYears(issueDate || null, new Date());
 
   return (
-    <Modal title={isNew ? "새 정책 추가" : "정책 정보"} onClose={onClose}>
+    <Modal title={isNew ? "새 Policy 추가" : "Policy 정보"} onClose={onClose}>
       {loading ? (
         <div className="empty">불러오는 중...</div>
       ) : (
@@ -475,7 +475,7 @@ export function PolicyModal({
           <div className="modal-actions" style={{ justifyContent: isNew ? "flex-end" : "space-between" }}>
             {!isNew && (
               <button className="btn-danger" disabled={deleting} onClick={handleDelete}>
-                {deleting ? "삭제 중..." : "정책 삭제"}
+                {deleting ? "삭제 중..." : "Policy 삭제"}
               </button>
             )}
             <button className="btn-primary" disabled={saving} onClick={handleSave}>

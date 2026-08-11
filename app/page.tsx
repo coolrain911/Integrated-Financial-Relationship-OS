@@ -808,7 +808,7 @@ export default function Home() {
                     onAddPerson={() => setPersonModal({ mode: "create" })}
                   />
                 ) : (
-                  <div className="empty">해지된 정책 없음</div>
+                  <div className="empty">해지된 Policy 없음</div>
                 )}
               </div>
             )}

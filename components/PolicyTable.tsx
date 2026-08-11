@@ -287,7 +287,7 @@ export function PolicyTable({
 
   async function remove(policy: PolicyDTO) {
     const label = `${policy.lastName} ${policy.firstName || ""}`.trim();
-    if (!confirm(`${label}${policy.policyNumber ? ` (${policy.policyNumber})` : ""} 정책을 삭제하시겠습니까?`)) return;
+    if (!confirm(`${label}${policy.policyNumber ? ` (${policy.policyNumber})` : ""} Policy를 삭제하시겠습니까?`)) return;
     setDeletingId(policy.id);
     try {
       const res = await fetch(`/api/policies/${policy.id}`, { method: "DELETE" });

@@ -102,7 +102,7 @@ export function PersonModal({
 
   async function handleDelete() {
     if (isNew) return;
-    if (!confirm("이 고객을 삭제하시겠습니까? 보유한 모든 정책도 함께 삭제됩니다.")) return;
+    if (!confirm("이 고객을 삭제하시겠습니까? 보유한 모든 Policy도 함께 삭제됩니다.")) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/people/${personId}`, { method: "DELETE" });
@@ -194,22 +194,22 @@ export function PersonModal({
           {!isNew && (
             <>
               <div className="modal-section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>보유 정책 ({policies.length}건)</span>
+                <span>보유 Policy ({policies.length}건)</span>
                 <button className="btn-mini" onClick={() => onAddPolicy(personId)}>
-                  + 정책 추가
+                  + Policy 추가
                 </button>
               </div>
               {policies.length ? (
                 policies.map((p) => (
                   <div key={p.id} className="policy-mini-row" onClick={() => onOpenPolicy(p.id)}>
-                    <span className="policy-mini-num">{p.policyNumber || "(정책번호 없음)"}</span>
+                    <span className="policy-mini-num">{p.policyNumber || "(Policy Number 없음)"}</span>
                     <span className="policy-mini-meta">
                       {p.carrier} · {p.product} · {p.category}
                     </span>
                   </div>
                 ))
               ) : (
-                <div className="empty">보유 정책 없음</div>
+                <div className="empty">보유 Policy 없음</div>
               )}
             </>
           )}
