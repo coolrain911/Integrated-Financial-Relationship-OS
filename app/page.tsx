@@ -38,8 +38,8 @@ type Tab =
 const NAV_ITEMS: { tab: Tab; label: string }[] = [
   { tab: "today", label: "Dashboard Today" },
   { tab: "clients", label: "Current Client" },
-  { tab: "surrendered", label: "해지 Plan" },
   { tab: "prospects", label: "Potential Client" },
+  { tab: "surrendered", label: "Surrender Plan" },
   { tab: "calendar", label: "Calendar" },
   { tab: "columns", label: "Columns" },
   { tab: "knowledge", label: "Knowledge Vault" },
@@ -796,7 +796,7 @@ export default function Home() {
               <div className="tab-panel active">
                 <div className="section-title-row">
                   <div className="section-title">
-                    해지 Plan · {filteredSurrenderedCount}명 (Policy {filteredSurrenderedPolicies.length}건)
+                    Surrender Plan · {filteredSurrenderedCount}명 (Policy {filteredSurrenderedPolicies.length}건)
                   </div>
                 </div>
                 {filteredSurrenderedPolicies.length ? (
