@@ -202,6 +202,11 @@ export function PolicyTable({
     loanFilterOn,
   ]);
 
+  const filteredClientCount = useMemo(
+    () => new Set(filtered.map((p) => p.personId)).size,
+    [filtered]
+  );
+
   // Counts every individual policy issued per year (not just the
   // representative row shown per client), so the year divider can report
   // how many policies were actually issued that year.
@@ -337,6 +342,11 @@ export function PolicyTable({
         >
           {groupByClient ? "전체 Policy 보기" : "고객별 보기"}
         </button>
+        {hasActiveFilter && (
+          <span className="filter-result-count">
+            필터 결과: 고객 {filteredClientCount}명 · Policy {filtered.length}건
+          </span>
+        )}
       </div>
       {filterOpen && (
       <div className="filter-panel">
