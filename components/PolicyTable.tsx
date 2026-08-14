@@ -93,16 +93,26 @@ function periodBucketFor(p: PolicyDTO): PeriodBucket | null {
   return "15년 +";
 }
 
+// A policy can have several status flags true at once (e.g. 에이전트변경 +
+// 정책변경 + 검토완료 all checked). Returns every flag that applies, in
+// priority order, so filtering can match on any of them while the badge/
+// sort still use just the first (highest-priority) one.
+function statusKeysFor(p: PolicyDTO): StatusKey[] {
+  const keys: StatusKey[] = [];
+  if (p.surrendered) keys.push("surrendered");
+  if (p.needsAttention) keys.push("attention");
+  if (p.policyChanged) keys.push("policyChanged");
+  if (p.changeNeeded) keys.push("changeNeeded");
+  if (p.agentChanged) keys.push("agentChanged");
+  if (p.needsReview) keys.push("needsReview");
+  if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) keys.push("upcoming");
+  if (p.reviewed) keys.push("reviewed");
+  if (keys.length === 0) keys.push("normal");
+  return keys;
+}
+
 function statusKeyFor(p: PolicyDTO): StatusKey {
-  if (p.surrendered) return "surrendered";
-  if (p.needsAttention) return "attention";
-  if (p.policyChanged) return "policyChanged";
-  if (p.changeNeeded) return "changeNeeded";
-  if (p.agentChanged) return "agentChanged";
-  if (p.needsReview) return "needsReview";
-  if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) return "upcoming";
-  if (p.reviewed) return "reviewed";
-  return "normal";
+  return statusKeysFor(p)[0];
 }
 
 function pillFor(p: PolicyDTO) {
@@ -180,10 +190,20 @@ export function PolicyTable({
     (loanFilterOn ? 1 : 0);
   const hasActiveFilter = activeFilterCount > 0;
 
+  function clearAllFilters() {
+    setActiveStatuses(new Set());
+    setActiveAgeBrackets(new Set());
+    setActiveCategories(new Set());
+    setActiveCarriers(new Set());
+    setActiveGrades(new Set());
+    setActivePeriods(new Set());
+    setLoanFilterOn(false);
+  }
+
   const filtered = useMemo(() => {
     if (!hasActiveFilter) return policies;
     return policies.filter((p) => {
-      if (activeStatuses.size && !activeStatuses.has(statusKeyFor(p))) return false;
+      if (activeStatuses.size && !statusKeysFor(p).some((k) => activeStatuses.has(k))) return false;
       if (activeAgeBrackets.size && (!p.ageBracket || !activeAgeBrackets.has(p.ageBracket))) return false;
       if (activeCategories.size && !activeCategories.has(p.category)) return false;
       if (activeCarriers.size && (!p.carrier || !activeCarriers.has(p.carrier))) return false;
@@ -348,9 +368,19 @@ export function PolicyTable({
           {groupByClient ? "전체 Policy 보기" : "고객별 보기"}
         </button>
         {hasActiveFilter && (
-          <span className="filter-result-count">
-            필터 결과: 고객 {filteredClientCount}명 · Policy {filtered.length}건
-          </span>
+          <>
+            <button
+              type="button"
+              className="btn-mini"
+              onClick={clearAllFilters}
+              style={{ marginLeft: 8 }}
+            >
+              필터 해제 (전체 보기)
+            </button>
+            <span className="filter-result-count">
+              필터 결과: 고객 {filteredClientCount}명 · Policy {filtered.length}건
+            </span>
+          </>
         )}
       </div>
       {filterOpen && (
@@ -448,17 +478,7 @@ export function PolicyTable({
           </div>
         )}
         {hasActiveFilter && (
-          <button
-            className="filter-chip filter-chip-clear"
-            onClick={() => {
-              setActiveStatuses(new Set());
-              setActiveAgeBrackets(new Set());
-              setActiveCategories(new Set());
-              setActiveCarriers(new Set());
-              setActiveGrades(new Set());
-              setActivePeriods(new Set());
-            }}
-          >
+          <button className="filter-chip filter-chip-clear" onClick={clearAllFilters}>
             필터 초기화
           </button>
         )}
