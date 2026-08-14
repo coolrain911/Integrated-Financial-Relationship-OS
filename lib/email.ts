@@ -26,10 +26,12 @@ export function buildPolicyReviewEmail(policy: {
   periodYears: number | null;
   category: "Life" | "Annuity";
   product: string | null;
+  deathBenefit: number | string | null;
   totalPremium: number | string | null;
   initialPremium: number | string | null;
   additionalPremium: number | string | null;
   accountValue: number | string | null;
+  optionType: string | null;
 }): { subject: string; body: string } {
   const policyLabel = policy.policyNumber || "정책";
   const subject = `Policy ${policyLabel} - 중간 Review`;
@@ -54,8 +56,10 @@ export function buildPolicyReviewEmail(policy: {
     `Policy: ${policyLabel}`,
     `Issued Date: ${policy.issueDate || ""}`,
     `Plan: ${policy.product || ""}`,
+    `Death Benefit(설정): ${toDisplayMoney(policy.deathBenefit)}`,
     `Total Premium: ${premiumTotal}`,
     `Account Value: ${toDisplayMoney(policy.accountValue)}`,
+    `Option: ${policy.optionType || ""}`,
     "",
     issuedSentence,
     "Review 결과 애초에 계획했던 것보다 Accumulation 상황이 [ 좋습니다 / 아쉽습니다 ].",
