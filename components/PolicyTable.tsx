@@ -3,7 +3,7 @@
 import { Fragment, useMemo, useState } from "react";
 import type { AgeBracket, PersonGrade, PolicyDTO } from "@/lib/types";
 import { compareByLastName } from "@/lib/mapping";
-import { buildGmailComposeUrl } from "@/lib/email";
+import { buildGmailComposeUrl, buildPolicyReviewEmail } from "@/lib/email";
 import { CATEGORY_OPTIONS, PERSON_GRADE_OPTIONS } from "@/lib/options";
 
 type SortKey = "lastName" | "issueDate" | "category" | "carrier" | "status" | "grade" | "policyCount";
@@ -296,13 +296,18 @@ export function PolicyTable({
     return groups;
   }, [filtered, sortKey, sortDir, groupByClient]);
 
+  const selectedPolicies = useMemo(
+    () => policies.filter((p) => selected.has(p.id)),
+    [policies, selected]
+  );
+
   const selectedEmails = useMemo(() => {
     const emails: string[] = [];
-    policies.forEach((p) => {
-      if (selected.has(p.id) && p.email) emails.push(p.email);
+    selectedPolicies.forEach((p) => {
+      if (p.email) emails.push(p.email);
     });
     return Array.from(new Set(emails));
-  }, [policies, selected]);
+  }, [selectedPolicies]);
 
   function toggleSelect(id: number) {
     setSelected((prev) => toggleInSet(prev, id));
@@ -319,6 +324,13 @@ export function PolicyTable({
   function sendEmail() {
     if (selectedEmails.length === 0) {
       alert("이메일 주소가 있는 사람을 선택해주세요.");
+      return;
+    }
+    // A drafted subject/body only makes sense for one policy at a time —
+    // for a multi-recipient blast, fall back to a blank compose as before.
+    if (selectedPolicies.length === 1) {
+      const { subject, body } = buildPolicyReviewEmail(selectedPolicies[0]);
+      window.open(buildGmailComposeUrl(selectedEmails, { subject, body }), "_blank");
       return;
     }
     window.open(buildGmailComposeUrl(selectedEmails), "_blank");
