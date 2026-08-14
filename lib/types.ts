@@ -79,6 +79,7 @@ export type PolicyDTO = {
   needsAttention: boolean;
   policyChanged: boolean;
   changeNeeded: boolean;
+  agentChanged: boolean;
   needsReview: boolean;
   reviewReason: string | null;
   comment: string | null;
@@ -108,6 +109,7 @@ export type PolicyUpdateBody = Partial<{
   needsAttention: boolean;
   policyChanged: boolean;
   changeNeeded: boolean;
+  agentChanged: boolean;
   needsReview: boolean;
   reviewReason: string | null;
   comment: string | null;

@@ -899,6 +899,11 @@ body {
   color: #ffffff;
 }
 
+.status-badge-caution {
+  background: var(--caution);
+  color: #ffffff;
+}
+
 .review-flag-mark {
   display: inline-flex;
   align-items: center;

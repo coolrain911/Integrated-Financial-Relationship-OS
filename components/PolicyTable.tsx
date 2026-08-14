@@ -20,6 +20,7 @@ type StatusKey =
   | "attention"
   | "policyChanged"
   | "changeNeeded"
+  | "agentChanged"
   | "reviewed"
   | "needsReview"
   | "upcoming"
@@ -31,6 +32,7 @@ const STATUS_ORDER: StatusKey[] = [
   "attention",
   "policyChanged",
   "changeNeeded",
+  "agentChanged",
   "needsReview",
   "upcoming",
   "reviewed",
@@ -50,6 +52,7 @@ const STATUS_LABELS: Record<StatusKey, string> = {
   attention: "주의요망",
   policyChanged: "정책변경",
   changeNeeded: "변경필요",
+  agentChanged: "에이전트변경",
   reviewed: "검토완료",
   needsReview: "검토필요",
   upcoming: "D-day 임박",
@@ -61,6 +64,7 @@ const STATUS_PILL_CLASS: Record<StatusKey, string> = {
   attention: "status-badge-urgent",
   policyChanged: "status-badge-accent",
   changeNeeded: "status-badge-urgent",
+  agentChanged: "status-badge-caution",
   reviewed: "status-badge-success",
   needsReview: "status-badge-info",
   upcoming: "status-badge-warn",
@@ -94,6 +98,7 @@ function statusKeyFor(p: PolicyDTO): StatusKey {
   if (p.needsAttention) return "attention";
   if (p.policyChanged) return "policyChanged";
   if (p.changeNeeded) return "changeNeeded";
+  if (p.agentChanged) return "agentChanged";
   if (p.needsReview) return "needsReview";
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) return "upcoming";
   if (p.reviewed) return "reviewed";

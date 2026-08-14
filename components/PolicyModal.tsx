@@ -88,6 +88,7 @@ export function PolicyModal({
   const [needsAttention, setNeedsAttention] = useState(false);
   const [policyChanged, setPolicyChanged] = useState(false);
   const [changeNeeded, setChangeNeeded] = useState(false);
+  const [agentChanged, setAgentChanged] = useState(false);
   const [comment, setComment] = useState("");
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
@@ -141,6 +142,7 @@ export function PolicyModal({
       setNeedsAttention(data.needsAttention);
       setPolicyChanged(data.policyChanged);
       setChangeNeeded(data.changeNeeded);
+      setAgentChanged(data.agentChanged);
       setComment(data.comment ?? "");
       setNote(data.note ?? "");
       setReviewed(data.reviewed);
@@ -193,6 +195,7 @@ export function PolicyModal({
                 needsAttention,
                 policyChanged,
                 changeNeeded,
+                agentChanged,
                 reviewed,
                 needsReview,
                 reviewReason,
@@ -432,6 +435,14 @@ export function PolicyModal({
                     onChange={(e) => setChangeNeeded(e.target.checked)}
                   />
                   <span>변경필요</span>
+                </label>
+                <label className="form-field form-field-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={agentChanged}
+                    onChange={(e) => setAgentChanged(e.target.checked)}
+                  />
+                  <span>에이전트변경</span>
                 </label>
                 <label className="form-field form-field-checkbox">
                   <input
