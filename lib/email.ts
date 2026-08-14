@@ -25,6 +25,7 @@ export function buildPolicyReviewEmail(policy: {
   issueDate: string | null;
   periodYears: number | null;
   category: "Life" | "Annuity";
+  product: string | null;
   totalPremium: number | string | null;
   initialPremium: number | string | null;
   additionalPremium: number | string | null;
@@ -33,16 +34,13 @@ export function buildPolicyReviewEmail(policy: {
   const policyLabel = policy.policyNumber || "정책";
   const subject = `Policy ${policyLabel} - 중간 Review`;
 
-  let issuedLine = `가입하신 Policy ${policyLabel}`;
+  let issuedSentence = `가입하신 Policy ${policyLabel}`;
   if (policy.issueDate) {
     const [year, month] = policy.issueDate.split("-");
-    issuedLine = `${year}년 ${Number(month)}월에 가입하신 Policy ${policyLabel}`;
+    issuedSentence = `${year}년 ${Number(month)}월에 가입하신 Policy ${policyLabel}`;
   }
-  if (policy.periodYears !== null) {
-    issuedLine += `가 ${policy.periodYears}년이 되었습니다.`;
-  } else {
-    issuedLine += "의 중간 점검을 안내드립니다.";
-  }
+  issuedSentence +=
+    policy.periodYears !== null ? `가 ${policy.periodYears}년이 되었습니다.` : "의 중간 점검을 안내드립니다.";
 
   const premiumTotal =
     policy.category === "Annuity"
@@ -51,15 +49,21 @@ export function buildPolicyReviewEmail(policy: {
 
   const lines = [
     "안녕하세요, 박찬우입니다.",
+    "가입하신 Policy에 대한 중간 Review 를 위해 메일을 보냅니다. ",
     "",
-    issuedLine,
-    "Review 결과 애초에 계획했던 것보다 Accumulation 상황이 [ 좋습니다 / 아쉽습니다 ].",
-    "",
-    premiumTotal ? `총 납입금: ${premiumTotal}` : "총 납입금: ",
+    `Policy: ${policyLabel}`,
+    `Issued Date: ${policy.issueDate || ""}`,
+    `Plan: ${policy.product || ""}`,
+    `Total Premium: ${premiumTotal}`,
     `Account Value: ${toDisplayMoney(policy.accountValue)}`,
-    "Illustration 예상 Value: ",
     "",
-    "현재 Policy를 변경하거나 전반적인 Review가 필요하시거나 궁금하신 사항이 있으시면 연락 주세요.",
+    issuedSentence,
+    "Review 결과 애초에 계획했던 것보다 Accumulation 상황이 [ 좋습니다 / 아쉽습니다 ].",
+    "가입시 Illustration 상의 예측치와 비교해본다면 Illustration 상의 Account Value는 $             로 [예측한대입니다 / 예측치보다 높은 상황입니다 / 다소 예측치보다 낮은 상황입니다]",
+    "",
+    "위 내용을 확인하시고 궁금한 사항이 있으면 연락주시기 바랍니다. ",
+    "현재 Policy를 변경할 사항은 없으나 구체적인 Review가 필요하시다면 연락 주시기 바랍니다.",
+    "안녕히 계세요.",
   ];
 
   return { subject, body: lines.join("\n") };
