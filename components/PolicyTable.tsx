@@ -528,7 +528,7 @@ export function PolicyTable({
               <th className="sortable" onClick={() => toggleSort("status")}>
                 상태{sortArrow("status")}
               </th>
-              <th>검토</th>
+              <th>주의</th>
               <th className="sticky-col-right"></th>
             </tr>
           </thead>
