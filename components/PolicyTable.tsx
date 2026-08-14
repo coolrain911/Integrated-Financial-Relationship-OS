@@ -22,7 +22,6 @@ type StatusKey =
   | "changeNeeded"
   | "agentChanged"
   | "reviewed"
-  | "needsReview"
   | "upcoming"
   | "normal";
 
@@ -33,7 +32,6 @@ const STATUS_ORDER: StatusKey[] = [
   "policyChanged",
   "changeNeeded",
   "agentChanged",
-  "needsReview",
   "upcoming",
   "reviewed",
   "normal",
@@ -54,7 +52,6 @@ const STATUS_LABELS: Record<StatusKey, string> = {
   changeNeeded: "변경필요",
   agentChanged: "에이전트변경",
   reviewed: "검토완료",
-  needsReview: "검토필요",
   upcoming: "D-day 임박",
   normal: "정상",
 };
@@ -66,7 +63,6 @@ const STATUS_PILL_CLASS: Record<StatusKey, string> = {
   changeNeeded: "status-badge-urgent",
   agentChanged: "status-badge-caution",
   reviewed: "status-badge-success",
-  needsReview: "status-badge-info",
   upcoming: "status-badge-warn",
   normal: "status-badge-muted",
 };
@@ -104,7 +100,6 @@ function statusKeysFor(p: PolicyDTO): StatusKey[] {
   if (p.policyChanged) keys.push("policyChanged");
   if (p.changeNeeded) keys.push("changeNeeded");
   if (p.agentChanged) keys.push("agentChanged");
-  if (p.needsReview) keys.push("needsReview");
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) keys.push("upcoming");
   if (p.reviewed) keys.push("reviewed");
   if (keys.length === 0) keys.push("normal");
