@@ -70,6 +70,7 @@ body {
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.7px #0a84ff;
 }
 
 .logo-sub {
