@@ -139,6 +139,12 @@ export function PolicyTable({
   const [activePeriods, setActivePeriods] = useState<Set<PeriodBucket>>(new Set());
   const [loanFilterOn, setLoanFilterOn] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  // Default view collapses each client's policies into one row (see the
+  // "rows" memo below). Turning this off shows every individual policy as
+  // its own row, so a client's older policies aren't hidden behind a
+  // "+N" badge under a different client — needed to see the full year-by-
+  // year picture of how many policies were issued/clients contacted.
+  const [groupByClient, setGroupByClient] = useState(true);
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
@@ -211,32 +217,40 @@ export function PolicyTable({
 
   // Groups same-client policies into a single row: the most recently issued
   // policy is shown, and any others collapse into a "+N" badge on Policy.
+  // Skipped entirely when groupByClient is off (see its declaration above).
   const rows = useMemo(() => {
-    const byPerson = new Map<number, PolicyDTO[]>();
-    filtered.forEach((p) => {
-      const list = byPerson.get(p.personId);
-      if (list) list.push(p);
-      else byPerson.set(p.personId, [p]);
-    });
-
     const groups: { representative: PolicyDTO; otherPolicyNumbers: string[]; otherYears: string[] }[] =
       [];
-    byPerson.forEach((list) => {
-      const representative = list.reduce((best, cur) =>
-        (cur.issueDate || "") > (best.issueDate || "") ? cur : best
-      );
-      const others = list.filter((p) => p.id !== representative.id);
-      const otherPolicyNumbers = others.map((p) => p.policyNumber || "-");
-      const repYear = representative.issueDate ? representative.issueDate.slice(0, 4) : null;
-      const otherYears = Array.from(
-        new Set(
-          others
-            .map((p) => (p.issueDate ? p.issueDate.slice(0, 4) : null))
-            .filter((y): y is string => y !== null && y !== repYear)
-        )
-      ).sort();
-      groups.push({ representative, otherPolicyNumbers, otherYears });
-    });
+
+    if (groupByClient) {
+      const byPerson = new Map<number, PolicyDTO[]>();
+      filtered.forEach((p) => {
+        const list = byPerson.get(p.personId);
+        if (list) list.push(p);
+        else byPerson.set(p.personId, [p]);
+      });
+
+      byPerson.forEach((list) => {
+        const representative = list.reduce((best, cur) =>
+          (cur.issueDate || "") > (best.issueDate || "") ? cur : best
+        );
+        const others = list.filter((p) => p.id !== representative.id);
+        const otherPolicyNumbers = others.map((p) => p.policyNumber || "-");
+        const repYear = representative.issueDate ? representative.issueDate.slice(0, 4) : null;
+        const otherYears = Array.from(
+          new Set(
+            others
+              .map((p) => (p.issueDate ? p.issueDate.slice(0, 4) : null))
+              .filter((y): y is string => y !== null && y !== repYear)
+          )
+        ).sort();
+        groups.push({ representative, otherPolicyNumbers, otherYears });
+      });
+    } else {
+      filtered.forEach((p) => {
+        groups.push({ representative: p, otherPolicyNumbers: [], otherYears: [] });
+      });
+    }
 
     groups.sort((a, b) => {
       const pa = a.representative;
@@ -255,7 +269,7 @@ export function PolicyTable({
       return sortDir === "asc" ? cmp : -cmp;
     });
     return groups;
-  }, [filtered, sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir, groupByClient]);
 
   const selectedEmails = useMemo(() => {
     const emails: string[] = [];
@@ -314,6 +328,14 @@ export function PolicyTable({
           onClick={() => setFilterOpen((v) => !v)}
         >
           필터{hasActiveFilter ? ` (${activeFilterCount})` : ""} {filterOpen ? "▲" : "▼"}
+        </button>
+        <button
+          type="button"
+          className={`btn-mini${!groupByClient ? " filter-toggle-active" : ""}`}
+          onClick={() => setGroupByClient((v) => !v)}
+          style={{ marginLeft: 8 }}
+        >
+          {groupByClient ? "전체 Policy 보기" : "고객별 보기"}
         </button>
       </div>
       {filterOpen && (
