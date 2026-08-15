@@ -168,6 +168,7 @@ export default function Home() {
   const [dateStr, setDateStr] = useState("");
   const [currentMonth, setCurrentMonth] = useState<number | null>(null);
   const [reviewExpanded, setReviewExpanded] = useState(false);
+  const [annivExpanded, setAnnivExpanded] = useState(false);
 
   const [reviewUnselected, setReviewUnselected] = useState<Set<number>>(new Set());
   const [annivUnselected, setAnnivUnselected] = useState<Set<number>>(new Set());
@@ -533,14 +534,14 @@ export default function Home() {
     [activePolicies, needsContact]
   );
   const reviewItems = reviewExpanded ? allContactItems : allContactItems.slice(0, 6);
-  const annivItems = useMemo(
+  const allAnnivItems = useMemo(
     () =>
       activePolicies
         .filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30)
-        .sort((a, b) => (a.daysToAnniv as number) - (b.daysToAnniv as number))
-        .slice(0, 6),
+        .sort((a, b) => (a.daysToAnniv as number) - (b.daysToAnniv as number)),
     [activePolicies]
   );
+  const annivItems = annivExpanded ? allAnnivItems : allAnnivItems.slice(0, 6);
 
   function toggleReviewSelect(id: number) {
     setReviewUnselected((prev) => {
@@ -800,6 +801,24 @@ export default function Home() {
                       ))
                     ) : (
                       <div className="empty">30일 이내 anniversary 없음</div>
+                    )}
+                    {!annivExpanded && allAnnivItems.length > 6 && (
+                      <button
+                        type="button"
+                        className="show-more-link"
+                        onClick={() => setAnnivExpanded(true)}
+                      >
+                        이외 {allAnnivItems.length - 6}건
+                      </button>
+                    )}
+                    {annivExpanded && allAnnivItems.length > 6 && (
+                      <button
+                        type="button"
+                        className="show-more-link"
+                        onClick={() => setAnnivExpanded(false)}
+                      >
+                        접기
+                      </button>
                     )}
                   </div>
                 </div>
