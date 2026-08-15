@@ -89,6 +89,14 @@ function periodBucketFor(p: PolicyDTO): PeriodBucket | null {
   return "15년 +";
 }
 
+const ISSUE_MONTH_ORDER: number[] = Array.from({ length: 12 }, (_, i) => i + 1);
+
+function issueMonthFor(p: PolicyDTO): number | null {
+  if (!p.issueDate) return null;
+  const month = Number(p.issueDate.slice(5, 7));
+  return Number.isNaN(month) ? null : month;
+}
+
 // A policy can have several status flags true at once (e.g. 에이전트변경 +
 // 정책변경 + 검토완료 all checked). Returns every flag that applies, in
 // priority order, so filtering can match on any of them while the badge/
@@ -147,6 +155,7 @@ export function PolicyTable({
   const [activeCarriers, setActiveCarriers] = useState<Set<string>>(new Set());
   const [activeGrades, setActiveGrades] = useState<Set<PersonGrade>>(new Set());
   const [activePeriods, setActivePeriods] = useState<Set<PeriodBucket>>(new Set());
+  const [activeIssueMonths, setActiveIssueMonths] = useState<Set<number>>(new Set());
   const [loanFilterOn, setLoanFilterOn] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   // Default view collapses each client's policies into one row (see the
@@ -182,6 +191,7 @@ export function PolicyTable({
     activeCarriers.size +
     activeGrades.size +
     activePeriods.size +
+    activeIssueMonths.size +
     (loanFilterOn ? 1 : 0);
   const hasActiveFilter = activeFilterCount > 0;
 
@@ -192,6 +202,7 @@ export function PolicyTable({
     setActiveCarriers(new Set());
     setActiveGrades(new Set());
     setActivePeriods(new Set());
+    setActiveIssueMonths(new Set());
     setLoanFilterOn(false);
   }
 
@@ -207,6 +218,10 @@ export function PolicyTable({
         const bucket = periodBucketFor(p);
         if (!bucket || !activePeriods.has(bucket)) return false;
       }
+      if (activeIssueMonths.size) {
+        const month = issueMonthFor(p);
+        if (!month || !activeIssueMonths.has(month)) return false;
+      }
       if (loanFilterOn && !p.loanOrWithdrawal) return false;
       return true;
     });
@@ -219,6 +234,7 @@ export function PolicyTable({
     activeCarriers,
     activeGrades,
     activePeriods,
+    activeIssueMonths,
     loanFilterOn,
   ]);
 
@@ -464,6 +480,20 @@ export function PolicyTable({
                 onClick={() => setActivePeriods((prev) => toggleInSet(prev, bucket))}
               >
                 {bucket}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="filter-group">
+          <div className="filter-group-label">가입월</div>
+          <div className="filter-chip-row">
+            {ISSUE_MONTH_ORDER.map((month) => (
+              <button
+                key={month}
+                className={`filter-chip${activeIssueMonths.has(month) ? " active" : ""}`}
+                onClick={() => setActiveIssueMonths((prev) => toggleInSet(prev, month))}
+              >
+                {month}월
               </button>
             ))}
           </div>
