@@ -166,6 +166,7 @@ export default function Home() {
   const [navOpen, setNavOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [dateStr, setDateStr] = useState("");
+  const [currentMonth, setCurrentMonth] = useState<number | null>(null);
 
   const [reviewUnselected, setReviewUnselected] = useState<Set<number>>(new Set());
   const [annivUnselected, setAnnivUnselected] = useState<Set<number>>(new Set());
@@ -216,15 +217,17 @@ export default function Home() {
     // Deliberately deferred to an effect: the page is statically prerendered,
     // so computing "today" during render would bake the build-time date into
     // the HTML and mismatch the client's real date on hydration.
+    const now = new Date();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDateStr(
-      new Date().toLocaleDateString("ko-KR", {
+      now.toLocaleDateString("ko-KR", {
         year: "numeric",
         month: "long",
         day: "numeric",
         weekday: "long",
       })
     );
+    setCurrentMonth(now.getMonth() + 1);
 
     // Chrome silently drops speechSynthesis.speak() calls made before the
     // page has seen any user gesture, and whether that blocks a given load
@@ -501,9 +504,28 @@ export default function Home() {
     () => new Set(activePolicies.map((p) => p.personId)).size,
     [activePolicies]
   );
+  // 고객접촉 필요: 주의요망 또는 변경필요 정책 중, 가입월(매년 반복되는 기념월)이
+  // 이번 달 기준 전월/이번달/다음달 범위에 드는 것만 — 지금이 8월이면 7·8·9월,
+  // currentMonth는 하이드레이션 불일치를 피하려고 클라이언트에서만 채워진다.
+  const contactWindowMonths = useMemo(() => {
+    if (currentMonth === null) return null;
+    const wrap = (m: number) => ((m - 1 + 12) % 12) + 1;
+    return new Set([wrap(currentMonth - 1), currentMonth, wrap(currentMonth + 1)]);
+  }, [currentMonth]);
+
+  const needsContact = useCallback(
+    (p: PolicyDTO): boolean => {
+      if (!p.needsAttention && !p.changeNeeded) return false;
+      if (!contactWindowMonths || !p.issueDate) return false;
+      const month = Number(p.issueDate.slice(5, 7));
+      return contactWindowMonths.has(month);
+    },
+    [contactWindowMonths]
+  );
+
   const reviewCount = useMemo(
-    () => activePolicies.filter((p) => p.needsReview && !p.reviewed).length,
-    [activePolicies]
+    () => activePolicies.filter(needsContact).length,
+    [activePolicies, needsContact]
   );
   const weekAnniv = useMemo(
     () =>
@@ -513,8 +535,8 @@ export default function Home() {
   );
 
   const reviewItems = useMemo(
-    () => activePolicies.filter((p) => p.needsReview && !p.reviewed).slice(0, 6),
-    [activePolicies]
+    () => activePolicies.filter(needsContact).slice(0, 6),
+    [activePolicies, needsContact]
   );
   const annivItems = useMemo(
     () =>
@@ -709,7 +731,7 @@ export default function Home() {
                 <div className="two-col">
                   <div className="section">
                     <div className="section-title-row">
-                      <div className="section-title">검토필요</div>
+                      <div className="section-title">고객접촉 필요</div>
                       <button
                         className="btn-mini"
                         disabled={reviewEmails.length === 0}
@@ -734,7 +756,7 @@ export default function Home() {
                         />
                       ))
                     ) : (
-                      <div className="empty">검토필요 항목 없음</div>
+                      <div className="empty">고객접촉 필요 항목 없음</div>
                     )}
                   </div>
                   <div className="section">

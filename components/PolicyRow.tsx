@@ -7,12 +7,14 @@ import { fmtMoney } from "@/lib/format";
 function pillFor(p: {
   surrendered: boolean;
   needsAttention: boolean;
+  changeNeeded: boolean;
   reviewed: boolean;
   needsReview: boolean;
   daysToAnniv: number | null;
 }) {
   if (p.surrendered) return { cls: "status-badge-muted", label: "계약해지" };
   if (p.needsAttention) return { cls: "status-badge-urgent", label: "주의요망" };
+  if (p.changeNeeded) return { cls: "status-badge-urgent", label: "변경필요" };
   if (p.reviewed) return { cls: "status-badge-success", label: "검토완료" };
   if (p.needsReview) return { cls: "status-badge-info", label: "검토필요" };
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) {
@@ -63,6 +65,7 @@ export function PolicyRow({
   const pill = pillFor({
     surrendered: policy.surrendered,
     needsAttention: policy.needsAttention,
+    changeNeeded: policy.changeNeeded,
     reviewed,
     needsReview: policy.needsReview,
     daysToAnniv: policy.daysToAnniv,
