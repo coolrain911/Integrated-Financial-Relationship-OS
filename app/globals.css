@@ -1119,6 +1119,12 @@ body {
   padding: 16px 18px;
 }
 
+.section-card .section-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--success);
+}
+
 .news-list {
   display: flex;
   flex-direction: column;
