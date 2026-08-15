@@ -797,7 +797,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="two-col">
-                  <div className="section">
+                  <div className="section section-card">
                     <div className="section-title-row">
                       <div className="section-title">Daily Financial News</div>
                     </div>
@@ -828,7 +828,7 @@ export default function Home() {
                       <div className="empty">표시할 뉴스가 없습니다.</div>
                     )}
                   </div>
-                  <div className="section">
+                  <div className="section section-card">
                     <div className="section-title-row">
                       <div className="section-title">Key Financial Index</div>
                     </div>

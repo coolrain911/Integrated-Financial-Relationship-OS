@@ -1095,6 +1095,30 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.kpi-clickable .n {
+  font-size: 29px;
+}
+
+.kpi-clickable .l {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.kpi-clickable.danger {
+  background: var(--danger-bg);
+}
+
+.kpi-clickable.accent {
+  background: var(--accent-bg);
+}
+
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
 .news-list {
   display: flex;
   flex-direction: column;
