@@ -167,6 +167,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [dateStr, setDateStr] = useState("");
   const [currentMonth, setCurrentMonth] = useState<number | null>(null);
+  const [reviewExpanded, setReviewExpanded] = useState(false);
 
   const [reviewUnselected, setReviewUnselected] = useState<Set<number>>(new Set());
   const [annivUnselected, setAnnivUnselected] = useState<Set<number>>(new Set());
@@ -505,22 +506,15 @@ export default function Home() {
     [activePolicies]
   );
   // 고객접촉 필요: 주의요망 또는 변경필요 정책 중, 가입월(매년 반복되는 기념월)이
-  // 이번 달 기준 전월/이번달/다음달 범위에 드는 것만 — 지금이 8월이면 7·8·9월,
-  // currentMonth는 하이드레이션 불일치를 피하려고 클라이언트에서만 채워진다.
-  const contactWindowMonths = useMemo(() => {
-    if (currentMonth === null) return null;
-    const wrap = (m: number) => ((m - 1 + 12) % 12) + 1;
-    return new Set([wrap(currentMonth - 1), currentMonth, wrap(currentMonth + 1)]);
-  }, [currentMonth]);
-
+  // 이번 달과 같은 것만 — currentMonth는 하이드레이션 불일치를 피하려고
+  // 클라이언트에서만 채워진다.
   const needsContact = useCallback(
     (p: PolicyDTO): boolean => {
       if (!p.needsAttention && !p.changeNeeded) return false;
-      if (!contactWindowMonths || !p.issueDate) return false;
-      const month = Number(p.issueDate.slice(5, 7));
-      return contactWindowMonths.has(month);
+      if (currentMonth === null || !p.issueDate) return false;
+      return Number(p.issueDate.slice(5, 7)) === currentMonth;
     },
-    [contactWindowMonths]
+    [currentMonth]
   );
 
   const reviewCount = useMemo(
@@ -534,10 +528,11 @@ export default function Home() {
     [activePolicies]
   );
 
-  const reviewItems = useMemo(
-    () => activePolicies.filter(needsContact).slice(0, 6),
+  const allContactItems = useMemo(
+    () => activePolicies.filter(needsContact),
     [activePolicies, needsContact]
   );
+  const reviewItems = reviewExpanded ? allContactItems : allContactItems.slice(0, 6);
   const annivItems = useMemo(
     () =>
       activePolicies
@@ -757,6 +752,24 @@ export default function Home() {
                       ))
                     ) : (
                       <div className="empty">고객접촉 필요 항목 없음</div>
+                    )}
+                    {!reviewExpanded && allContactItems.length > 6 && (
+                      <button
+                        type="button"
+                        className="show-more-link"
+                        onClick={() => setReviewExpanded(true)}
+                      >
+                        이외 {allContactItems.length - 6}건
+                      </button>
+                    )}
+                    {reviewExpanded && allContactItems.length > 6 && (
+                      <button
+                        type="button"
+                        className="show-more-link"
+                        onClick={() => setReviewExpanded(false)}
+                      >
+                        접기
+                      </button>
                     )}
                   </div>
                   <div className="section">
