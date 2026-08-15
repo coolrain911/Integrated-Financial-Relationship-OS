@@ -31,17 +31,26 @@ const FEEDS: { url: string; source: string; kind: "news" | "column"; lang: "ko" 
   { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", source: "CNBC", kind: "news", lang: "en" },
 ];
 
+// Composition target: 5 Korean news + 2 Korean columns + 4 English — Korean
+// coverage still leads (매체 요청대로), but a healthy slice of English/CNBC
+// survives instead of being crowded out once the Korean feeds return plenty.
+const QUOTA = { koNews: 5, koColumn: 2, en: 4 };
+
+// "중요도"는 거시경제(금리/고용/성장) > 시장/투자 > 보험·은퇴 순으로 정의하고,
+// 같은 등급 안에서는 최신순으로 정렬한다. 두 언어 모두 같은 개념을 적용.
+const KO_TIER1_MACRO = [
+  "금리", "기준금리", "인플레이션", "물가", "고용", "일자리", "연준",
+  "경기침체", "경기둔화", "경기회복", "경기부양", "성장률",
+];
+const KO_TIER2_MARKETS = ["증시", "주식", "환율", "달러", "펀드", "투자", "나스닥", "다우"];
+const KO_TIER3_INSURANCE = ["보험", "연금", "은퇴"];
 const FINANCE_KEYWORDS_KO = [
-  "금리", "증시", "주식", "환율", "연준", "인플레이션", "경기", "부동산",
-  "세금", "은퇴", "보험", "달러", "연금", "경제", "펀드", "투자", "관세",
-  "일자리", "고용", "물가",
+  ...KO_TIER1_MACRO,
+  ...KO_TIER2_MARKETS,
+  ...KO_TIER3_INSURANCE,
+  "부동산", "세금", "경제", "관세",
 ];
 
-// English articles are additionally ranked by topic once matched: macro
-// finance (inflation/jobs/growth) first, then stocks/bonds, then
-// insurance/long-term care — reflecting what matters most to Chanwoo's
-// clients — with everything else that merely mentions a general finance term
-// (tax, dollar, ...) ranked last among English items.
 const EN_TIER1_MACRO = [
   "inflation", "unemployment", "jobless", "gdp", "growth", "recession",
   "fed", "federal reserve", "interest rate", "rate hike", "rate cut", "jobs report",
@@ -92,20 +101,57 @@ function stripHtml(raw: string): string {
     .trim();
 }
 
-function matchesFinance(title: string, lang: "ko" | "en"): boolean {
-  const keywords = lang === "en" ? FINANCE_KEYWORDS_EN : FINANCE_KEYWORDS_KO;
-  const haystack = lang === "en" ? title.toLowerCase() : title;
-  return keywords.some((k) => haystack.includes(k));
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// 0 = Korean (always first), 1-3 = English by topic tier, 4 = other English.
-function priorityGroup(item: NewsItemDTO): number {
-  if (item.lang === "ko") return 0;
-  const text = `${item.title} ${item.description ?? ""}`.toLowerCase();
-  if (EN_TIER1_MACRO.some((k) => text.includes(k))) return 1;
-  if (EN_TIER2_MARKETS.some((k) => text.includes(k))) return 2;
-  if (EN_TIER3_INSURANCE.some((k) => text.includes(k))) return 3;
+// Plain .includes() is fine for almost every Korean keyword here — legitimate
+// compounds like "뉴욕증시"/"국민연금" put the keyword right after another
+// Hangul syllable, and rejecting that would lose real matches. "연준"(the Fed)
+// is the one exception: it's also a common Korean given name, so "박연준"
+// (a person's name) false-matches on plain .includes(). Guard only that
+// keyword by requiring it not be embedded right after another Hangul
+// syllable — a name (surname+given name) always has one there, while real
+// usage ("연준은 금리를...", "미국 연준 의장...") never does.
+function koIncludesKeyword(text: string, keyword: string): boolean {
+  if (keyword === "연준") return /(?<![가-힣])연준/.test(text);
+  return text.includes(keyword);
+}
+
+// English tokenizes on whitespace, so a real word-boundary regex is enough
+// to stop e.g. "rate" from matching inside "corporate".
+function enIncludesKeyword(text: string, keyword: string): boolean {
+  return new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text);
+}
+
+function includesKeyword(text: string, keyword: string, lang: "ko" | "en"): boolean {
+  return lang === "en" ? enIncludesKeyword(text, keyword) : koIncludesKeyword(text, keyword);
+}
+
+function matchesFinance(item: NewsItemDTO): boolean {
+  const keywords = item.lang === "en" ? FINANCE_KEYWORDS_EN : FINANCE_KEYWORDS_KO;
+  return keywords.some((k) => includesKeyword(item.title, k, item.lang));
+}
+
+// 1 = macro finance, 2 = markets/investment, 3 = insurance/retirement, 4 = other.
+function importanceTier(item: NewsItemDTO): number {
+  const text = `${item.title} ${item.description ?? ""}`;
+  const tier1 = item.lang === "en" ? EN_TIER1_MACRO : KO_TIER1_MACRO;
+  const tier2 = item.lang === "en" ? EN_TIER2_MARKETS : KO_TIER2_MARKETS;
+  const tier3 = item.lang === "en" ? EN_TIER3_INSURANCE : KO_TIER3_INSURANCE;
+  if (tier1.some((k) => includesKeyword(text, k, item.lang))) return 1;
+  if (tier2.some((k) => includesKeyword(text, k, item.lang))) return 2;
+  if (tier3.some((k) => includesKeyword(text, k, item.lang))) return 3;
   return 4;
+}
+
+function byImportanceThenRecency(a: NewsItemDTO, b: NewsItemDTO): number {
+  const ta = importanceTier(a);
+  const tb = importanceTier(b);
+  if (ta !== tb) return ta - tb;
+  const da = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+  const db = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+  return db - da;
 }
 
 async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
@@ -147,22 +193,42 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
 
 export async function GET() {
   const feedResults = await Promise.all(FEEDS.map(fetchFeed));
-  const all = feedResults.flat();
+  // Deliberately no "fall back to the unfiltered pool" here — a shorter list
+  // of genuinely relevant stories beats padding it out with whatever else a
+  // feed happened to return (obituaries, unrelated local news, ...).
+  const financial = feedResults.flat().filter(matchesFinance);
 
-  const financial = all.filter((n) => matchesFinance(n.title, n.lang));
-  // Fall back to the unfiltered pool if the keyword filter happens to leave
-  // nothing (e.g. a quiet news day) — an empty "Daily Financial News" card
-  // is worse than a slightly-broader one.
-  const pool = financial.length ? financial : all;
+  const koNews = financial.filter((n) => n.lang === "ko" && n.kind === "news").sort(byImportanceThenRecency);
+  const koColumn = financial.filter((n) => n.lang === "ko" && n.kind === "column").sort(byImportanceThenRecency);
+  const en = financial.filter((n) => n.lang === "en").sort(byImportanceThenRecency);
 
-  pool.sort((a, b) => {
-    const pa = priorityGroup(a);
-    const pb = priorityGroup(b);
-    if (pa !== pb) return pa - pb;
-    const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-    const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-    return tb - ta;
-  });
+  const koNewsPicked = koNews.slice(0, QUOTA.koNews);
+  const koColumnPicked = koColumn.slice(0, QUOTA.koColumn);
+  const enPicked = en.slice(0, QUOTA.en);
 
-  return NextResponse.json(pool.slice(0, 10));
+  // If a category came up short of its quota, backfill the leftover slots
+  // from whichever category has surplus, so a quiet day for one source
+  // doesn't shrink the whole briefing below what's actually available.
+  const target = QUOTA.koNews + QUOTA.koColumn + QUOTA.en;
+  let used = koNewsPicked.length + koColumnPicked.length + enPicked.length;
+  const leftovers = [
+    koNews.slice(koNewsPicked.length),
+    koColumn.slice(koColumnPicked.length),
+    en.slice(enPicked.length),
+  ].flat();
+  leftovers.sort(byImportanceThenRecency);
+  for (const item of leftovers) {
+    if (used >= target) break;
+    if (item.lang === "ko" && item.kind === "news") koNewsPicked.push(item);
+    else if (item.lang === "ko" && item.kind === "column") koColumnPicked.push(item);
+    else enPicked.push(item);
+    used += 1;
+  }
+
+  koNewsPicked.sort(byImportanceThenRecency);
+  koColumnPicked.sort(byImportanceThenRecency);
+  enPicked.sort(byImportanceThenRecency);
+
+  const result = [...koNewsPicked, ...koColumnPicked, ...enPicked];
+  return NextResponse.json(result);
 }
