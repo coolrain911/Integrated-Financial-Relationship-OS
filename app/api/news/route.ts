@@ -2,63 +2,29 @@ import { NextResponse } from "next/server";
 import { XMLParser } from "fast-xml-parser";
 import type { NewsItemDTO } from "@/lib/types";
 
-// Scoped to Korean-language outlets Chanwoo actually reads. 미주중앙일보 is a
-// US-based Korean-American paper, so its economy/opinion coverage is
-// inherently US-focused already. 조선일보/한국일보 are Korea-domestic outlets,
-// so their stories are additionally required to mention the US market/economy
-// specifically (see US_KEYWORDS below) — otherwise a quiet US day gets
-// crowded out by 코스피/한국은행-type domestic stories that aren't relevant
-// to Chanwoo's US-based clients.
-const FEEDS: { url: string; source: string; kind: "news" | "column"; usOnly: boolean }[] = [
-  {
-    url: "https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml",
-    source: "조선일보",
-    kind: "news",
-    usOnly: true,
-  },
-  {
-    url: "https://www.chosun.com/arc/outboundfeeds/rss/category/opinion/?outputType=xml",
-    source: "조선일보",
-    kind: "column",
-    usOnly: true,
-  },
-  {
-    url: "https://rss.hankookilbo.com/feed/economy.xml",
-    source: "한국일보",
-    kind: "news",
-    usOnly: true,
-  },
-  {
-    url: "https://rss.hankookilbo.com/feed/opinion.xml",
-    source: "한국일보",
-    kind: "column",
-    usOnly: true,
-  },
-  {
-    url: "https://www.koreadaily.com/rss/economy.xml",
-    source: "미주중앙일보",
-    kind: "news",
-    usOnly: false,
-  },
-  {
-    url: "https://www.koreadaily.com/rss/opinion.xml",
-    source: "미주중앙일보",
-    kind: "column",
-    usOnly: false,
-  },
+// All three sources are US media (not South Korea domestic outlets), matching
+// Chanwoo's US-based clients: 미주중앙일보/미주한국일보 are the two Korean-language
+// US papers, and CNBC is the one English-language outlet — chosen over CNN
+// because it's a dedicated financial/markets network rather than general news,
+// a better fit for a financial advisor's morning briefing.
+const FEEDS: { url: string; source: string; kind: "news" | "column"; lang: "ko" | "en" }[] = [
+  { url: "https://www.koreadaily.com/rss/economy.xml", source: "미주중앙일보", kind: "news", lang: "ko" },
+  { url: "https://www.koreadaily.com/rss/opinion.xml", source: "미주중앙일보", kind: "column", lang: "ko" },
+  { url: "https://www.koreatimes.com/rss/economy.xml", source: "미주한국일보", kind: "news", lang: "ko" },
+  { url: "https://www.koreatimes.com/rss/opinion.xml", source: "미주한국일보", kind: "column", lang: "ko" },
+  { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", source: "CNBC", kind: "news", lang: "en" },
 ];
 
-const FINANCE_KEYWORDS = [
+const FINANCE_KEYWORDS_KO = [
   "금리", "증시", "주식", "환율", "연준", "인플레이션", "경기", "부동산",
   "세금", "은퇴", "보험", "달러", "연금", "경제", "펀드", "투자", "관세",
   "일자리", "고용", "물가",
 ];
 
-// Required (in addition to FINANCE_KEYWORDS) for Korea-domestic outlets, so
-// only their US-relevant coverage makes it onto a "US news-focused" briefing.
-const US_KEYWORDS = [
-  "미국", "연준", "나스닥", "다우", "S&P", "월가", "뉴욕", "파월", "백악관",
-  "바이든", "트럼프", "관세",
+const FINANCE_KEYWORDS_EN = [
+  "rate", "stock", "market", "inflation", "fed", "dollar", "economy", "tax",
+  "retirement", "insurance", "bond", "yield", "tariff", "jobs", "unemployment",
+  "s&p", "dow", "nasdaq", "wall street", "recession", "earnings",
 ];
 
 type RssItem = { title?: unknown; link?: unknown; pubDate?: unknown };
@@ -75,15 +41,15 @@ function textOf(raw: unknown): string {
   return "";
 }
 
-function matchesFinance(title: string): boolean {
-  return FINANCE_KEYWORDS.some((k) => title.includes(k));
+function matchesFinance(title: string, lang: "ko" | "en"): boolean {
+  const keywords = lang === "en" ? FINANCE_KEYWORDS_EN : FINANCE_KEYWORDS_KO;
+  const haystack = lang === "en" ? title.toLowerCase() : title;
+  return keywords.some((k) => haystack.includes(k));
 }
 
-function matchesUs(title: string): boolean {
-  return US_KEYWORDS.some((k) => title.includes(k));
-}
+type FetchedItem = NewsItemDTO & { lang: "ko" | "en" };
 
-async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
+async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<FetchedItem[]> {
   try {
     const res = await fetch(feed.url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; FINOS-dashboard/1.0)" },
@@ -108,11 +74,11 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
           link,
           source: feed.source,
           kind: feed.kind,
+          lang: feed.lang,
           publishedAt: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null,
         };
       })
-      .filter((n) => n.title && n.link)
-      .filter((n) => !feed.usOnly || matchesUs(n.title));
+      .filter((n) => n.title && n.link);
   } catch {
     return [];
   }
@@ -122,11 +88,17 @@ export async function GET() {
   const feedResults = await Promise.all(FEEDS.map(fetchFeed));
   const all = feedResults.flat();
 
-  const financial = all.filter((n) => matchesFinance(n.title));
+  const financial = all.filter((n) => matchesFinance(n.title, n.lang));
   // Fall back to the unfiltered pool if the keyword filter happens to leave
   // nothing (e.g. a quiet news day) — an empty "Daily Financial News" card
   // is worse than a slightly-broader one.
-  const pool = financial.length ? financial : all;
+  const pool: NewsItemDTO[] = (financial.length ? financial : all).map((n) => ({
+    title: n.title,
+    link: n.link,
+    source: n.source,
+    kind: n.kind,
+    publishedAt: n.publishedAt,
+  }));
 
   pool.sort((a, b) => {
     const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
