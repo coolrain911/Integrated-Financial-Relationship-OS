@@ -813,7 +813,10 @@ export default function Home() {
                             rel="noreferrer"
                             className="news-item"
                           >
-                            <div className="news-item-title">{n.title}</div>
+                            <div className="news-item-title">
+                              {n.kind === "column" && <span className="news-item-tag">칼럼</span>}
+                              {n.title}
+                            </div>
                             <div className="news-item-meta">
                               {n.source}
                               {n.publishedAt ? ` · ${fmtNewsDate(n.publishedAt)}` : ""}

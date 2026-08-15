@@ -1124,6 +1124,18 @@ body {
   color: var(--accent);
 }
 
+.news-item-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--caution-bg);
+  color: var(--caution);
+  font-size: 10.5px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 .news-item-meta {
   margin-top: 3px;
   font-size: 11.5px;

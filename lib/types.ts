@@ -271,6 +271,7 @@ export type NewsItemDTO = {
   link: string;
   source: string;
   publishedAt: string | null;
+  kind: "news" | "column";
 };
 
 export type MarketIndexDTO = {

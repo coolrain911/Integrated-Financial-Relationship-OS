@@ -2,19 +2,63 @@ import { NextResponse } from "next/server";
 import { XMLParser } from "fast-xml-parser";
 import type { NewsItemDTO } from "@/lib/types";
 
-// Scoped to Korean-language outlets Chanwoo actually reads, and filtered to
-// financial/economic keywords — pulling in general Korean news would bury
-// the handful of stories relevant to a financial advisor's morning briefing.
-const FEEDS: { url: string; source: string }[] = [
-  { url: "https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml", source: "조선일보" },
-  { url: "https://rss.hankookilbo.com/feed/economy.xml", source: "한국일보" },
-  { url: "https://www.koreadaily.com/rss/economy.xml", source: "미주중앙일보" },
+// Scoped to Korean-language outlets Chanwoo actually reads. 미주중앙일보 is a
+// US-based Korean-American paper, so its economy/opinion coverage is
+// inherently US-focused already. 조선일보/한국일보 are Korea-domestic outlets,
+// so their stories are additionally required to mention the US market/economy
+// specifically (see US_KEYWORDS below) — otherwise a quiet US day gets
+// crowded out by 코스피/한국은행-type domestic stories that aren't relevant
+// to Chanwoo's US-based clients.
+const FEEDS: { url: string; source: string; kind: "news" | "column"; usOnly: boolean }[] = [
+  {
+    url: "https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml",
+    source: "조선일보",
+    kind: "news",
+    usOnly: true,
+  },
+  {
+    url: "https://www.chosun.com/arc/outboundfeeds/rss/category/opinion/?outputType=xml",
+    source: "조선일보",
+    kind: "column",
+    usOnly: true,
+  },
+  {
+    url: "https://rss.hankookilbo.com/feed/economy.xml",
+    source: "한국일보",
+    kind: "news",
+    usOnly: true,
+  },
+  {
+    url: "https://rss.hankookilbo.com/feed/opinion.xml",
+    source: "한국일보",
+    kind: "column",
+    usOnly: true,
+  },
+  {
+    url: "https://www.koreadaily.com/rss/economy.xml",
+    source: "미주중앙일보",
+    kind: "news",
+    usOnly: false,
+  },
+  {
+    url: "https://www.koreadaily.com/rss/opinion.xml",
+    source: "미주중앙일보",
+    kind: "column",
+    usOnly: false,
+  },
 ];
 
 const FINANCE_KEYWORDS = [
   "금리", "증시", "주식", "환율", "연준", "인플레이션", "경기", "부동산",
   "세금", "은퇴", "보험", "달러", "연금", "경제", "펀드", "투자", "관세",
   "일자리", "고용", "물가",
+];
+
+// Required (in addition to FINANCE_KEYWORDS) for Korea-domestic outlets, so
+// only their US-relevant coverage makes it onto a "US news-focused" briefing.
+const US_KEYWORDS = [
+  "미국", "연준", "나스닥", "다우", "S&P", "월가", "뉴욕", "파월", "백악관",
+  "바이든", "트럼프", "관세",
 ];
 
 type RssItem = { title?: unknown; link?: unknown; pubDate?: unknown };
@@ -35,7 +79,11 @@ function matchesFinance(title: string): boolean {
   return FINANCE_KEYWORDS.some((k) => title.includes(k));
 }
 
-async function fetchFeed(feed: { url: string; source: string }): Promise<NewsItemDTO[]> {
+function matchesUs(title: string): boolean {
+  return US_KEYWORDS.some((k) => title.includes(k));
+}
+
+async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
   try {
     const res = await fetch(feed.url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; FINOS-dashboard/1.0)" },
@@ -59,10 +107,12 @@ async function fetchFeed(feed: { url: string; source: string }): Promise<NewsIte
           title,
           link,
           source: feed.source,
+          kind: feed.kind,
           publishedAt: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null,
         };
       })
-      .filter((n) => n.title && n.link);
+      .filter((n) => n.title && n.link)
+      .filter((n) => !feed.usOnly || matchesUs(n.title));
   } catch {
     return [];
   }
