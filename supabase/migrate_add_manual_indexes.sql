@@ -12,3 +12,8 @@ create table if not exists manual_indexes (
 insert into manual_indexes (name)
 values ('MLSB'), ('S&P MARC 5%'), ('Barclays Focus')
 on conflict (name) do nothing;
+
+-- No RLS policies are defined, so once RLS is enabled, anon/authenticated
+-- roles have zero access — matching every other table in this app. Only the
+-- server-side service role key (used by /api/manual-indexes) can read/write.
+alter table manual_indexes enable row level security;

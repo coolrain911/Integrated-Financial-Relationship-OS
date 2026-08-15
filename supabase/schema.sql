@@ -150,6 +150,7 @@ alter table columns_lib enable row level security;
 alter table calendar_events enable row level security;
 alter table knowledge_items enable row level security;
 alter table licenses_certificates enable row level security;
+alter table manual_indexes enable row level security;
 
 -- Splits a "LastName FirstName [MiddleInitial]" string (the convention used
 -- throughout this app) into (last_name, first_name). Falls back to a
