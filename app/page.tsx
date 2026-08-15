@@ -522,13 +522,6 @@ export default function Home() {
     () => activePolicies.filter(needsContact).length,
     [activePolicies, needsContact]
   );
-  const weekAnniv = useMemo(
-    () =>
-      activePolicies.filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 7)
-        .length,
-    [activePolicies]
-  );
-
   const allContactItems = useMemo(
     () => activePolicies.filter(needsContact),
     [activePolicies, needsContact]
@@ -586,7 +579,7 @@ export default function Home() {
     { n: prospects.length, l: "Potential Client", cls: "accent" },
   ];
   const kpisBottom = [
-    { n: weekAnniv, l: "Weekly Anniversary", cls: "accent" },
+    { n: allAnnivItems.length, l: "Up-coming Anniversary (30 days)", cls: "accent" },
     { n: reviewCount, l: "Attention", cls: "danger" },
   ];
 
@@ -775,7 +768,7 @@ export default function Home() {
                   </div>
                   <div className="section">
                     <div className="section-title-row">
-                      <div className="section-title">다가오는 Anniversary (30일 이내)</div>
+                      <div className="section-title">Up-coming Anniversary (30 days)</div>
                       <button
                         className="btn-mini"
                         disabled={annivEmails.length === 0}
