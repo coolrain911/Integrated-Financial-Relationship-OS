@@ -272,6 +272,8 @@ export type NewsItemDTO = {
   source: string;
   publishedAt: string | null;
   kind: "news" | "column";
+  lang: "ko" | "en";
+  description: string | null;
 };
 
 export type MarketIndexDTO = {

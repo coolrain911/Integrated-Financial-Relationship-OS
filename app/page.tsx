@@ -14,6 +14,7 @@ import { KnowledgeItemModal } from "@/components/KnowledgeItemModal";
 import { LicenseCertTable } from "@/components/LicenseCertTable";
 import { LicenseCertModal } from "@/components/LicenseCertModal";
 import { PolicyListModal } from "@/components/PolicyListModal";
+import { NewsPreviewModal } from "@/components/NewsPreviewModal";
 import type {
   CalendarEventDTO,
   ColumnDTO,
@@ -193,6 +194,13 @@ export default function Home() {
   const [marketIndexes, setMarketIndexes] = useState<MarketIndexDTO[]>([]);
   const [manualIndexes, setManualIndexes] = useState<ManualIndexDTO[]>([]);
   const [editingManualIndexId, setEditingManualIndexId] = useState<number | null>(null);
+  const [newsPreview, setNewsPreview] = useState<{
+    item: NewsItemDTO;
+    translatedTitle: string | null;
+    translatedDescription: string | null;
+    loading: boolean;
+    failed: boolean;
+  } | null>(null);
 
   const [personModal, setPersonModal] = useState<PersonModalState>({ mode: "closed" });
   const [policyModal, setPolicyModal] = useState<PolicyModalState>({ mode: "closed" });
@@ -642,6 +650,34 @@ export default function Home() {
     }
   }
 
+  async function translateText(text: string): Promise<string | null> {
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) return null;
+      const data: { translated?: string } = await res.json();
+      return data.translated ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function openNewsPreview(item: NewsItemDTO) {
+    setNewsPreview({ item, translatedTitle: null, translatedDescription: null, loading: true, failed: false });
+    const [translatedTitle, translatedDescription] = await Promise.all([
+      translateText(item.title),
+      item.description ? translateText(item.description) : Promise.resolve(null),
+    ]);
+    setNewsPreview((prev) =>
+      prev && prev.item.link === item.link
+        ? { ...prev, translatedTitle, translatedDescription, loading: false, failed: !translatedTitle }
+        : prev
+    );
+  }
+
   const kpisTop = [
     { n: uniquePeople, l: "Total Client", cls: "" },
     { n: activePolicies.length, l: "Total Policy", cls: "" },
@@ -805,24 +841,43 @@ export default function Home() {
                       <div className="empty">불러오는 중...</div>
                     ) : news.length ? (
                       <div className="news-list">
-                        {news.map((n, i) => (
-                          <a
-                            key={`${n.link}-${i}`}
-                            href={n.link}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="news-item"
-                          >
-                            <div className="news-item-title">
-                              {n.kind === "column" && <span className="news-item-tag">칼럼</span>}
-                              {n.title}
-                            </div>
-                            <div className="news-item-meta">
-                              {n.source}
-                              {n.publishedAt ? ` · ${fmtNewsDate(n.publishedAt)}` : ""}
-                            </div>
-                          </a>
-                        ))}
+                        {news.map((n, i) => {
+                          const inner = (
+                            <>
+                              <div className="news-item-title">
+                                {n.kind === "column" && <span className="news-item-tag">칼럼</span>}
+                                {n.lang === "en" && (
+                                  <span className="news-item-tag news-item-tag-en">EN</span>
+                                )}
+                                {n.title}
+                              </div>
+                              <div className="news-item-meta">
+                                {n.source}
+                                {n.publishedAt ? ` · ${fmtNewsDate(n.publishedAt)}` : ""}
+                              </div>
+                            </>
+                          );
+                          return n.lang === "en" ? (
+                            <button
+                              key={`${n.link}-${i}`}
+                              type="button"
+                              className="news-item news-item-button"
+                              onClick={() => openNewsPreview(n)}
+                            >
+                              {inner}
+                            </button>
+                          ) : (
+                            <a
+                              key={`${n.link}-${i}`}
+                              href={n.link}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="news-item"
+                            >
+                              {inner}
+                            </a>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="empty">표시할 뉴스가 없습니다.</div>
@@ -1064,6 +1119,16 @@ export default function Home() {
           onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
           onSaved={handlePolicySaved}
           onClose={() => setAnnivModalOpen(false)}
+        />
+      )}
+      {newsPreview && (
+        <NewsPreviewModal
+          item={newsPreview.item}
+          translatedTitle={newsPreview.translatedTitle}
+          translatedDescription={newsPreview.translatedDescription}
+          loading={newsPreview.loading}
+          failed={newsPreview.failed}
+          onClose={() => setNewsPreview(null)}
         />
       )}
       {personModal.mode !== "closed" && (

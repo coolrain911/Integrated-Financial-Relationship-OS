@@ -27,7 +27,7 @@ const FINANCE_KEYWORDS_EN = [
   "s&p", "dow", "nasdaq", "wall street", "recession", "earnings",
 ];
 
-type RssItem = { title?: unknown; link?: unknown; pubDate?: unknown };
+type RssItem = { title?: unknown; link?: unknown; pubDate?: unknown; description?: unknown };
 type RssFeed = { rss?: { channel?: { item?: RssItem | RssItem[] } } };
 
 function textOf(raw: unknown): string {
@@ -41,15 +41,29 @@ function textOf(raw: unknown): string {
   return "";
 }
 
+// RSS <description> often carries raw HTML (a <p>/<img> snippet) — strip tags
+// and decode the handful of entities that show up in practice so the preview
+// modal shows plain text.
+function stripHtml(raw: string): string {
+  return raw
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function matchesFinance(title: string, lang: "ko" | "en"): boolean {
   const keywords = lang === "en" ? FINANCE_KEYWORDS_EN : FINANCE_KEYWORDS_KO;
   const haystack = lang === "en" ? title.toLowerCase() : title;
   return keywords.some((k) => haystack.includes(k));
 }
 
-type FetchedItem = NewsItemDTO & { lang: "ko" | "en" };
-
-async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<FetchedItem[]> {
+async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
   try {
     const res = await fetch(feed.url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; FINOS-dashboard/1.0)" },
@@ -68,6 +82,7 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<FetchedItem[]> {
         const title = textOf(item.title);
         const link = textOf(item.link);
         const pubDate = textOf(item.pubDate);
+        const description = stripHtml(textOf(item.description));
         const parsedDate = pubDate ? new Date(pubDate) : null;
         return {
           title,
@@ -75,6 +90,7 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<FetchedItem[]> {
           source: feed.source,
           kind: feed.kind,
           lang: feed.lang,
+          description: description || null,
           publishedAt: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null,
         };
       })
@@ -92,13 +108,7 @@ export async function GET() {
   // Fall back to the unfiltered pool if the keyword filter happens to leave
   // nothing (e.g. a quiet news day) — an empty "Daily Financial News" card
   // is worse than a slightly-broader one.
-  const pool: NewsItemDTO[] = (financial.length ? financial : all).map((n) => ({
-    title: n.title,
-    link: n.link,
-    source: n.source,
-    kind: n.kind,
-    publishedAt: n.publishedAt,
-  }));
+  const pool = financial.length ? financial : all;
 
   pool.sort((a, b) => {
     const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
