@@ -308,9 +308,13 @@ export default function Home() {
         fetch("/api/market-indexes").then((r) => r.json()),
         fetch("/api/manual-indexes").then((r) => r.json()),
       ]);
-      setNews(newsData);
-      setMarketIndexes(indexData);
-      setManualIndexes(manualData);
+      // Each API route can fail independently (e.g. the manual_indexes
+      // table not existing yet in a not-fully-migrated database) and
+      // returns a non-array error body in that case — falling back to []
+      // keeps that one card empty instead of crashing the whole render.
+      setNews(Array.isArray(newsData) ? newsData : []);
+      setMarketIndexes(Array.isArray(indexData) ? indexData : []);
+      setManualIndexes(Array.isArray(manualData) ? manualData : []);
     } catch {
       // Non-critical — the dashboard works fine without news/index data.
     } finally {
