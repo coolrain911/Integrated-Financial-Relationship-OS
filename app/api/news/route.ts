@@ -13,22 +13,18 @@ function googleNewsRss(query: string): string {
   return `https://news.google.com/rss/search?${params.toString()}`;
 }
 
-const FEEDS: { url: string; source: string; kind: "news" | "column"; lang: "ko" | "en" }[] = [
-  { url: googleNewsRss("site:koreadaily.com when:3d"), source: "미주중앙일보", kind: "news", lang: "ko" },
-  {
-    url: googleNewsRss("site:koreadaily.com (칼럼 OR 오피니언) when:7d"),
-    source: "미주중앙일보",
-    kind: "column",
-    lang: "ko",
-  },
-  { url: googleNewsRss("site:koreatimes.com when:3d"), source: "미주한국일보", kind: "news", lang: "ko" },
-  {
-    url: googleNewsRss("site:koreatimes.com (칼럼 OR 오피니언) when:7d"),
-    source: "미주한국일보",
-    kind: "column",
-    lang: "ko",
-  },
-  { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", source: "CNBC", kind: "news", lang: "en" },
+// The "(칼럼 OR 오피니언)" query below is only a *search strategy* to surface
+// more opinion content — Google News full-text-searches the whole article,
+// so it just as easily returns a plain news story that happens to mention
+// "칼럼" somewhere (a related-reads sidebar, etc). It must NOT be trusted as
+// the actual kind; see classifyKind() below, which decides "column" vs
+// "news" from real evidence on the item itself instead.
+const FEEDS: { url: string; source: string; lang: "ko" | "en" }[] = [
+  { url: googleNewsRss("site:koreadaily.com when:3d"), source: "미주중앙일보", lang: "ko" },
+  { url: googleNewsRss("site:koreadaily.com (칼럼 OR 오피니언) when:7d"), source: "미주중앙일보", lang: "ko" },
+  { url: googleNewsRss("site:koreatimes.com when:3d"), source: "미주한국일보", lang: "ko" },
+  { url: googleNewsRss("site:koreatimes.com (칼럼 OR 오피니언) when:7d"), source: "미주한국일보", lang: "ko" },
+  { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", source: "CNBC", lang: "en" },
 ];
 
 // Composition target: 5 Korean news + 2 Korean columns + 4 English — Korean
@@ -128,6 +124,19 @@ function includesKeyword(text: string, keyword: string, lang: "ko" | "en"): bool
   return lang === "en" ? enIncludesKeyword(text, keyword) : koIncludesKeyword(text, keyword);
 }
 
+// Korean outlets consistently prefix an opinion/column headline with a
+// bracketed tag like "[칼럼]" or "[오피니언]" — a reliable, visible signal,
+// unlike the search query that found the item. Defaults to "news" so an
+// ordinary story never gets mislabeled just because it turned up under the
+// column search; a real column without the bracket is the rarer, safer
+// miss to make.
+function classifyKind(title: string, link: string): "news" | "column" {
+  const bracketed = ["[칼럼]", "[오피니언]", "[사설]"];
+  if (bracketed.some((tag) => title.includes(tag))) return "column";
+  if (/\/(opinion|column)\//i.test(link)) return "column";
+  return "news";
+}
+
 function matchesFinance(item: NewsItemDTO): boolean {
   const keywords = item.lang === "en" ? FINANCE_KEYWORDS_EN : FINANCE_KEYWORDS_KO;
   return keywords.some((k) => includesKeyword(item.title, k, item.lang));
@@ -179,7 +188,7 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
           title,
           link,
           source: feed.source,
-          kind: feed.kind,
+          kind: classifyKind(title, link),
           lang: feed.lang,
           description: description || null,
           publishedAt: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null,
@@ -193,10 +202,20 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
 
 export async function GET() {
   const feedResults = await Promise.all(FEEDS.map(fetchFeed));
+
+  // The plain-news and column searches for the same outlet can both surface
+  // the same article — de-dupe by link before anything else.
+  const seenLinks = new Set<string>();
+  const all = feedResults.flat().filter((n) => {
+    if (seenLinks.has(n.link)) return false;
+    seenLinks.add(n.link);
+    return true;
+  });
+
   // Deliberately no "fall back to the unfiltered pool" here — a shorter list
   // of genuinely relevant stories beats padding it out with whatever else a
   // feed happened to return (obituaries, unrelated local news, ...).
-  const financial = feedResults.flat().filter(matchesFinance);
+  const financial = all.filter(matchesFinance);
 
   const koNews = financial.filter((n) => n.lang === "ko" && n.kind === "news").sort(byImportanceThenRecency);
   const koColumn = financial.filter((n) => n.lang === "ko" && n.kind === "column").sort(byImportanceThenRecency);
