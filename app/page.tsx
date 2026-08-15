@@ -726,7 +726,7 @@ export default function Home() {
                 <div className="two-col">
                   <div className="section">
                     <div className="section-title-row">
-                      <div className="section-title">고객접촉 필요</div>
+                      <div className="section-title">Attention</div>
                       <button
                         className="btn-mini"
                         disabled={reviewEmails.length === 0}
@@ -751,7 +751,7 @@ export default function Home() {
                         />
                       ))
                     ) : (
-                      <div className="empty">고객접촉 필요 항목 없음</div>
+                      <div className="empty">Attention 항목 없음</div>
                     )}
                     {!reviewExpanded && allContactItems.length > 6 && (
                       <button
