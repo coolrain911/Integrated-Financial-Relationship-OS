@@ -2,16 +2,32 @@ import { NextResponse } from "next/server";
 import { XMLParser } from "fast-xml-parser";
 import type { NewsItemDTO } from "@/lib/types";
 
-// All three sources are US media (not South Korea domestic outlets), matching
-// Chanwoo's US-based clients: 미주중앙일보/미주한국일보 are the two Korean-language
-// US papers, and CNBC is the one English-language outlet — chosen over CNN
-// because it's a dedicated financial/markets network rather than general news,
-// a better fit for a financial advisor's morning briefing.
+// 미주중앙일보/미주한국일보 go through Google News' `site:` search RSS rather than
+// guessing each publisher's own RSS path — a much more reliable, well-documented
+// endpoint that works for any domain. CNBC keeps its own official feed (already
+// confirmed working). All three are US media, matching Chanwoo's US-based
+// clients — CNBC was chosen over CNN as the one English outlet because it's a
+// dedicated financial/markets network rather than general news.
+function googleNewsRss(query: string): string {
+  const params = new URLSearchParams({ q: query, hl: "ko", gl: "US", ceid: "US:ko" });
+  return `https://news.google.com/rss/search?${params.toString()}`;
+}
+
 const FEEDS: { url: string; source: string; kind: "news" | "column"; lang: "ko" | "en" }[] = [
-  { url: "https://www.koreadaily.com/rss/economy.xml", source: "미주중앙일보", kind: "news", lang: "ko" },
-  { url: "https://www.koreadaily.com/rss/opinion.xml", source: "미주중앙일보", kind: "column", lang: "ko" },
-  { url: "https://www.koreatimes.com/rss/economy.xml", source: "미주한국일보", kind: "news", lang: "ko" },
-  { url: "https://www.koreatimes.com/rss/opinion.xml", source: "미주한국일보", kind: "column", lang: "ko" },
+  { url: googleNewsRss("site:koreadaily.com when:3d"), source: "미주중앙일보", kind: "news", lang: "ko" },
+  {
+    url: googleNewsRss("site:koreadaily.com (칼럼 OR 오피니언) when:7d"),
+    source: "미주중앙일보",
+    kind: "column",
+    lang: "ko",
+  },
+  { url: googleNewsRss("site:koreatimes.com when:3d"), source: "미주한국일보", kind: "news", lang: "ko" },
+  {
+    url: googleNewsRss("site:koreatimes.com (칼럼 OR 오피니언) when:7d"),
+    source: "미주한국일보",
+    kind: "column",
+    lang: "ko",
+  },
   { url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", source: "CNBC", kind: "news", lang: "en" },
 ];
 
@@ -21,10 +37,28 @@ const FINANCE_KEYWORDS_KO = [
   "일자리", "고용", "물가",
 ];
 
+// English articles are additionally ranked by topic once matched: macro
+// finance (inflation/jobs/growth) first, then stocks/bonds, then
+// insurance/long-term care — reflecting what matters most to Chanwoo's
+// clients — with everything else that merely mentions a general finance term
+// (tax, dollar, ...) ranked last among English items.
+const EN_TIER1_MACRO = [
+  "inflation", "unemployment", "jobless", "gdp", "growth", "recession",
+  "fed", "federal reserve", "interest rate", "rate hike", "rate cut", "jobs report",
+];
+const EN_TIER2_MARKETS = [
+  "stock", "stocks", "bond", "bonds", "yield", "s&p", "dow", "nasdaq",
+  "earnings", "wall street", "market",
+];
+const EN_TIER3_INSURANCE = [
+  "insurance", "long-term care", "long term care", "annuity", "life insurance",
+  "medicare", "retirement",
+];
 const FINANCE_KEYWORDS_EN = [
-  "rate", "stock", "market", "inflation", "fed", "dollar", "economy", "tax",
-  "retirement", "insurance", "bond", "yield", "tariff", "jobs", "unemployment",
-  "s&p", "dow", "nasdaq", "wall street", "recession", "earnings",
+  ...EN_TIER1_MACRO,
+  ...EN_TIER2_MARKETS,
+  ...EN_TIER3_INSURANCE,
+  "rate", "dollar", "economy", "tax", "tariff", "jobs",
 ];
 
 type RssItem = { title?: unknown; link?: unknown; pubDate?: unknown; description?: unknown };
@@ -41,9 +75,10 @@ function textOf(raw: unknown): string {
   return "";
 }
 
-// RSS <description> often carries raw HTML (a <p>/<img> snippet) — strip tags
-// and decode the handful of entities that show up in practice so the preview
-// modal shows plain text.
+// RSS <description> often carries raw HTML (a <p>/<img> snippet, or Google
+// News' "<a href=...>title</a>&nbsp;source" format) — strip tags and decode
+// the handful of entities that show up in practice so the preview modal shows
+// plain text.
 function stripHtml(raw: string): string {
   return raw
     .replace(/<[^>]*>/g, " ")
@@ -61,6 +96,16 @@ function matchesFinance(title: string, lang: "ko" | "en"): boolean {
   const keywords = lang === "en" ? FINANCE_KEYWORDS_EN : FINANCE_KEYWORDS_KO;
   const haystack = lang === "en" ? title.toLowerCase() : title;
   return keywords.some((k) => haystack.includes(k));
+}
+
+// 0 = Korean (always first), 1-3 = English by topic tier, 4 = other English.
+function priorityGroup(item: NewsItemDTO): number {
+  if (item.lang === "ko") return 0;
+  const text = `${item.title} ${item.description ?? ""}`.toLowerCase();
+  if (EN_TIER1_MACRO.some((k) => text.includes(k))) return 1;
+  if (EN_TIER2_MARKETS.some((k) => text.includes(k))) return 2;
+  if (EN_TIER3_INSURANCE.some((k) => text.includes(k))) return 3;
+  return 4;
 }
 
 async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItemDTO[]> {
@@ -111,6 +156,9 @@ export async function GET() {
   const pool = financial.length ? financial : all;
 
   pool.sort((a, b) => {
+    const pa = priorityGroup(a);
+    const pb = priorityGroup(b);
+    if (pa !== pb) return pa - pb;
     const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
     const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
     return tb - ta;
