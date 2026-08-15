@@ -3,6 +3,13 @@ export function fmtMoney(v: number | string | null | undefined): string {
   return "$" + Number(v).toLocaleString();
 }
 
+/** Formats a percent-change value with an explicit +/- sign, e.g. "+1.2%". */
+export function fmtPct(v: number | null | undefined): string {
+  if (v === null || v === undefined || Number.isNaN(v)) return "-";
+  const sign = v > 0 ? "+" : "";
+  return `${sign}${v.toFixed(1)}%`;
+}
+
 /** Formats a money input field's raw text as the user types: strips
  * anything but digits/one decimal point and inserts thousands commas.
  * Leaves the "na" sentinel (used for "not applicable" amounts in this

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PolicyRow } from "@/components/PolicyRow";
 import { PolicyTable } from "@/components/PolicyTable";
 import { ProspectTable } from "@/components/ProspectTable";
 import { ColumnRow } from "@/components/ColumnRow";
@@ -14,16 +13,21 @@ import { KnowledgeItemTable } from "@/components/KnowledgeItemTable";
 import { KnowledgeItemModal } from "@/components/KnowledgeItemModal";
 import { LicenseCertTable } from "@/components/LicenseCertTable";
 import { LicenseCertModal } from "@/components/LicenseCertModal";
+import { PolicyListModal } from "@/components/PolicyListModal";
 import type {
   CalendarEventDTO,
   ColumnDTO,
   KnowledgeItemDTO,
   LicenseCertDTO,
+  ManualIndexDTO,
+  MarketIndexDTO,
+  NewsItemDTO,
   PersonDTO,
   PolicyDTO,
   ProspectDTO,
 } from "@/lib/types";
 import { buildGmailComposeUrl } from "@/lib/email";
+import { fmtPct } from "@/lib/format";
 
 type Tab =
   | "today"
@@ -154,6 +158,17 @@ function pickCheerfulFemaleVoice(
   return notObviouslyMale ?? candidates[0];
 }
 
+function fmtNewsDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+}
+
+function chgCls(v: number | null): string {
+  if (v === null || Number.isNaN(v)) return "";
+  return v > 0 ? "up" : v < 0 ? "down" : "";
+}
+
 export default function Home() {
   const [policies, setPolicies] = useState<PolicyDTO[]>([]);
   const [prospects, setProspects] = useState<ProspectDTO[]>([]);
@@ -167,11 +182,17 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [dateStr, setDateStr] = useState("");
   const [currentMonth, setCurrentMonth] = useState<number | null>(null);
-  const [reviewExpanded, setReviewExpanded] = useState(false);
-  const [annivExpanded, setAnnivExpanded] = useState(false);
+  const [attentionModalOpen, setAttentionModalOpen] = useState(false);
+  const [annivModalOpen, setAnnivModalOpen] = useState(false);
 
   const [reviewUnselected, setReviewUnselected] = useState<Set<number>>(new Set());
   const [annivUnselected, setAnnivUnselected] = useState<Set<number>>(new Set());
+
+  const [news, setNews] = useState<NewsItemDTO[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [marketIndexes, setMarketIndexes] = useState<MarketIndexDTO[]>([]);
+  const [manualIndexes, setManualIndexes] = useState<ManualIndexDTO[]>([]);
+  const [editingManualIndexId, setEditingManualIndexId] = useState<number | null>(null);
 
   const [personModal, setPersonModal] = useState<PersonModalState>({ mode: "closed" });
   const [policyModal, setPolicyModal] = useState<PolicyModalState>({ mode: "closed" });
@@ -279,6 +300,29 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAll();
   }, [loadAll]);
+
+  const loadMarketData = useCallback(async () => {
+    try {
+      const [newsData, indexData, manualData] = await Promise.all([
+        fetch("/api/news").then((r) => r.json()),
+        fetch("/api/market-indexes").then((r) => r.json()),
+        fetch("/api/manual-indexes").then((r) => r.json()),
+      ]);
+      setNews(newsData);
+      setMarketIndexes(indexData);
+      setManualIndexes(manualData);
+    } catch {
+      // Non-critical — the dashboard works fine without news/index data.
+    } finally {
+      setNewsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Same deferred-async-setState shape as loadAll above.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadMarketData();
+  }, [loadMarketData]);
 
   const handlePolicySaved = useCallback((updated: PolicyDTO) => {
     setPolicies((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
@@ -526,7 +570,6 @@ export default function Home() {
     () => activePolicies.filter(needsContact),
     [activePolicies, needsContact]
   );
-  const reviewItems = reviewExpanded ? allContactItems : allContactItems.slice(0, 6);
   const allAnnivItems = useMemo(
     () =>
       activePolicies
@@ -534,7 +577,6 @@ export default function Home() {
         .sort((a, b) => (a.daysToAnniv as number) - (b.daysToAnniv as number)),
     [activePolicies]
   );
-  const annivItems = annivExpanded ? allAnnivItems : allAnnivItems.slice(0, 6);
 
   function toggleReviewSelect(id: number) {
     setReviewUnselected((prev) => {
@@ -558,20 +600,43 @@ export default function Home() {
     () =>
       Array.from(
         new Set(
-          reviewItems.filter((p) => !reviewUnselected.has(p.id) && p.email).map((p) => p.email as string)
+          allContactItems
+            .filter((p) => !reviewUnselected.has(p.id) && p.email)
+            .map((p) => p.email as string)
         )
       ),
-    [reviewItems, reviewUnselected]
+    [allContactItems, reviewUnselected]
   );
   const annivEmails = useMemo(
     () =>
       Array.from(
         new Set(
-          annivItems.filter((p) => !annivUnselected.has(p.id) && p.email).map((p) => p.email as string)
+          allAnnivItems.filter((p) => !annivUnselected.has(p.id) && p.email).map((p) => p.email as string)
         )
       ),
-    [annivItems, annivUnselected]
+    [allAnnivItems, annivUnselected]
   );
+
+  async function handleManualIndexSave(id: number, rawValue: string) {
+    const trimmed = rawValue.trim();
+    const value = trimmed === "" ? null : Number(trimmed);
+    if (value !== null && Number.isNaN(value)) {
+      alert("숫자를 입력해주세요.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/manual-indexes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value }),
+      });
+      if (!res.ok) throw new Error("저장 실패");
+      const updated: ManualIndexDTO = await res.json();
+      setManualIndexes((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+    } catch {
+      alert("저장에 실패했습니다.");
+    }
+  }
 
   const kpisTop = [
     { n: uniquePeople, l: "Total Client", cls: "" },
@@ -579,8 +644,13 @@ export default function Home() {
     { n: prospects.length, l: "Potential Client", cls: "accent" },
   ];
   const kpisBottom = [
-    { n: allAnnivItems.length, l: "Up-coming Anniversary (30 days)", cls: "accent" },
-    { n: reviewCount, l: "Attention", cls: "danger" },
+    {
+      n: allAnnivItems.length,
+      l: "Up-coming Anniversary (30 days)",
+      cls: "accent",
+      onClick: () => setAnnivModalOpen(true),
+    },
+    { n: reviewCount, l: "Attention", cls: "danger", onClick: () => setAttentionModalOpen(true) },
   ];
 
   return (
@@ -699,10 +769,15 @@ export default function Home() {
                     </div>
                     <div className="kpi-grid">
                       {kpisBottom.map((k) => (
-                        <div key={k.l} className={`kpi ${k.cls}`}>
+                        <button
+                          key={k.l}
+                          type="button"
+                          className={`kpi kpi-clickable ${k.cls}`}
+                          onClick={k.onClick}
+                        >
                           <div className="n">{k.n}</div>
                           <div className="l">{k.l}</div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -720,99 +795,81 @@ export default function Home() {
                 <div className="two-col">
                   <div className="section">
                     <div className="section-title-row">
-                      <div className="section-title">Attention</div>
-                      <button
-                        className="btn-mini"
-                        disabled={reviewEmails.length === 0}
-                        onClick={() => {
-                          window.open(buildGmailComposeUrl(reviewEmails), "_blank");
-                        }}
-                      >
-                        이메일 보내기 ({reviewEmails.length})
-                      </button>
+                      <div className="section-title">Daily Financial News</div>
                     </div>
-                    {reviewItems.length ? (
-                      reviewItems.map((p) => (
-                        <PolicyRow
-                          key={p.id}
-                          policy={p}
-                          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
-                          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
-                          onSaved={handlePolicySaved}
-                          selected={!reviewUnselected.has(p.id)}
-                          onToggleSelect={() => toggleReviewSelect(p.id)}
-                          compact
-                        />
-                      ))
+                    {newsLoading ? (
+                      <div className="empty">불러오는 중...</div>
+                    ) : news.length ? (
+                      <div className="news-list">
+                        {news.map((n, i) => (
+                          <a
+                            key={`${n.link}-${i}`}
+                            href={n.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="news-item"
+                          >
+                            <div className="news-item-title">{n.title}</div>
+                            <div className="news-item-meta">
+                              {n.source}
+                              {n.publishedAt ? ` · ${fmtNewsDate(n.publishedAt)}` : ""}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
                     ) : (
-                      <div className="empty">Attention 항목 없음</div>
-                    )}
-                    {!reviewExpanded && allContactItems.length > 6 && (
-                      <button
-                        type="button"
-                        className="show-more-link"
-                        onClick={() => setReviewExpanded(true)}
-                      >
-                        이외 {allContactItems.length - 6}건
-                      </button>
-                    )}
-                    {reviewExpanded && allContactItems.length > 6 && (
-                      <button
-                        type="button"
-                        className="show-more-link"
-                        onClick={() => setReviewExpanded(false)}
-                      >
-                        접기
-                      </button>
+                      <div className="empty">표시할 뉴스가 없습니다.</div>
                     )}
                   </div>
                   <div className="section">
                     <div className="section-title-row">
-                      <div className="section-title">Up-coming Anniversary (30 days)</div>
-                      <button
-                        className="btn-mini"
-                        disabled={annivEmails.length === 0}
-                        onClick={() => {
-                          window.open(buildGmailComposeUrl(annivEmails), "_blank");
-                        }}
-                      >
-                        이메일 보내기 ({annivEmails.length})
-                      </button>
+                      <div className="section-title">Key Financial Index</div>
                     </div>
-                    {annivItems.length ? (
-                      annivItems.map((p) => (
-                        <PolicyRow
-                          key={p.id}
-                          policy={p}
-                          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
-                          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
-                          onSaved={handlePolicySaved}
-                          selected={!annivUnselected.has(p.id)}
-                          onToggleSelect={() => toggleAnnivSelect(p.id)}
-                          compact
-                        />
-                      ))
-                    ) : (
-                      <div className="empty">30일 이내 anniversary 없음</div>
-                    )}
-                    {!annivExpanded && allAnnivItems.length > 6 && (
-                      <button
-                        type="button"
-                        className="show-more-link"
-                        onClick={() => setAnnivExpanded(true)}
-                      >
-                        이외 {allAnnivItems.length - 6}건
-                      </button>
-                    )}
-                    {annivExpanded && allAnnivItems.length > 6 && (
-                      <button
-                        type="button"
-                        className="show-more-link"
-                        onClick={() => setAnnivExpanded(false)}
-                      >
-                        접기
-                      </button>
-                    )}
+                    <div className="index-list">
+                      {marketIndexes.map((idx) => (
+                        <div key={idx.symbol} className="index-row">
+                          <div className="index-name">{idx.name}</div>
+                          <div className="index-value">
+                            {idx.value !== null
+                              ? idx.value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                              : "-"}
+                          </div>
+                          <div className={`index-change ${chgCls(idx.changePct1d)}`}>
+                            {fmtPct(idx.changePct1d)} (전일)
+                          </div>
+                          <div className={`index-change ${chgCls(idx.changePct1y)}`}>
+                            {fmtPct(idx.changePct1y)} (1년)
+                          </div>
+                        </div>
+                      ))}
+                      {manualIndexes.map((m) => (
+                        <div key={m.id} className="index-row">
+                          <div className="index-name">{m.name}</div>
+                          {editingManualIndexId === m.id ? (
+                            <input
+                              className="index-edit-input"
+                              defaultValue={m.value !== null ? String(m.value) : ""}
+                              autoFocus
+                              onBlur={(e) => {
+                                handleManualIndexSave(m.id, e.target.value);
+                                setEditingManualIndexId(null);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                              }}
+                            />
+                          ) : (
+                            <div
+                              className="index-value link-cell"
+                              onClick={() => setEditingManualIndexId(m.id)}
+                              title="클릭해서 값 수정"
+                            >
+                              {m.value !== null ? `${m.value}%` : "입력 필요"}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -974,6 +1031,34 @@ export default function Home() {
         )}
       </div>
 
+      {attentionModalOpen && (
+        <PolicyListModal
+          title="Attention"
+          items={allContactItems}
+          unselected={reviewUnselected}
+          onToggleSelect={toggleReviewSelect}
+          emailCount={reviewEmails.length}
+          onEmailClick={() => window.open(buildGmailComposeUrl(reviewEmails), "_blank")}
+          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
+          onSaved={handlePolicySaved}
+          onClose={() => setAttentionModalOpen(false)}
+        />
+      )}
+      {annivModalOpen && (
+        <PolicyListModal
+          title="Up-coming Anniversary (30 days)"
+          items={allAnnivItems}
+          unselected={annivUnselected}
+          onToggleSelect={toggleAnnivSelect}
+          emailCount={annivEmails.length}
+          onEmailClick={() => window.open(buildGmailComposeUrl(annivEmails), "_blank")}
+          onOpenPerson={(id) => setPersonModal({ mode: "edit", id })}
+          onOpenPolicy={(id) => setPolicyModal({ mode: "edit", id })}
+          onSaved={handlePolicySaved}
+          onClose={() => setAnnivModalOpen(false)}
+        />
+      )}
       {personModal.mode !== "closed" && (
         <PersonModal
           personId={personModal.mode === "edit" ? personModal.id : null}

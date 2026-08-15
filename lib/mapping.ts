@@ -8,6 +8,7 @@ import type {
   LicenseCertCategory,
   LicenseCertDTO,
   LifeType,
+  ManualIndexDTO,
   OptionType,
   PersonDTO,
   PersonGrade,
@@ -124,6 +125,14 @@ export type CalendarEventRow = {
   event_date: string;
   title: string;
   note: string | null;
+};
+
+export type ManualIndexRow = {
+  id: number;
+  name: string;
+  value: string | number | null;
+  note: string | null;
+  updated_at: string | null;
 };
 
 function toNumberOrStr(raw: string | null): number | string | null {
@@ -330,6 +339,16 @@ export function calendarEventRowToDto(row: CalendarEventRow): CalendarEventDTO {
     date: row.event_date,
     title: row.title,
     note: row.note,
+  };
+}
+
+export function manualIndexRowToDto(row: ManualIndexRow): ManualIndexDTO {
+  return {
+    id: row.id,
+    name: row.name,
+    value: row.value === null ? null : Number(row.value),
+    note: row.note,
+    updatedAt: row.updated_at,
   };
 }
 

@@ -265,3 +265,32 @@ export type CalendarEventUpdateBody = Partial<{
 export type CalendarEventCreateBody = { date: string; title: string } & Partial<{
   note: string | null;
 }>;
+
+export type NewsItemDTO = {
+  title: string;
+  link: string;
+  source: string;
+  publishedAt: string | null;
+};
+
+export type MarketIndexDTO = {
+  symbol: string;
+  name: string;
+  value: number | null;
+  changePct1d: number | null;
+  changePct1y: number | null;
+  asOfDate: string | null;
+};
+
+export type ManualIndexDTO = {
+  id: number;
+  name: string;
+  value: number | null;
+  note: string | null;
+  updatedAt: string | null;
+};
+
+export type ManualIndexUpdateBody = Partial<{
+  value: number | null;
+  note: string | null;
+}>;

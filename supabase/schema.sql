@@ -87,6 +87,21 @@ create table if not exists calendar_events (
   note text
 );
 
+-- Insurance-carrier crediting indexes (MLSB, S&P MARC 5%, Barclays Focus...)
+-- that aren't published through any public market-data API — the advisor
+-- enters these by hand from each carrier's own rate sheet.
+create table if not exists manual_indexes (
+  id bigint generated always as identity primary key,
+  name text not null unique,
+  value numeric,
+  note text,
+  updated_at timestamptz not null default now()
+);
+
+insert into manual_indexes (name)
+values ('MLSB'), ('S&P MARC 5%'), ('Barclays Focus')
+on conflict (name) do nothing;
+
 -- 지식 창고 (Knowledge Vault) — reusable answers to recurring client
 -- questions (real estate, overseas assets, tax, FAFSA...) and related
 -- reference material, sortable by title/category/date.

@@ -41,6 +41,9 @@
 9. **`supabase/migrate_add_person_grade.sql`** — `people`에 고객 등급(A/B/C/D)
    컬럼을 추가합니다. 등급은 사람 단위로 저장되므로, 한 사람에게 매긴 등급이 그
    사람의 모든 Policy 행(Current Client 표)에 자동으로 반영됩니다.
+10. **`supabase/migrate_add_manual_indexes.sql`** — Dashboard Today의 Key Financial
+    Index 카드에서 직접 입력하는 보험사 전용 크레딧 지수(MLSB, S&P MARC 5%,
+    Barclays Focus)를 저장할 `manual_indexes` 테이블을 만듭니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 
