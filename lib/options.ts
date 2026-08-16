@@ -40,6 +40,7 @@ export const COLUMN_CATEGORY_OPTIONS = [
   "상속/증여",
   "자산운용/투자",
   "Medicare/LTC",
+  "기타",
 ] as const;
 
 // 백화점 VVIP/VIP 등급을 응용한 고객 등급. 이름(A/B/C/D)은 우선 고정하고, 의미는

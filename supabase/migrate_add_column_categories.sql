@@ -30,3 +30,9 @@ update columns_lib set categories = array['401(k)/IRA Rollover']
 
 update columns_lib set categories = array['연금(Annuity)']
   where cardinality(categories) = 0 and (category ilike '%연금%' or category ilike '%annuity%');
+
+-- Catch-all: anything still unmapped (the old "기타" bucket, or anything else
+-- that didn't match a specific rule above) goes into the new "기타" category
+-- rather than staying empty.
+update columns_lib set categories = array['기타']
+  where cardinality(categories) = 0;
