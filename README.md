@@ -44,6 +44,12 @@
 10. **`supabase/migrate_add_manual_indexes.sql`** — Dashboard Today의 Key Financial
     Index 카드에서 직접 입력하는 보험사 전용 크레딧 지수(MLSB, S&P MARC 5%,
     Barclays Focus)를 저장할 `manual_indexes` 테이블을 만듭니다.
+11. **`supabase/migrate_add_column_categories.sql`** — `columns_lib`의 자유 텍스트
+    단일 `category`를 복수 선택 가능한 `categories text[]`로 바꿉니다. 기존
+    카테고리 값을 새 9종 분류(생명보험/연금/절세/401(k)·IRA Rollover/학자금
+    /은퇴준비/상속·증여/자산운용·투자/Medicare·LTC)로 최대한 자동 매칭하지만,
+    "기타"처럼 매칭이 애매한 값은 비워두므로 Columns 탭에서 직접 확인/재분류가
+    필요합니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 

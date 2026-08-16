@@ -37,8 +37,12 @@ export function ColumnRow({
             {column.title}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="pill success">{(column.category || "").split(",")[0]}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {column.categories.map((cat) => (
+            <span key={cat} className="pill success">
+              {cat}
+            </span>
+          ))}
           <button className="btn-danger-mini" disabled={deleting} onClick={remove}>
             {deleting ? "삭제 중..." : "삭제"}
           </button>

@@ -52,7 +52,7 @@ export async function PATCH(
   const columnMap: Record<string, string> = {
     num: "num",
     title: "title",
-    category: "category",
+    categories: "categories",
     file: "file",
     content: "content",
     link: "link",

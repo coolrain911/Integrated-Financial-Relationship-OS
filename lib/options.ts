@@ -30,6 +30,18 @@ export const KNOWLEDGE_CATEGORY_PRESETS = ["부동산", "해외자산", "세금"
 
 export const LICENSE_CERT_CATEGORY_OPTIONS = ["License", "Register", "CE", "E&O"] as const;
 
+export const COLUMN_CATEGORY_OPTIONS = [
+  "생명보험(Life Insurance)",
+  "연금(Annuity)",
+  "절세(Tax Savings)",
+  "401(k)/IRA Rollover",
+  "학자금(FAFSA)",
+  "은퇴준비",
+  "상속/증여",
+  "자산운용/투자",
+  "Medicare/LTC",
+] as const;
+
 // 백화점 VVIP/VIP 등급을 응용한 고객 등급. 이름(A/B/C/D)은 우선 고정하고, 의미는
 // 나중에 바뀔 수 있어 설명 문구만 별도로 둔다.
 export const PERSON_GRADE_OPTIONS = ["A", "B", "C", "D"] as const;

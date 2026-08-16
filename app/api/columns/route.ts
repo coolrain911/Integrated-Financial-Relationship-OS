@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     .insert({
       num: body.num ?? null,
       title: body.title,
-      category: body.category ?? null,
+      categories: body.categories ?? [],
       file: body.file ?? null,
       content: body.content ?? null,
       link: body.link ?? null,

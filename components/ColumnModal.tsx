@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import type { ColumnDTO } from "@/lib/types";
+import { COLUMN_CATEGORY_OPTIONS } from "@/lib/options";
 
 export function ColumnModal({
   columnId,
@@ -24,7 +25,7 @@ export function ColumnModal({
 
   const [num, setNum] = useState("");
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
   const [file, setFile] = useState("");
   const [content, setContent] = useState("");
   const [link, setLink] = useState("");
@@ -36,13 +37,17 @@ export function ColumnModal({
       const data: ColumnDTO = await res.json();
       setNum(data.num !== null ? String(data.num) : "");
       setTitle(data.title ?? "");
-      setCategory(data.category ?? "");
+      setCategories(data.categories ?? []);
       setFile(data.file ?? "");
       setContent(data.content ?? "");
       setLink(data.link ?? "");
       setLoading(false);
     })();
   }, [columnId, isNew]);
+
+  function toggleCategory(cat: string) {
+    setCategories((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
+  }
 
   async function handleSave() {
     if (!title.trim()) {
@@ -54,7 +59,7 @@ export function ColumnModal({
       const payload = {
         num: num.trim() ? Number(num) : null,
         title,
-        category: category || null,
+        categories,
         file: file || null,
         content: content || null,
         link: link || null,
@@ -110,12 +115,23 @@ export function ColumnModal({
               <input value={title} onChange={(e) => setTitle(e.target.value)} />
             </label>
             <label className="form-field">
-              <span>카테고리</span>
-              <input value={category} onChange={(e) => setCategory(e.target.value)} />
-            </label>
-            <label className="form-field">
               <span>파일명</span>
               <input value={file} onChange={(e) => setFile(e.target.value)} />
+            </label>
+            <label className="form-field form-field-wide">
+              <span>카테고리 (복수 선택 가능)</span>
+              <div className="filter-chip-row">
+                {COLUMN_CATEGORY_OPTIONS.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={`filter-chip${categories.includes(cat) ? " active" : ""}`}
+                    onClick={() => toggleCategory(cat)}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </label>
             <label className="form-field form-field-wide">
               <span>

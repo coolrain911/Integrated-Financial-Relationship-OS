@@ -166,7 +166,7 @@ export type ColumnDTO = {
   id: number;
   num: number | null;
   title: string;
-  category: string | null;
+  categories: string[];
   file: string | null;
   content: string | null;
   link: string | null;
@@ -175,7 +175,7 @@ export type ColumnDTO = {
 export type ColumnUpdateBody = Partial<{
   num: number | null;
   title: string;
-  category: string | null;
+  categories: string[];
   file: string | null;
   content: string | null;
   link: string | null;
@@ -183,7 +183,7 @@ export type ColumnUpdateBody = Partial<{
 
 export type ColumnCreateBody = { title: string } & Partial<{
   num: number | null;
-  category: string | null;
+  categories: string[];
   file: string | null;
   content: string | null;
   link: string | null;

@@ -91,7 +91,7 @@ export type ColumnRow = {
   id: number;
   num: number | null;
   title: string;
-  category: string | null;
+  categories: string[] | null;
   file: string | null;
   content: string | null;
   link: string | null;
@@ -299,7 +299,7 @@ export function columnRowToDto(row: ColumnRow): ColumnDTO {
     id: row.id,
     num: row.num,
     title: row.title,
-    category: row.category,
+    categories: row.categories ?? [],
     file: row.file,
     content: row.content,
     link: row.link,

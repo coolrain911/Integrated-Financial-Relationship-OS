@@ -73,6 +73,7 @@ create table if not exists columns_lib (
   num numeric,
   title text not null,
   category text,
+  categories text[] not null default '{}',
   file text,
   content text,
   link text

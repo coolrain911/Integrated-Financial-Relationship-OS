@@ -29,6 +29,7 @@ import type {
 } from "@/lib/types";
 import { buildGmailComposeUrl } from "@/lib/email";
 import { fmtPct } from "@/lib/format";
+import { COLUMN_CATEGORY_OPTIONS } from "@/lib/options";
 
 type Tab =
   | "today"
@@ -181,6 +182,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [navOpen, setNavOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeColumnCategories, setActiveColumnCategories] = useState<Set<string>>(new Set());
   const [dateStr, setDateStr] = useState("");
   const [currentMonth, setCurrentMonth] = useState<number | null>(null);
   const [attentionModalOpen, setAttentionModalOpen] = useState(false);
@@ -515,8 +517,23 @@ export default function Home() {
 
   const filteredColumns = useMemo(() => {
     const f = search.toLowerCase();
-    return columns.filter((c) => !f || (c.title || "").toLowerCase().includes(f));
-  }, [columns, search]);
+    return columns.filter((c) => {
+      if (f && !(c.title || "").toLowerCase().includes(f)) return false;
+      if (activeColumnCategories.size && !c.categories.some((cat) => activeColumnCategories.has(cat))) {
+        return false;
+      }
+      return true;
+    });
+  }, [columns, search, activeColumnCategories]);
+
+  function toggleColumnCategoryFilter(cat: string) {
+    setActiveColumnCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  }
 
   const filteredKnowledgeItems = useMemo(() => {
     const f = search.toLowerCase();
@@ -1026,6 +1043,27 @@ export default function Home() {
                   <button className="btn-mini" onClick={() => setColumnModal({ mode: "create" })}>
                     + 새 칼럼
                   </button>
+                </div>
+                <div className="filter-chip-row" style={{ marginBottom: 16 }}>
+                  {COLUMN_CATEGORY_OPTIONS.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      className={`filter-chip${activeColumnCategories.has(cat) ? " active" : ""}`}
+                      onClick={() => toggleColumnCategoryFilter(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                  {activeColumnCategories.size > 0 && (
+                    <button
+                      type="button"
+                      className="filter-chip filter-chip-clear"
+                      onClick={() => setActiveColumnCategories(new Set())}
+                    >
+                      필터 해제
+                    </button>
+                  )}
                 </div>
                 <div className="list-scroll">
                   {filteredColumns.length ? (
