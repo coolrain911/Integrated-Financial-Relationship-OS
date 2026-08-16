@@ -10,7 +10,7 @@ alter table columns_lib add column if not exists categories text[] not null defa
 -- reruns don't clobber anything manually re-tagged since). Anything that
 -- doesn't match (e.g. "기타") is left uncategorized for manual review in
 -- the new multi-select UI.
-update columns_lib set categories = array['생명보험(Life Insurance)']
+update columns_lib set categories = array['Life Insurance']
   where cardinality(categories) = 0 and category ilike '%생명보험%';
 
 update columns_lib set categories = array['은퇴준비']
@@ -28,7 +28,7 @@ update columns_lib set categories = array['학자금(FAFSA)']
 update columns_lib set categories = array['401(k)/IRA Rollover']
   where cardinality(categories) = 0 and category ilike '%401%';
 
-update columns_lib set categories = array['연금(Annuity)']
+update columns_lib set categories = array['Annuity']
   where cardinality(categories) = 0 and (category ilike '%연금%' or category ilike '%annuity%');
 
 -- Catch-all: anything still unmapped (the old "기타" bucket, or anything else
@@ -36,3 +36,9 @@ update columns_lib set categories = array['연금(Annuity)']
 -- rather than staying empty.
 update columns_lib set categories = array['기타']
   where cardinality(categories) = 0;
+
+-- Rename pass: shortens the two labels that made the filter-chip row wrap
+-- onto two lines. Safe to run against a database that was migrated before
+-- this rename (array_replace is a no-op where the old label isn't present).
+update columns_lib set categories = array_replace(categories, '생명보험(Life Insurance)', 'Life Insurance');
+update columns_lib set categories = array_replace(categories, '연금(Annuity)', 'Annuity');

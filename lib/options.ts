@@ -31,8 +31,8 @@ export const KNOWLEDGE_CATEGORY_PRESETS = ["부동산", "해외자산", "세금"
 export const LICENSE_CERT_CATEGORY_OPTIONS = ["License", "Register", "CE", "E&O"] as const;
 
 export const COLUMN_CATEGORY_OPTIONS = [
-  "생명보험(Life Insurance)",
-  "연금(Annuity)",
+  "Life Insurance",
+  "Annuity",
   "절세(Tax Savings)",
   "401(k)/IRA Rollover",
   "학자금(FAFSA)",
