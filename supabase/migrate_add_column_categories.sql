@@ -16,7 +16,7 @@ update columns_lib set categories = array['Life Insurance']
 update columns_lib set categories = array['은퇴준비']
   where cardinality(categories) = 0 and category ilike '%은퇴%';
 
-update columns_lib set categories = array['절세(Tax Savings)']
+update columns_lib set categories = array['Tax Saving/Diversification']
   where cardinality(categories) = 0 and category ilike '%세금%';
 
 update columns_lib set categories = array['자산운용/투자']
@@ -43,3 +43,4 @@ update columns_lib set categories = array['기타']
 update columns_lib set categories = array_replace(categories, '생명보험(Life Insurance)', 'Life Insurance');
 update columns_lib set categories = array_replace(categories, '연금(Annuity)', 'Annuity');
 update columns_lib set categories = array_replace(categories, '401(k)/IRA Rollover', 'Qualified Plan/IRA Rollover');
+update columns_lib set categories = array_replace(categories, '절세(Tax Savings)', 'Tax Saving/Diversification');

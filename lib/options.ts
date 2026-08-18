@@ -33,7 +33,7 @@ export const LICENSE_CERT_CATEGORY_OPTIONS = ["License", "Register", "CE", "E&O"
 export const COLUMN_CATEGORY_OPTIONS = [
   "Life Insurance",
   "Annuity",
-  "절세(Tax Savings)",
+  "Tax Saving/Diversification",
   "Qualified Plan/IRA Rollover",
   "학자금(FAFSA)",
   "은퇴준비",
