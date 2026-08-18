@@ -103,20 +103,6 @@ insert into manual_indexes (name)
 values ('MLSB'), ('S&P MARC 5%'), ('Barclays Focus')
 on conflict (name) do nothing;
 
--- Daily "아메리츠 경제뉴스 브리핑" pasted in from a KakaoTalk message each
--- morning, parsed into a numbered {text, source} item list. One row per
--- calendar day. raw_text/items are for a text paste; image_path is for when
--- the briefing arrives as a photo instead (see the "briefings" bucket below)
--- — either or both may be set.
-create table if not exists daily_briefings (
-  id bigint generated always as identity primary key,
-  briefing_date date not null unique,
-  raw_text text,
-  items jsonb not null default '[]',
-  image_path text,
-  updated_at timestamptz not null default now()
-);
-
 -- 지식 창고 (Knowledge Vault) — reusable answers to recurring client
 -- questions (real estate, overseas assets, tax, FAFSA...) and related
 -- reference material, sortable by title/category/date.
@@ -154,12 +140,6 @@ insert into storage.buckets (id, name, public)
 values ('licenses', 'licenses', false)
 on conflict (id) do nothing;
 
--- Private bucket for an uploaded daily-briefing image (same pattern as
--- "licenses" above).
-insert into storage.buckets (id, name, public)
-values ('briefings', 'briefings', false)
-on conflict (id) do nothing;
-
 -- No RLS policies are defined below, so once RLS is enabled, anon/authenticated
 -- roles have zero access to these tables. The app talks to Supabase only from
 -- Next.js server routes using the service role key, which bypasses RLS
@@ -172,7 +152,6 @@ alter table calendar_events enable row level security;
 alter table knowledge_items enable row level security;
 alter table licenses_certificates enable row level security;
 alter table manual_indexes enable row level security;
-alter table daily_briefings enable row level security;
 
 -- Splits a "LastName FirstName [MiddleInitial]" string (the convention used
 -- throughout this app) into (last_name, first_name). Falls back to a
