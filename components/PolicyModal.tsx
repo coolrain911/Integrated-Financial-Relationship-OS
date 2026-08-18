@@ -100,6 +100,24 @@ export function PolicyModal({
     [productOptionsByCategory, category]
   );
 
+  // Displayed next to the Additional Premium field so the true Annuity total
+  // (what the review-email template actually sends) is visible right where
+  // the two premium fields are, instead of only surfacing once an email is
+  // composed.
+  const annuityTotalPremium = useMemo(() => {
+    const toNum = (raw: string): number | null => {
+      const parsed = parseMoneyInput(raw).trim();
+      if (parsed === "") return 0;
+      if (parsed.toLowerCase() === "na") return 0;
+      const n = Number(parsed);
+      return Number.isNaN(n) ? null : n;
+    };
+    const init = toNum(initialPremium);
+    const add = toNum(additionalPremium);
+    if (init === null || add === null) return null;
+    return init + add;
+  }, [initialPremium, additionalPremium]);
+
   useEffect(() => {
     if (isNew) return;
     (async () => {
@@ -377,9 +395,13 @@ export function PolicyModal({
                   <MoneyField value={initialPremium} onChange={setInitialPremium} />
                 </label>
                 <label className="form-field">
-                  <span>Total Premium</span>
+                  <span>Additional Premium</span>
                   <MoneyField value={additionalPremium} onChange={setAdditionalPremium} />
                 </label>
+                <div className="form-field form-field-wide annuity-total-premium">
+                  Total Premium (Initial + Additional):{" "}
+                  {annuityTotalPremium !== null ? `$${annuityTotalPremium.toLocaleString()}` : "-"}
+                </div>
               </div>
             </>
           )}
