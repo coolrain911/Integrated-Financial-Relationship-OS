@@ -34,7 +34,7 @@ export const COLUMN_CATEGORY_OPTIONS = [
   "Life Insurance",
   "Annuity",
   "절세(Tax Savings)",
-  "401(k)/IRA Rollover",
+  "Qualified Plan/IRA Rollover",
   "학자금(FAFSA)",
   "은퇴준비",
   "상속/증여",

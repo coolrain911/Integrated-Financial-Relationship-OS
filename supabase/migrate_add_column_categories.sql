@@ -25,7 +25,7 @@ update columns_lib set categories = array['자산운용/투자']
 update columns_lib set categories = array['학자금(FAFSA)']
   where cardinality(categories) = 0 and (category ilike '%FAFSA%' or category ilike '%자녀교육%');
 
-update columns_lib set categories = array['401(k)/IRA Rollover']
+update columns_lib set categories = array['Qualified Plan/IRA Rollover']
   where cardinality(categories) = 0 and category ilike '%401%';
 
 update columns_lib set categories = array['Annuity']
@@ -42,3 +42,4 @@ update columns_lib set categories = array['기타']
 -- this rename (array_replace is a no-op where the old label isn't present).
 update columns_lib set categories = array_replace(categories, '생명보험(Life Insurance)', 'Life Insurance');
 update columns_lib set categories = array_replace(categories, '연금(Annuity)', 'Annuity');
+update columns_lib set categories = array_replace(categories, '401(k)/IRA Rollover', 'Qualified Plan/IRA Rollover');
