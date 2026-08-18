@@ -18,6 +18,7 @@ import { NewsPreviewModal } from "@/components/NewsPreviewModal";
 import type {
   CalendarEventDTO,
   ColumnDTO,
+  DailyBriefingDTO,
   KnowledgeItemDTO,
   LicenseCertDTO,
   ManualIndexDTO,
@@ -185,6 +186,7 @@ export default function Home() {
   const [activeColumnCategories, setActiveColumnCategories] = useState<Set<string>>(new Set());
   const [dateStr, setDateStr] = useState("");
   const [currentMonth, setCurrentMonth] = useState<number | null>(null);
+  const [todayISO, setTodayISO] = useState<string | null>(null);
   const [attentionModalOpen, setAttentionModalOpen] = useState(false);
   const [annivModalOpen, setAnnivModalOpen] = useState(false);
 
@@ -196,6 +198,10 @@ export default function Home() {
   const [marketIndexes, setMarketIndexes] = useState<MarketIndexDTO[]>([]);
   const [manualIndexes, setManualIndexes] = useState<ManualIndexDTO[]>([]);
   const [editingManualIndexId, setEditingManualIndexId] = useState<number | null>(null);
+  const [briefing, setBriefing] = useState<DailyBriefingDTO | null>(null);
+  const [briefingDraft, setBriefingDraft] = useState("");
+  const [briefingEditing, setBriefingEditing] = useState(false);
+  const [briefingSaving, setBriefingSaving] = useState(false);
   const [newsPreview, setNewsPreview] = useState<{
     item: NewsItemDTO;
     translatedTitle: string | null;
@@ -261,6 +267,8 @@ export default function Home() {
       })
     );
     setCurrentMonth(now.getMonth() + 1);
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    setTodayISO(`${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`);
 
     // Chrome silently drops speechSynthesis.speak() calls made before the
     // page has seen any user gesture, and whether that blocks a given load
@@ -313,10 +321,11 @@ export default function Home() {
 
   const loadMarketData = useCallback(async () => {
     try {
-      const [newsData, indexData, manualData] = await Promise.all([
+      const [newsData, indexData, manualData, briefingData] = await Promise.all([
         fetch("/api/news").then((r) => r.json()),
         fetch("/api/market-indexes").then((r) => r.json()),
         fetch("/api/manual-indexes").then((r) => r.json()),
+        fetch("/api/daily-briefings").then((r) => r.json()),
       ]);
       // Each API route can fail independently (e.g. the manual_indexes
       // table not existing yet in a not-fully-migrated database) and
@@ -325,6 +334,7 @@ export default function Home() {
       setNews(Array.isArray(newsData) ? newsData : []);
       setMarketIndexes(Array.isArray(indexData) ? indexData : []);
       setManualIndexes(Array.isArray(manualData) ? manualData : []);
+      setBriefing(briefingData && !briefingData.detail ? briefingData : null);
     } catch {
       // Non-critical — the dashboard works fine without news/index data.
     } finally {
@@ -667,6 +677,26 @@ export default function Home() {
     }
   }
 
+  async function handleSaveBriefing() {
+    if (!todayISO || !briefingDraft.trim()) return;
+    setBriefingSaving(true);
+    try {
+      const res = await fetch("/api/daily-briefings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: todayISO, rawText: briefingDraft }),
+      });
+      if (!res.ok) throw new Error("저장 실패");
+      const saved: DailyBriefingDTO = await res.json();
+      setBriefing(saved);
+      setBriefingEditing(false);
+    } catch {
+      alert("저장에 실패했습니다.");
+    } finally {
+      setBriefingSaving(false);
+    }
+  }
+
   async function translateText(text: string): Promise<string | null> {
     try {
       const res = await fetch("/api/translate", {
@@ -854,6 +884,70 @@ export default function Home() {
                     <div className="section-title-row">
                       <div className="section-title">Daily Financial News</div>
                     </div>
+                    <div className="briefing-block">
+                      <div className="briefing-header-row">
+                        <div className="briefing-label">
+                          오늘의 브리핑
+                          {briefing && todayISO && briefing.date !== todayISO && (
+                            <span className="briefing-stale-tag">{briefing.date} 기준</span>
+                          )}
+                        </div>
+                        {!briefingEditing && (
+                          <button
+                            type="button"
+                            className="btn-mini"
+                            onClick={() => {
+                              setBriefingDraft(
+                                briefing && briefing.date === todayISO ? briefing.rawText : ""
+                              );
+                              setBriefingEditing(true);
+                            }}
+                          >
+                            {briefing && briefing.date === todayISO ? "수정" : "붙여넣기"}
+                          </button>
+                        )}
+                      </div>
+                      {briefingEditing ? (
+                        <div className="briefing-editor">
+                          <textarea
+                            className="briefing-textarea"
+                            value={briefingDraft}
+                            onChange={(e) => setBriefingDraft(e.target.value)}
+                            rows={8}
+                            placeholder="카카오톡에서 받은 오늘의 브리핑을 그대로 붙여넣으세요..."
+                          />
+                          <div className="briefing-editor-actions">
+                            <button
+                              type="button"
+                              className="btn-mini"
+                              onClick={() => setBriefingEditing(false)}
+                            >
+                              취소
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={briefingSaving || !briefingDraft.trim()}
+                              onClick={handleSaveBriefing}
+                            >
+                              {briefingSaving ? "저장 중..." : "저장"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : briefing && briefing.items.length ? (
+                        <ol className="briefing-list">
+                          {briefing.items.map((it, i) => (
+                            <li key={i}>
+                              {it.text}
+                              {it.source && <span className="briefing-source"> ({it.source})</span>}
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <div className="empty">아직 오늘의 브리핑이 없습니다.</div>
+                      )}
+                    </div>
+                    <div className="news-subheading">자동 수집 뉴스</div>
                     {newsLoading ? (
                       <div className="empty">불러오는 중...</div>
                     ) : news.length ? (

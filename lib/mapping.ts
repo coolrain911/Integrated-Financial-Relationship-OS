@@ -3,6 +3,7 @@ import type {
   AnnuityType,
   CalendarEventDTO,
   ColumnDTO,
+  DailyBriefingDTO,
   Gender,
   KnowledgeItemDTO,
   LicenseCertCategory,
@@ -133,6 +134,14 @@ export type ManualIndexRow = {
   value: string | number | null;
   note: string | null;
   updated_at: string | null;
+};
+
+export type DailyBriefingRow = {
+  id: number;
+  briefing_date: string;
+  raw_text: string;
+  items: { text: string; source: string | null }[] | null;
+  updated_at: string;
 };
 
 function toNumberOrStr(raw: string | null): number | string | null {
@@ -348,6 +357,16 @@ export function manualIndexRowToDto(row: ManualIndexRow): ManualIndexDTO {
     name: row.name,
     value: row.value === null ? null : Number(row.value),
     note: row.note,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function dailyBriefingRowToDto(row: DailyBriefingRow): DailyBriefingDTO {
+  return {
+    id: row.id,
+    date: row.briefing_date,
+    rawText: row.raw_text,
+    items: row.items ?? [],
     updatedAt: row.updated_at,
   };
 }

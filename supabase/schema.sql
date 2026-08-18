@@ -103,6 +103,17 @@ insert into manual_indexes (name)
 values ('MLSB'), ('S&P MARC 5%'), ('Barclays Focus')
 on conflict (name) do nothing;
 
+-- Daily "아메리츠 경제뉴스 브리핑" pasted in from a KakaoTalk message each
+-- morning, parsed into a numbered {text, source} item list. One row per
+-- calendar day.
+create table if not exists daily_briefings (
+  id bigint generated always as identity primary key,
+  briefing_date date not null unique,
+  raw_text text not null,
+  items jsonb not null default '[]',
+  updated_at timestamptz not null default now()
+);
+
 -- 지식 창고 (Knowledge Vault) — reusable answers to recurring client
 -- questions (real estate, overseas assets, tax, FAFSA...) and related
 -- reference material, sortable by title/category/date.
@@ -152,6 +163,7 @@ alter table calendar_events enable row level security;
 alter table knowledge_items enable row level security;
 alter table licenses_certificates enable row level security;
 alter table manual_indexes enable row level security;
+alter table daily_briefings enable row level security;
 
 -- Splits a "LastName FirstName [MiddleInitial]" string (the convention used
 -- throughout this app) into (last_name, first_name). Falls back to a

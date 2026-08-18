@@ -297,3 +297,21 @@ export type ManualIndexUpdateBody = Partial<{
   value: number | null;
   note: string | null;
 }>;
+
+export type BriefingItemDTO = {
+  text: string;
+  source: string | null;
+};
+
+export type DailyBriefingDTO = {
+  id: number;
+  date: string;
+  rawText: string;
+  items: BriefingItemDTO[];
+  updatedAt: string;
+};
+
+export type DailyBriefingSaveBody = {
+  date: string;
+  rawText: string;
+};
