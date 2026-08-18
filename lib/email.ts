@@ -28,7 +28,6 @@ export function buildPolicyReviewEmail(policy: {
   product: string | null;
   deathBenefit: number | string | null;
   totalPremium: number | string | null;
-  initialPremium: number | string | null;
   additionalPremium: number | string | null;
   accountValue: number | string | null;
   optionType: string | null;
@@ -46,7 +45,7 @@ export function buildPolicyReviewEmail(policy: {
 
   const premiumTotal =
     policy.category === "Annuity"
-      ? addMoney(policy.initialPremium, policy.additionalPremium)
+      ? toDisplayMoney(policy.additionalPremium)
       : toDisplayMoney(policy.totalPremium);
 
   const lines = [
@@ -77,12 +76,4 @@ function toDisplayMoney(v: number | string | null): string {
   if (v === null || v === "na") return "";
   const n = Number(v);
   return Number.isNaN(n) ? "" : "$" + n.toLocaleString();
-}
-
-function addMoney(a: number | string | null, b: number | string | null): string {
-  const na = a === null || a === "na" ? 0 : Number(a);
-  const nb = b === null || b === "na" ? 0 : Number(b);
-  if (Number.isNaN(na) || Number.isNaN(nb)) return "";
-  const sum = na + nb;
-  return sum ? "$" + sum.toLocaleString() : "";
 }
