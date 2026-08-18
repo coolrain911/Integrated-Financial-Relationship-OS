@@ -1195,6 +1195,31 @@ body {
   margin-bottom: 8px;
 }
 
+.briefing-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.briefing-hint {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+
+.briefing-image-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.briefing-image {
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
 .briefing-label {
   font-size: 13px;
   font-weight: 700;

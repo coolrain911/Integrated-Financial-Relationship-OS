@@ -202,6 +202,8 @@ export default function Home() {
   const [briefingDraft, setBriefingDraft] = useState("");
   const [briefingEditing, setBriefingEditing] = useState(false);
   const [briefingSaving, setBriefingSaving] = useState(false);
+  const [briefingImageUploading, setBriefingImageUploading] = useState(false);
+  const briefingImageInputRef = useRef<HTMLInputElement>(null);
   const [newsPreview, setNewsPreview] = useState<{
     item: NewsItemDTO;
     translatedTitle: string | null;
@@ -697,6 +699,55 @@ export default function Home() {
     }
   }
 
+  async function uploadBriefingImage(file: File) {
+    if (!todayISO) return;
+    setBriefingImageUploading(true);
+    try {
+      const form = new FormData();
+      form.append("date", todayISO);
+      form.append("file", file);
+      const res = await fetch("/api/daily-briefings/image", { method: "POST", body: form });
+      if (!res.ok) throw new Error("업로드 실패");
+      const updated: DailyBriefingDTO = await res.json();
+      setBriefing(updated);
+    } catch {
+      alert("이미지 업로드에 실패했습니다.");
+    } finally {
+      setBriefingImageUploading(false);
+    }
+  }
+
+  function handleBriefingPaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          uploadBriefingImage(file);
+        }
+        return;
+      }
+    }
+  }
+
+  async function handleBriefingImageDelete() {
+    if (!briefing || !todayISO) return;
+    if (!confirm("첨부된 이미지를 삭제하시겠습니까?")) return;
+    try {
+      const res = await fetch(`/api/daily-briefings/image?date=${briefing.date}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("삭제 실패");
+      const updated: DailyBriefingDTO = await res.json();
+      setBriefing(updated);
+    } catch {
+      alert("삭제에 실패했습니다.");
+    }
+  }
+
   async function translateText(text: string): Promise<string | null> {
     try {
       const res = await fetch("/api/translate", {
@@ -884,7 +935,7 @@ export default function Home() {
                     <div className="section-title-row">
                       <div className="section-title">Daily Financial News</div>
                     </div>
-                    <div className="briefing-block">
+                    <div className="briefing-block" tabIndex={0} onPaste={handleBriefingPaste}>
                       <div className="briefing-header-row">
                         <div className="briefing-label">
                           오늘의 브리핑
@@ -892,22 +943,48 @@ export default function Home() {
                             <span className="briefing-stale-tag">{briefing.date} 기준</span>
                           )}
                         </div>
-                        {!briefingEditing && (
+                        <div className="briefing-actions">
+                          <input
+                            ref={briefingImageInputRef}
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              e.target.value = "";
+                              if (file) uploadBriefingImage(file);
+                            }}
+                          />
                           <button
                             type="button"
                             className="btn-mini"
-                            onClick={() => {
-                              setBriefingDraft(
-                                briefing && briefing.date === todayISO ? briefing.rawText : ""
-                              );
-                              setBriefingEditing(true);
-                            }}
+                            disabled={briefingImageUploading}
+                            onClick={() => briefingImageInputRef.current?.click()}
                           >
-                            {briefing && briefing.date === todayISO ? "수정" : "붙여넣기"}
+                            {briefingImageUploading ? "업로드 중..." : "이미지 첨부"}
                           </button>
-                        )}
+                          {!briefingEditing && (
+                            <button
+                              type="button"
+                              className="btn-mini"
+                              onClick={() => {
+                                setBriefingDraft(
+                                  briefing && briefing.date === todayISO ? briefing.rawText ?? "" : ""
+                                );
+                                setBriefingEditing(true);
+                              }}
+                            >
+                              {briefing && briefing.date === todayISO && briefing.rawText
+                                ? "텍스트 수정"
+                                : "텍스트 붙여넣기"}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      {briefingEditing ? (
+                      <div className="briefing-hint">
+                        이 영역을 클릭한 뒤 Ctrl+V로 캡처한 이미지를 바로 붙여넣을 수도 있습니다.
+                      </div>
+                      {briefingEditing && (
                         <div className="briefing-editor">
                           <textarea
                             className="briefing-textarea"
@@ -934,7 +1011,28 @@ export default function Home() {
                             </button>
                           </div>
                         </div>
-                      ) : briefing && briefing.items.length ? (
+                      )}
+                      {briefing?.imagePath && (
+                        <div className="briefing-image-wrap">
+                          {/* Served from our own private, service-role-gated
+                              route (not a static asset), so next/image's
+                              build-time optimization doesn't apply here. */}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`/api/daily-briefings/image?date=${briefing.date}`}
+                            alt="브리핑 이미지"
+                            className="briefing-image"
+                          />
+                          <button
+                            type="button"
+                            className="btn-danger-mini"
+                            onClick={handleBriefingImageDelete}
+                          >
+                            이미지 삭제
+                          </button>
+                        </div>
+                      )}
+                      {!briefingEditing && briefing && briefing.items.length > 0 && (
                         <ol className="briefing-list">
                           {briefing.items.map((it, i) => (
                             <li key={i}>
@@ -943,8 +1041,11 @@ export default function Home() {
                             </li>
                           ))}
                         </ol>
-                      ) : (
-                        <div className="empty">아직 오늘의 브리핑이 없습니다.</div>
+                      )}
+                      {!briefingEditing && !briefing?.imagePath && !briefing?.items.length && (
+                        <div className="empty">
+                          아직 오늘의 브리핑이 없습니다. 텍스트나 이미지로 추가해주세요.
+                        </div>
                       )}
                     </div>
                     <div className="news-subheading">자동 수집 뉴스</div>

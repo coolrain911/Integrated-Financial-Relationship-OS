@@ -52,6 +52,10 @@
 12. **`supabase/migrate_add_daily_briefings.sql`** — Dashboard Today의 "오늘의
     브리핑" 카드에서 매일 붙여넣는 카카오톡 브리핑을 저장할 `daily_briefings`
     테이블을 만듭니다.
+13. **`supabase/migrate_add_daily_briefing_image.sql`** — 브리핑이 텍스트가 아닌
+    사진(신문 캡처 등)으로 오는 경우를 위해 이미지 첨부를 지원합니다.
+    `daily_briefings.raw_text`를 nullable로 바꾸고 `image_path` 컬럼과 비공개
+    Storage 버킷(`briefings`)을 추가합니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 

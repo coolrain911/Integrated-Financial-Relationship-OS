@@ -105,12 +105,15 @@ on conflict (name) do nothing;
 
 -- Daily "아메리츠 경제뉴스 브리핑" pasted in from a KakaoTalk message each
 -- morning, parsed into a numbered {text, source} item list. One row per
--- calendar day.
+-- calendar day. raw_text/items are for a text paste; image_path is for when
+-- the briefing arrives as a photo instead (see the "briefings" bucket below)
+-- — either or both may be set.
 create table if not exists daily_briefings (
   id bigint generated always as identity primary key,
   briefing_date date not null unique,
-  raw_text text not null,
+  raw_text text,
   items jsonb not null default '[]',
+  image_path text,
   updated_at timestamptz not null default now()
 );
 
@@ -149,6 +152,12 @@ create table if not exists licenses_certificates (
 -- role key, same as every other table here.
 insert into storage.buckets (id, name, public)
 values ('licenses', 'licenses', false)
+on conflict (id) do nothing;
+
+-- Private bucket for an uploaded daily-briefing image (same pattern as
+-- "licenses" above).
+insert into storage.buckets (id, name, public)
+values ('briefings', 'briefings', false)
 on conflict (id) do nothing;
 
 -- No RLS policies are defined below, so once RLS is enabled, anon/authenticated

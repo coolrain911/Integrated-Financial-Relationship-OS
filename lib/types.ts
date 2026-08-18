@@ -306,8 +306,9 @@ export type BriefingItemDTO = {
 export type DailyBriefingDTO = {
   id: number;
   date: string;
-  rawText: string;
+  rawText: string | null;
   items: BriefingItemDTO[];
+  imagePath: string | null;
   updatedAt: string;
 };
 

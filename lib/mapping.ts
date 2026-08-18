@@ -139,8 +139,9 @@ export type ManualIndexRow = {
 export type DailyBriefingRow = {
   id: number;
   briefing_date: string;
-  raw_text: string;
+  raw_text: string | null;
   items: { text: string; source: string | null }[] | null;
+  image_path: string | null;
   updated_at: string;
 };
 
@@ -367,6 +368,7 @@ export function dailyBriefingRowToDto(row: DailyBriefingRow): DailyBriefingDTO {
     date: row.briefing_date,
     rawText: row.raw_text,
     items: row.items ?? [],
+    imagePath: row.image_path,
     updatedAt: row.updated_at,
   };
 }
