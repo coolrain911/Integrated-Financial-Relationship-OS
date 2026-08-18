@@ -22,7 +22,7 @@ update columns_lib set categories = array['Tax Saving/Diversification']
 update columns_lib set categories = array['자산운용/투자']
   where cardinality(categories) = 0 and (category ilike '%투자%' or category ilike '%시장동향%');
 
-update columns_lib set categories = array['학자금(FAFSA)']
+update columns_lib set categories = array['학자금']
   where cardinality(categories) = 0 and (category ilike '%FAFSA%' or category ilike '%자녀교육%');
 
 update columns_lib set categories = array['Qualified Plan/IRA Rollover']
@@ -44,3 +44,4 @@ update columns_lib set categories = array_replace(categories, '생명보험(Life
 update columns_lib set categories = array_replace(categories, '연금(Annuity)', 'Annuity');
 update columns_lib set categories = array_replace(categories, '401(k)/IRA Rollover', 'Qualified Plan/IRA Rollover');
 update columns_lib set categories = array_replace(categories, '절세(Tax Savings)', 'Tax Saving/Diversification');
+update columns_lib set categories = array_replace(categories, '학자금(FAFSA)', '학자금');

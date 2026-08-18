@@ -35,11 +35,12 @@ export const COLUMN_CATEGORY_OPTIONS = [
   "Annuity",
   "Tax Saving/Diversification",
   "Qualified Plan/IRA Rollover",
-  "학자금(FAFSA)",
+  "학자금",
   "은퇴준비",
   "상속/증여",
   "자산운용/투자",
   "Medicare/LTC",
+  "세법",
   "기타",
 ] as const;
 
