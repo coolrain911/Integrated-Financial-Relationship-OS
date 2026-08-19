@@ -62,6 +62,8 @@
     패널에서 걸러볼 수 있습니다. 표에는 컬럼으로 노출되지 않습니다.
 14. **`supabase/migrate_rename_prospect_category_meeting.sql`** — `prospects`의
     접촉경로 값 "모임"을 "모임/세미나"로 바꿉니다.
+15. **`supabase/migrate_rename_prospect_category_phone_email.sql`** — `prospects`의
+    접촉경로 값 "전화/이메일 연락"을 "방문/전화/이메일"로 바꿉니다.
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 
