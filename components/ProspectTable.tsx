@@ -10,8 +10,8 @@ type SortKey = "lastName" | "contacted" | "category";
 type ContactedFilterKey = "yes" | "no";
 
 const CONTACTED_FILTER_OPTIONS: { key: ContactedFilterKey; label: string }[] = [
-  { key: "yes", label: "접촉경험 있음" },
-  { key: "no", label: "접촉경험 없음" },
+  { key: "yes", label: "있음" },
+  { key: "no", label: "없음" },
 ];
 
 function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
@@ -190,7 +190,7 @@ export function ProspectTable({
                 </td>
                 <td>
                   <span className={`pill ${p.contacted ? "success" : "muted"}`}>
-                    {p.contacted ? "접촉경험 있음" : "접촉경험 없음"}
+                    {p.contacted ? "있음" : "없음"}
                   </span>
                 </td>
                 <td>{p.category ? <span className="pill accent">{p.category}</span> : "-"}</td>

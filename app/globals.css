@@ -1474,12 +1474,11 @@ body {
   text-decoration: underline;
 }
 
-/* Potential Client table: bold+centered headers, and a tightened gap
-   between 성(1) and 이름(2) to leave room for the added 접촉유무/접촉경로
-   columns. */
+/* Potential Client table: bold headers, and a tightened gap between
+   성(1) and 이름(2) to leave room for the added 접촉유무/접촉경로 columns. */
 .data-table-prospects thead th {
   font-weight: 800;
-  text-align: center;
+  text-align: left;
 }
 
 .data-table-prospects th:nth-child(1),
@@ -1490,6 +1489,17 @@ body {
 .data-table-prospects th:nth-child(2),
 .data-table-prospects td:nth-child(2) {
   padding-left: 4px;
+}
+
+/* Email is often the longest value in the row and was crowding out the
+   접촉경로(경로) column — cap its width and let 경로 use the freed space. */
+.data-table-prospects td:nth-child(4) {
+  max-width: 170px;
+}
+
+.data-table-prospects th:nth-child(7),
+.data-table-prospects td:nth-child(7) {
+  min-width: 160px;
 }
 
 /* Merged Phone/기타정보 cell: let the note wrap to a second line instead of
