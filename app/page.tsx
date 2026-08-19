@@ -1008,7 +1008,6 @@ export default function Home() {
                   <ProspectTable
                     prospects={filteredProspects}
                     onOpenProspect={(id) => setProspectModal({ mode: "edit", id })}
-                    onConverted={handleProspectConverted}
                     onDeleted={handleProspectDeleted}
                   />
                 ) : (

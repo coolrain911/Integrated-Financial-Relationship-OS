@@ -32,7 +32,7 @@ export function ProspectModal({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [categoryChoice, setCategoryChoice] = useState("");
-  const [categoryCustom, setCategoryCustom] = useState("");
+  const [contacted, setContacted] = useState(false);
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -45,14 +45,8 @@ export function ProspectModal({
       setKoreanName(data.koreanName ?? "");
       setEmail(data.email ?? "");
       setPhone(data.phone ?? "");
-      const cat = data.category;
-      if (cat && !CONTACT_CHANNEL_PRESETS.includes(cat as (typeof CONTACT_CHANNEL_PRESETS)[number])) {
-        setCategoryChoice("기타");
-        setCategoryCustom(cat);
-      } else {
-        setCategoryChoice(cat ?? "");
-        setCategoryCustom("");
-      }
+      setCategoryChoice(data.category ?? "");
+      setContacted(data.contacted);
       setNote(data.note ?? "");
       setLoading(false);
     })();
@@ -67,7 +61,8 @@ export function ProspectModal({
         koreanName: koreanName || null,
         email: email || null,
         phone: phone || null,
-        category: categoryChoice === "기타" ? categoryCustom || null : categoryChoice || null,
+        category: categoryChoice || null,
+        contacted,
         note: note || null,
       };
       const res = await fetch(isNew ? "/api/prospects" : `/api/prospects/${prospectId}`, {
@@ -157,12 +152,25 @@ export function ProspectModal({
                 ))}
               </select>
             </label>
-            {categoryChoice === "기타" && (
-              <label className="form-field">
-                <span>접촉경로 (직접 입력)</span>
-                <input value={categoryCustom} onChange={(e) => setCategoryCustom(e.target.value)} />
-              </label>
-            )}
+            <label className="form-field form-field-wide">
+              <span>접촉유무</span>
+              <div className="filter-chip-row">
+                <button
+                  type="button"
+                  className={`filter-chip${contacted ? " active" : ""}`}
+                  onClick={() => setContacted(true)}
+                >
+                  접촉경험 있음
+                </button>
+                <button
+                  type="button"
+                  className={`filter-chip${!contacted ? " active" : ""}`}
+                  onClick={() => setContacted(false)}
+                >
+                  접촉경험 없음
+                </button>
+              </div>
+            </label>
             <label className="form-field form-field-wide">
               <span>주요 정보</span>
               <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />

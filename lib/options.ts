@@ -13,10 +13,12 @@ export const OCCUPATION_PRESETS = [
 
 export const CONTACT_CHANNEL_PRESETS = [
   "소개",
-  "모임/골프",
+  "골프",
+  "모임",
   "교회",
   "전화/이메일 연락",
-  "명함",
+  "CPA/변호사",
+  "광고/명함",
   "기타",
 ];
 

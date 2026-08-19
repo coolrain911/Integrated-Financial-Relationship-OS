@@ -84,6 +84,7 @@ export type ProspectRow = {
   email: string | null;
   phone: string | null;
   category: string | null;
+  contacted: boolean;
   note: string | null;
 };
 
@@ -291,6 +292,7 @@ export function prospectRowToDto(row: ProspectRow): ProspectDTO {
     email: row.email,
     phone: row.phone,
     category: row.category,
+    contacted: row.contacted,
     note: row.note,
   };
 }

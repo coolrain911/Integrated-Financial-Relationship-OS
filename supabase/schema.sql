@@ -57,6 +57,9 @@ create table if not exists policies (
   reviewed boolean not null default false
 );
 
+-- category holds the 접촉경로 (contact channel — 소개/골프/모임/교회/...), a
+-- separate concern from contacted (접촉유무 — whether they've been reached
+-- at all yet).
 create table if not exists prospects (
   id bigint generated always as identity primary key,
   last_name text,
@@ -65,6 +68,7 @@ create table if not exists prospects (
   email text,
   phone text,
   category text,
+  contacted boolean not null default false,
   note text
 );
 

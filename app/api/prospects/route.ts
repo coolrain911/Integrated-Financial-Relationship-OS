@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       email: body.email ?? null,
       phone: body.phone ?? null,
       category: body.category ?? null,
+      contacted: body.contacted ?? false,
       note: body.note ?? null,
     })
     .select("*")

@@ -52,6 +52,7 @@ export async function PATCH(
     email: "email",
     phone: "phone",
     category: "category",
+    contacted: "contacted",
     note: "note",
   };
 

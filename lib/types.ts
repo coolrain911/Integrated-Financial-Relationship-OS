@@ -147,6 +147,7 @@ export type ProspectDTO = {
   email: string | null;
   phone: string | null;
   category: string | null;
+  contacted: boolean;
   note: string | null;
 };
 
@@ -157,6 +158,7 @@ export type ProspectUpdateBody = Partial<{
   email: string | null;
   phone: string | null;
   category: string | null;
+  contacted: boolean;
   note: string | null;
 }>;
 
