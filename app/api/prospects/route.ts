@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       phone: body.phone ?? null,
       category: body.category ?? null,
       contacted: body.contacted ?? false,
+      sales_priority: body.salesPriority ?? null,
       note: body.note ?? null,
     })
     .select("*")

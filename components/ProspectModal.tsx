@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
-import type { ProspectDTO } from "@/lib/types";
-import { CONTACT_CHANNEL_PRESETS } from "@/lib/options";
+import type { ProspectDTO, ProspectSalesPriority } from "@/lib/types";
+import {
+  CONTACT_CHANNEL_PRESETS,
+  PROSPECT_SALES_PRIORITY_DESCRIPTIONS,
+  PROSPECT_SALES_PRIORITY_OPTIONS,
+} from "@/lib/options";
 
 export function ProspectModal({
   prospectId,
@@ -33,6 +37,7 @@ export function ProspectModal({
   const [phone, setPhone] = useState("");
   const [categoryChoice, setCategoryChoice] = useState("");
   const [contacted, setContacted] = useState(false);
+  const [salesPriority, setSalesPriority] = useState("");
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -47,6 +52,7 @@ export function ProspectModal({
       setPhone(data.phone ?? "");
       setCategoryChoice(data.category ?? "");
       setContacted(data.contacted);
+      setSalesPriority(data.salesPriority ?? "");
       setNote(data.note ?? "");
       setLoading(false);
     })();
@@ -63,6 +69,7 @@ export function ProspectModal({
         phone: phone || null,
         category: categoryChoice || null,
         contacted,
+        salesPriority: (salesPriority || null) as ProspectSalesPriority | null,
         note: note || null,
       };
       const res = await fetch(isNew ? "/api/prospects" : `/api/prospects/${prospectId}`, {
@@ -170,6 +177,22 @@ export function ProspectModal({
                   접촉경험 없음
                 </button>
               </div>
+            </label>
+            <label className="form-field">
+              <span>
+                Sales Priority
+                {salesPriority
+                  ? ` — ${PROSPECT_SALES_PRIORITY_DESCRIPTIONS[salesPriority as ProspectSalesPriority]}`
+                  : ""}
+              </span>
+              <select value={salesPriority} onChange={(e) => setSalesPriority(e.target.value)}>
+                <option value="">미입력</option>
+                {PROSPECT_SALES_PRIORITY_OPTIONS.map((p) => (
+                  <option key={p} value={p}>
+                    {p} — {PROSPECT_SALES_PRIORITY_DESCRIPTIONS[p]}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="form-field form-field-wide">
               <span>주요 정보</span>

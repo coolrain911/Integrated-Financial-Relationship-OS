@@ -1,9 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ProspectDTO } from "@/lib/types";
+import type { ProspectDTO, ProspectSalesPriority } from "@/lib/types";
 import { compareByLastName } from "@/lib/mapping";
-import { CONTACT_CHANNEL_PRESETS } from "@/lib/options";
+import {
+  CONTACT_CHANNEL_PRESETS,
+  PROSPECT_SALES_PRIORITY_DESCRIPTIONS,
+  PROSPECT_SALES_PRIORITY_OPTIONS,
+} from "@/lib/options";
 
 type SortKey = "lastName" | "contacted" | "category";
 
@@ -37,12 +41,17 @@ export function ProspectTable({
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeContacted, setActiveContacted] = useState<Set<ContactedFilterKey>>(new Set());
   const [activeChannels, setActiveChannels] = useState<Set<string>>(new Set());
+  const [activeSalesPriority, setActiveSalesPriority] = useState<Set<ProspectSalesPriority>>(
+    new Set()
+  );
 
-  const hasActiveFilter = activeContacted.size > 0 || activeChannels.size > 0;
+  const hasActiveFilter =
+    activeContacted.size > 0 || activeChannels.size > 0 || activeSalesPriority.size > 0;
 
   function clearAllFilters() {
     setActiveContacted(new Set());
     setActiveChannels(new Set());
+    setActiveSalesPriority(new Set());
   }
 
   function toggleSort(key: SortKey) {
@@ -59,9 +68,11 @@ export function ProspectTable({
     return prospects.filter((p) => {
       if (activeContacted.size && !activeContacted.has(p.contacted ? "yes" : "no")) return false;
       if (activeChannels.size && (!p.category || !activeChannels.has(p.category))) return false;
+      if (activeSalesPriority.size && (!p.salesPriority || !activeSalesPriority.has(p.salesPriority)))
+        return false;
       return true;
     });
-  }, [prospects, hasActiveFilter, activeContacted, activeChannels]);
+  }, [prospects, hasActiveFilter, activeContacted, activeChannels, activeSalesPriority]);
 
   const sorted = useMemo(() => {
     const items = [...filtered];
@@ -102,7 +113,10 @@ export function ProspectTable({
           className={`btn-mini${hasActiveFilter ? " filter-toggle-active" : ""}`}
           onClick={() => setFilterOpen((v) => !v)}
         >
-          필터{hasActiveFilter ? ` (${activeContacted.size + activeChannels.size})` : ""}{" "}
+          필터
+          {hasActiveFilter
+            ? ` (${activeContacted.size + activeChannels.size + activeSalesPriority.size})`
+            : ""}{" "}
           {filterOpen ? "▲" : "▼"}
         </button>
         {hasActiveFilter && (
@@ -147,6 +161,21 @@ export function ProspectTable({
                   onClick={() => setActiveChannels((prev) => toggleInSet(prev, channel))}
                 >
                   {channel}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="filter-group">
+            <div className="filter-group-label">Sales Priority</div>
+            <div className="filter-chip-row">
+              {PROSPECT_SALES_PRIORITY_OPTIONS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`filter-chip${activeSalesPriority.has(p) ? " active" : ""}`}
+                  onClick={() => setActiveSalesPriority((prev) => toggleInSet(prev, p))}
+                >
+                  {p} — {PROSPECT_SALES_PRIORITY_DESCRIPTIONS[p]}
                 </button>
               ))}
             </div>

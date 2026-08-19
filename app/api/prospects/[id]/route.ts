@@ -53,6 +53,7 @@ export async function PATCH(
     phone: "phone",
     category: "category",
     contacted: "contacted",
+    salesPriority: "sales_priority",
     note: "note",
   };
 

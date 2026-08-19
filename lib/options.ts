@@ -55,3 +55,15 @@ export const PERSON_GRADE_DESCRIPTIONS: Record<(typeof PERSON_GRADE_OPTIONS)[num
   C: "보통",
   D: "신경을 덜 써도 되는 고객",
 };
+
+// Potential Client의 영업 우선순위. 표에는 컬럼으로 노출하지 않고, 잠재고객
+// 정보 입력/수정과 필터에서만 쓴다.
+export const PROSPECT_SALES_PRIORITY_OPTIONS = ["A", "B", "C"] as const;
+export const PROSPECT_SALES_PRIORITY_DESCRIPTIONS: Record<
+  (typeof PROSPECT_SALES_PRIORITY_OPTIONS)[number],
+  string
+> = {
+  A: "우선영업",
+  B: "접촉유지",
+  C: "관망대상",
+};

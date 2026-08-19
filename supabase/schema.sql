@@ -59,7 +59,9 @@ create table if not exists policies (
 
 -- category holds the 접촉경로 (contact channel — 소개/골프/모임/교회/...), a
 -- separate concern from contacted (접촉유무 — whether they've been reached
--- at all yet).
+-- at all yet). sales_priority (Sales Priority) is a lightweight internal
+-- triage flag — A(우선영업)/B(접촉유지)/C(관망대상) — used for input/filtering
+-- only; it's not shown as a column in the Potential Client table.
 create table if not exists prospects (
   id bigint generated always as identity primary key,
   last_name text,
@@ -69,6 +71,7 @@ create table if not exists prospects (
   phone text,
   category text,
   contacted boolean not null default false,
+  sales_priority text check (sales_priority in ('A', 'B', 'C')),
   note text
 );
 

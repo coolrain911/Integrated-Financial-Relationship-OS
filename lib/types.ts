@@ -6,6 +6,7 @@ export type OptionType = "A" | "B" | "B->A";
 export type PremiumMethod = "월납" | "분기납" | "반기납" | "연납" | "일시납";
 export type AnnuityType = "IRA" | "Roth IRA" | "SEP IRA" | "Non-Qualified";
 export type PersonGrade = "A" | "B" | "C" | "D";
+export type ProspectSalesPriority = "A" | "B" | "C";
 
 export type PersonDTO = {
   id: number;
@@ -148,6 +149,7 @@ export type ProspectDTO = {
   phone: string | null;
   category: string | null;
   contacted: boolean;
+  salesPriority: ProspectSalesPriority | null;
   note: string | null;
 };
 
@@ -159,6 +161,7 @@ export type ProspectUpdateBody = Partial<{
   phone: string | null;
   category: string | null;
   contacted: boolean;
+  salesPriority: ProspectSalesPriority | null;
   note: string | null;
 }>;
 

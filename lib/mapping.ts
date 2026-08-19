@@ -16,6 +16,7 @@ import type {
   PolicyDTO,
   PremiumMethod,
   ProspectDTO,
+  ProspectSalesPriority,
 } from "./types";
 
 export type PersonRow = {
@@ -85,6 +86,7 @@ export type ProspectRow = {
   phone: string | null;
   category: string | null;
   contacted: boolean;
+  sales_priority: ProspectSalesPriority | null;
   note: string | null;
 };
 
@@ -293,6 +295,7 @@ export function prospectRowToDto(row: ProspectRow): ProspectDTO {
     phone: row.phone,
     category: row.category,
     contacted: row.contacted,
+    salesPriority: row.sales_priority,
     note: row.note,
   };
 }
