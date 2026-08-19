@@ -14,7 +14,7 @@ export const OCCUPATION_PRESETS = [
 export const CONTACT_CHANNEL_PRESETS = [
   "소개",
   "골프",
-  "모임",
+  "모임/세미나",
   "교회",
   "전화/이메일 연락",
   "CPA/변호사",
