@@ -10,6 +10,12 @@ const SYMBOLS: { symbol: string; name: string }[] = [
   { symbol: "^DJI", name: "Dow Jones" },
   { symbol: "^IXIC", name: "Nasdaq" },
   { symbol: "GC=F", name: "Gold" },
+  { symbol: "TSLA", name: "Tesla" },
+  { symbol: "PLTR", name: "Palantir" },
+  { symbol: "NVDA", name: "Nvidia" },
+  { symbol: "^KS11", name: "KOSPI" },
+  { symbol: "BTC-USD", name: "Bitcoin" },
+  { symbol: "XRP-USD", name: "XRP" },
 ];
 
 type YahooChartResponse = {

@@ -64,6 +64,11 @@
     접촉경로 값 "모임"을 "모임/세미나"로 바꿉니다.
 15. **`supabase/migrate_rename_prospect_category_phone_email.sql`** — `prospects`의
     접촉경로 값 "전화/이메일 연락"을 "방문/전화/이메일"로 바꿉니다.
+16. **`supabase/migrate_drop_manual_indexes.sql`** — Dashboard Today의 Key
+    Financial Index 카드에서 직접 입력하던 MLSB/S&P MARC 5%/Barclays Focus
+    3종을 완전히 없애고 `manual_indexes` 테이블을 삭제합니다. 대신 Tesla/
+    Palantir/Nvidia/KOSPI/Bitcoin/XRP가 S&P 500/Dow Jones/Nasdaq/Gold와
+    같은 방식으로 자동 조회됩니다 (Yahoo Finance).
 
 ## 새로 시작하는 경우 (로컬 개발 설정)
 

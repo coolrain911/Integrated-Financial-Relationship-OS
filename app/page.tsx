@@ -20,7 +20,6 @@ import type {
   ColumnDTO,
   KnowledgeItemDTO,
   LicenseCertDTO,
-  ManualIndexDTO,
   MarketIndexDTO,
   NewsItemDTO,
   PersonDTO,
@@ -194,8 +193,6 @@ export default function Home() {
   const [news, setNews] = useState<NewsItemDTO[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const [marketIndexes, setMarketIndexes] = useState<MarketIndexDTO[]>([]);
-  const [manualIndexes, setManualIndexes] = useState<ManualIndexDTO[]>([]);
-  const [editingManualIndexId, setEditingManualIndexId] = useState<number | null>(null);
   const [newsPreview, setNewsPreview] = useState<{
     item: NewsItemDTO;
     translatedTitle: string | null;
@@ -313,18 +310,12 @@ export default function Home() {
 
   const loadMarketData = useCallback(async () => {
     try {
-      const [newsData, indexData, manualData] = await Promise.all([
+      const [newsData, indexData] = await Promise.all([
         fetch("/api/news").then((r) => r.json()),
         fetch("/api/market-indexes").then((r) => r.json()),
-        fetch("/api/manual-indexes").then((r) => r.json()),
       ]);
-      // Each API route can fail independently (e.g. the manual_indexes
-      // table not existing yet in a not-fully-migrated database) and
-      // returns a non-array error body in that case — falling back to []
-      // keeps that one card empty instead of crashing the whole render.
       setNews(Array.isArray(newsData) ? newsData : []);
       setMarketIndexes(Array.isArray(indexData) ? indexData : []);
-      setManualIndexes(Array.isArray(manualData) ? manualData : []);
     } catch {
       // Non-critical — the dashboard works fine without news/index data.
     } finally {
@@ -646,27 +637,6 @@ export default function Home() {
     [allAnnivItems, annivUnselected]
   );
 
-  async function handleManualIndexSave(id: number, rawValue: string) {
-    const trimmed = rawValue.trim();
-    const value = trimmed === "" ? null : Number(trimmed);
-    if (value !== null && Number.isNaN(value)) {
-      alert("숫자를 입력해주세요.");
-      return;
-    }
-    try {
-      const res = await fetch(`/api/manual-indexes/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
-      });
-      if (!res.ok) throw new Error("저장 실패");
-      const updated: ManualIndexDTO = await res.json();
-      setManualIndexes((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
-    } catch {
-      alert("저장에 실패했습니다.");
-    }
-  }
-
   async function translateText(text: string): Promise<string | null> {
     try {
       const res = await fetch("/api/translate", {
@@ -919,33 +889,6 @@ export default function Home() {
                           <div className={`index-change ${chgCls(idx.changePct1y)}`}>
                             {fmtPct(idx.changePct1y)} (1년)
                           </div>
-                        </div>
-                      ))}
-                      {manualIndexes.map((m) => (
-                        <div key={m.id} className="index-row">
-                          <div className="index-name">{m.name}</div>
-                          {editingManualIndexId === m.id ? (
-                            <input
-                              className="index-edit-input"
-                              defaultValue={m.value !== null ? String(m.value) : ""}
-                              autoFocus
-                              onBlur={(e) => {
-                                handleManualIndexSave(m.id, e.target.value);
-                                setEditingManualIndexId(null);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                              }}
-                            />
-                          ) : (
-                            <div
-                              className="index-value link-cell"
-                              onClick={() => setEditingManualIndexId(m.id)}
-                              title="클릭해서 값 수정"
-                            >
-                              {m.value !== null ? `${m.value}%` : "입력 필요"}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>

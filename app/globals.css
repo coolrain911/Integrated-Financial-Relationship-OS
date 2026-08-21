@@ -1269,15 +1269,6 @@ body {
   color: var(--danger);
 }
 
-.index-edit-input {
-  width: 80px;
-  text-align: right;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 4px 6px;
-  font-size: 13px;
-}
-
 .filter-toggle-active {
   background: var(--accent);
   color: #fff;

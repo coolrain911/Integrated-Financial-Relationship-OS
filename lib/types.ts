@@ -290,15 +290,3 @@ export type MarketIndexDTO = {
   asOfDate: string | null;
 };
 
-export type ManualIndexDTO = {
-  id: number;
-  name: string;
-  value: number | null;
-  note: string | null;
-  updatedAt: string | null;
-};
-
-export type ManualIndexUpdateBody = Partial<{
-  value: number | null;
-  note: string | null;
-}>;
