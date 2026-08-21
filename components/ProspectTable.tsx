@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { ProspectDTO, ProspectSalesPriority } from "@/lib/types";
 import { compareByLastName } from "@/lib/mapping";
+import { buildGmailComposeUrl } from "@/lib/email";
 import {
   CONTACT_CHANNEL_PRESETS,
   PROSPECT_SALES_PRIORITY_DESCRIPTIONS,
@@ -37,6 +38,7 @@ export function ProspectTable({
   const [sortKey, setSortKey] = useState<SortKey>("lastName");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeContacted, setActiveContacted] = useState<Set<ContactedFilterKey>>(new Set());
@@ -89,6 +91,34 @@ export function ProspectTable({
   function sortArrow(key: SortKey) {
     if (key !== sortKey) return "";
     return sortDir === "asc" ? " ▲" : " ▼";
+  }
+
+  const selectedEmails = useMemo(() => {
+    const emails: string[] = [];
+    prospects.forEach((p) => {
+      if (selected.has(p.id) && p.email) emails.push(p.email);
+    });
+    return Array.from(new Set(emails));
+  }, [prospects, selected]);
+
+  function toggleSelect(id: number) {
+    setSelected((prev) => toggleInSet(prev, id));
+  }
+
+  function selectAllVisible() {
+    setSelected(new Set(sorted.map((p) => p.id)));
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function sendEmail() {
+    if (selectedEmails.length === 0) {
+      alert("이메일 주소가 있는 사람을 선택해주세요.");
+      return;
+    }
+    window.open(buildGmailComposeUrl(selectedEmails), "_blank");
   }
 
   async function remove(id: number, label: string) {
@@ -182,10 +212,25 @@ export function ProspectTable({
           </div>
         </div>
       )}
+
+      <div className="selection-bar">
+        <span className="selection-count">{selected.size}명 선택됨</span>
+        <button className="btn-mini" onClick={selectAllVisible}>
+          화면 전체 선택
+        </button>
+        <button className="btn-mini" onClick={clearSelection}>
+          선택 해제
+        </button>
+        <button className="btn-primary" disabled={selectedEmails.length === 0} onClick={sendEmail}>
+          이메일 보내기 ({selectedEmails.length})
+        </button>
+      </div>
+
       <div className="table-scroll">
         <table className="data-table data-table-prospects">
           <thead>
             <tr>
+              <th className="sticky-col-left"></th>
               <th className="sortable" onClick={() => toggleSort("lastName")}>
                 성{sortArrow("lastName")}
               </th>
@@ -205,6 +250,13 @@ export function ProspectTable({
           <tbody>
             {sorted.map((p) => (
               <tr key={p.id}>
+                <td className="sticky-col-left">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(p.id)}
+                    onChange={() => toggleSelect(p.id)}
+                  />
+                </td>
                 <td className="link-cell" onClick={() => onOpenProspect(p.id)}>
                   {p.lastName || "-"}
                 </td>

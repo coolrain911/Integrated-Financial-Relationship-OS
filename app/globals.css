@@ -1472,35 +1472,35 @@ body {
   text-align: left;
 }
 
-.data-table-prospects th:nth-child(1),
-.data-table-prospects td:nth-child(1) {
+.data-table-prospects th:nth-child(2),
+.data-table-prospects td:nth-child(2) {
   padding-right: 2px;
 }
 
-.data-table-prospects th:nth-child(2),
-.data-table-prospects td:nth-child(2) {
+.data-table-prospects th:nth-child(3),
+.data-table-prospects td:nth-child(3) {
   padding-left: 2px;
 }
 
 /* 한글명 doesn't need as much room as the other text columns. */
-.data-table-prospects td:nth-child(3) {
+.data-table-prospects td:nth-child(4) {
   max-width: 110px;
 }
 
 /* Email is often the longest value in the row and was crowding out the
    접촉경로 column — cap its width (a bit wider than 한글명) and let 접촉경로
    use the freed space. */
-.data-table-prospects td:nth-child(4) {
+.data-table-prospects td:nth-child(5) {
   max-width: 210px;
-}
-
-.data-table-prospects th:nth-child(6),
-.data-table-prospects td:nth-child(6) {
-  padding-left: 20px;
 }
 
 .data-table-prospects th:nth-child(7),
 .data-table-prospects td:nth-child(7) {
+  padding-left: 20px;
+}
+
+.data-table-prospects th:nth-child(8),
+.data-table-prospects td:nth-child(8) {
   padding-left: 20px;
   min-width: 160px;
 }
