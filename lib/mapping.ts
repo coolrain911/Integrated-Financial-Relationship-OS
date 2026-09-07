@@ -171,12 +171,21 @@ export function computeAnniversary(
     today.getUTCDate()
   );
 
-  let anniv = safeUtcDate(today.getUTCFullYear(), month, day);
-  if (anniv.getTime() < todayUtc) {
-    anniv = safeUtcDate(today.getUTCFullYear() + 1, month, day);
-  }
+  // The anniversary repeats every year, so at any given moment there are two
+  // candidate occurrences bracketing today: the most recent one that has
+  // already happened (this year's, or last year's if this year's hasn't
+  // happened yet) and the next one still to come. Pick whichever is closer
+  // so a just-passed anniversary reports a small negative daysToAnniv
+  // instead of always jumping forward to next year's occurrence.
+  const thisYear = safeUtcDate(today.getUTCFullYear(), month, day);
+  const past = thisYear.getTime() <= todayUtc ? thisYear : safeUtcDate(today.getUTCFullYear() - 1, month, day);
+  const future = thisYear.getTime() >= todayUtc ? thisYear : safeUtcDate(today.getUTCFullYear() + 1, month, day);
 
-  const daysToAnniv = Math.round((anniv.getTime() - todayUtc) / 86400000);
+  const daysSincePast = Math.round((todayUtc - past.getTime()) / 86400000);
+  const daysUntilFuture = Math.round((future.getTime() - todayUtc) / 86400000);
+
+  const anniv = daysSincePast <= daysUntilFuture ? past : future;
+  const daysToAnniv = daysSincePast <= daysUntilFuture ? -daysSincePast : daysUntilFuture;
   return { anniv: toIsoDate(anniv), daysToAnniv };
 }
 
