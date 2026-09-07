@@ -37,6 +37,7 @@ export const KNOWLEDGE_CATEGORY_PRESETS = [
   "LTC",
   "Medicare",
   "상속/증여",
+  "재정전반",
   "기타",
 ];
 
