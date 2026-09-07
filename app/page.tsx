@@ -593,7 +593,7 @@ export default function Home() {
   const allAnnivItems = useMemo(
     () =>
       activePolicies
-        .filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30)
+        .filter((p) => p.daysToAnniv !== null && p.daysToAnniv >= -15 && p.daysToAnniv <= 15)
         .sort((a, b) => (a.daysToAnniv as number) - (b.daysToAnniv as number)),
     [activePolicies]
   );
@@ -673,7 +673,7 @@ export default function Home() {
   const kpisBottom = [
     {
       n: allAnnivItems.length,
-      l: "Up-coming Anniversary (30 days)",
+      l: "Up-coming Anniversary (±15 days)",
       cls: "accent",
       onClick: () => setAnnivModalOpen(true),
     },
@@ -1089,7 +1089,7 @@ export default function Home() {
       )}
       {annivModalOpen && (
         <PolicyListModal
-          title="Up-coming Anniversary (30 days)"
+          title="Up-coming Anniversary (±15 days)"
           items={allAnnivItems}
           unselected={annivUnselected}
           onToggleSelect={toggleAnnivSelect}
