@@ -20,6 +20,9 @@ function pillFor(p: {
   if (p.daysToAnniv !== null && p.daysToAnniv >= 0 && p.daysToAnniv <= 30) {
     return { cls: "status-badge-warn", label: `D-${p.daysToAnniv}` };
   }
+  if (p.daysToAnniv !== null && p.daysToAnniv < 0 && p.daysToAnniv >= -15) {
+    return { cls: "status-badge-caution", label: `D+${-p.daysToAnniv} (지남)` };
+  }
   return null;
 }
 
