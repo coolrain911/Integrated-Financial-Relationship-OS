@@ -36,6 +36,7 @@ export const KNOWLEDGE_CATEGORY_PRESETS = [
   "Social Security",
   "LTC",
   "Medicare",
+  "상속/증여",
   "기타",
 ];
 
