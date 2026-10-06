@@ -288,5 +288,8 @@ export type MarketIndexDTO = {
   changePct1d: number | null;
   changePct1y: number | null;
   asOfDate: string | null;
+  // Appended after the formatted value (e.g. "%" for a yield/rate index like
+  // the 10Y Treasury or CPI inflation). Null for a plain price index.
+  unit: string | null;
 };
 

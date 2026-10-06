@@ -880,7 +880,7 @@ export default function Home() {
                           <div className="index-name">{idx.name}</div>
                           <div className="index-value">
                             {idx.value !== null
-                              ? idx.value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                              ? `${idx.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}${idx.unit ?? ""}`
                               : "-"}
                           </div>
                           <div className={`index-change ${chgCls(idx.changePct1d)}`}>

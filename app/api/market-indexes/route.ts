@@ -5,17 +5,21 @@ import type { MarketIndexDTO } from "@/lib/types";
 // widely relied upon by tools like yfinance. Undocumented, so a fetch
 // failure here is treated as "no data" rather than surfaced as an error;
 // the dashboard just shows a dash for that index.
-const SYMBOLS: { symbol: string; name: string }[] = [
-  { symbol: "^GSPC", name: "S&P 500" },
-  { symbol: "^DJI", name: "Dow Jones" },
-  { symbol: "^IXIC", name: "Nasdaq" },
-  { symbol: "GC=F", name: "Gold" },
-  { symbol: "TSLA", name: "Tesla" },
-  { symbol: "PLTR", name: "Palantir" },
-  { symbol: "NVDA", name: "Nvidia" },
-  { symbol: "^KS11", name: "KOSPI" },
-  { symbol: "BTC-USD", name: "Bitcoin" },
-  { symbol: "XRP-USD", name: "XRP" },
+const SYMBOLS: { symbol: string; name: string; unit: string | null }[] = [
+  { symbol: "^GSPC", name: "S&P 500", unit: null },
+  { symbol: "^DJI", name: "Dow Jones", unit: null },
+  { symbol: "^IXIC", name: "Nasdaq", unit: null },
+  { symbol: "GC=F", name: "Gold", unit: null },
+  { symbol: "TSLA", name: "Tesla", unit: null },
+  { symbol: "PLTR", name: "Palantir", unit: null },
+  { symbol: "NVDA", name: "Nvidia", unit: null },
+  { symbol: "^KS11", name: "KOSPI", unit: null },
+  { symbol: "BTC-USD", name: "Bitcoin", unit: null },
+  { symbol: "XRP-USD", name: "XRP", unit: null },
+  // CBOE 10-Year Treasury Note Yield Index — Yahoo already reports this as
+  // the yield itself in percent (e.g. 4.16 means 4.16%), not the raw
+  // CBOE index value (which would be the yield x10).
+  { symbol: "^TNX", name: "US 10Y Treasury", unit: "%" },
 ];
 
 type YahooChartResponse = {
@@ -81,20 +85,79 @@ async function fetchIndex(symbol: string): Promise<IndexData | null> {
   }
 }
 
+// US CPI (All Urban Consumers, seasonally adjusted) year-over-year % change
+// — the standard headline "inflation rate". FRED's CSV export needs no API
+// key. The series is monthly, not daily, so there's no meaningful
+// day-over-day change for it (left null; the dashboard shows a dash).
+async function fetchInflationRate(): Promise<{ value: number; asOfDate: string } | null> {
+  try {
+    const url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL";
+    const res = await fetch(url, { next: { revalidate: 21600 } });
+    if (!res.ok) return null;
+
+    const text = await res.text();
+    const rows = text
+      .trim()
+      .split("\n")
+      .slice(1)
+      .map((line) => {
+        const [date, raw] = line.split(",");
+        const value = Number(raw);
+        return date && !Number.isNaN(value) ? { date, value } : null;
+      })
+      .filter((r): r is { date: string; value: number } => r !== null);
+    if (rows.length < 13) return null;
+
+    const latest = rows[rows.length - 1];
+    const yearAgoTarget = new Date(latest.date);
+    yearAgoTarget.setUTCFullYear(yearAgoTarget.getUTCFullYear() - 1);
+    let yearAgo = rows[0];
+    for (const r of rows) {
+      if (new Date(r.date).getTime() <= yearAgoTarget.getTime()) yearAgo = r;
+      else break;
+    }
+    if (yearAgo === latest) return null;
+
+    return {
+      value: ((latest.value - yearAgo.value) / yearAgo.value) * 100,
+      asOfDate: latest.date,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
-  const results: MarketIndexDTO[] = await Promise.all(
-    SYMBOLS.map(async ({ symbol, name }) => {
-      const data = await fetchIndex(symbol);
-      return {
-        symbol,
-        name,
-        value: data?.value ?? null,
-        changePct1d: data?.changePct1d ?? null,
-        changePct1y: data?.changePct1y ?? null,
-        asOfDate: data?.asOfDate ?? null,
-      };
-    })
-  );
+  const [indexResults, inflation] = await Promise.all([
+    Promise.all(
+      SYMBOLS.map(async ({ symbol, name, unit }) => {
+        const data = await fetchIndex(symbol);
+        return {
+          symbol,
+          name,
+          value: data?.value ?? null,
+          changePct1d: data?.changePct1d ?? null,
+          changePct1y: data?.changePct1y ?? null,
+          asOfDate: data?.asOfDate ?? null,
+          unit,
+        };
+      })
+    ),
+    fetchInflationRate(),
+  ]);
+
+  const results: MarketIndexDTO[] = [
+    ...indexResults,
+    {
+      symbol: "CPIAUCSL-YOY",
+      name: "US CPI (Inflation)",
+      value: inflation?.value ?? null,
+      changePct1d: null,
+      changePct1y: null,
+      asOfDate: inflation?.asOfDate ?? null,
+      unit: "%",
+    },
+  ];
 
   return NextResponse.json(results);
 }
