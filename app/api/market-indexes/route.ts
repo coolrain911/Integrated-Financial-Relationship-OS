@@ -127,8 +127,56 @@ async function fetchInflationRate(): Promise<{ value: number; asOfDate: string }
   }
 }
 
+// Freddie Mac 30-Year Fixed Rate Mortgage Average (PMMS), published weekly
+// (Thursdays) — via the same unauthenticated FRED CSV export. Reports the
+// rate itself (not a YoY transform like the CPI row above), so the 1yr
+// column is the relative % change of the rate versus ~52 weeks ago, same
+// convention as the 10Y Treasury row. No day-over-day change since it isn't
+// a daily series.
+async function fetchMortgageRate(): Promise<{
+  value: number;
+  asOfDate: string;
+  changePct1y: number | null;
+} | null> {
+  try {
+    const url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US";
+    const res = await fetch(url, { next: { revalidate: 21600 } });
+    if (!res.ok) return null;
+
+    const text = await res.text();
+    const rows = text
+      .trim()
+      .split("\n")
+      .slice(1)
+      .map((line) => {
+        const [date, raw] = line.split(",");
+        const value = Number(raw);
+        return date && !Number.isNaN(value) ? { date, value } : null;
+      })
+      .filter((r): r is { date: string; value: number } => r !== null);
+    if (!rows.length) return null;
+
+    const latest = rows[rows.length - 1];
+    const yearAgoTarget = new Date(latest.date);
+    yearAgoTarget.setUTCFullYear(yearAgoTarget.getUTCFullYear() - 1);
+    let yearAgo = rows[0];
+    for (const r of rows) {
+      if (new Date(r.date).getTime() <= yearAgoTarget.getTime()) yearAgo = r;
+      else break;
+    }
+
+    return {
+      value: latest.value,
+      asOfDate: latest.date,
+      changePct1y: yearAgo !== latest ? ((latest.value - yearAgo.value) / yearAgo.value) * 100 : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
-  const [indexResults, inflation] = await Promise.all([
+  const [indexResults, inflation, mortgage] = await Promise.all([
     Promise.all(
       SYMBOLS.map(async ({ symbol, name, unit }) => {
         const data = await fetchIndex(symbol);
@@ -144,6 +192,7 @@ export async function GET() {
       })
     ),
     fetchInflationRate(),
+    fetchMortgageRate(),
   ]);
 
   const results: MarketIndexDTO[] = [
@@ -155,6 +204,15 @@ export async function GET() {
       changePct1d: null,
       changePct1y: null,
       asOfDate: inflation?.asOfDate ?? null,
+      unit: "%",
+    },
+    {
+      symbol: "MORTGAGE30US",
+      name: "US 30Y Mortgage",
+      value: mortgage?.value ?? null,
+      changePct1d: null,
+      changePct1y: mortgage?.changePct1y ?? null,
+      asOfDate: mortgage?.asOfDate ?? null,
       unit: "%",
     },
   ];
