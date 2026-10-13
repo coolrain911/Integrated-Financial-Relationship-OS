@@ -16,6 +16,8 @@ const SYMBOLS: { symbol: string; name: string; unit: string | null }[] = [
   { symbol: "^KS11", name: "KOSPI", unit: null },
   { symbol: "BTC-USD", name: "Bitcoin", unit: null },
   { symbol: "XRP-USD", name: "XRP", unit: null },
+  // USD/KRW 기준환율 (원/달러 환율)
+  { symbol: "KRW=X", name: "기준환율 (USD/KRW)", unit: null },
   // CBOE 10-Year Treasury Note Yield Index — Yahoo already reports this as
   // the yield itself in percent (e.g. 4.16 means 4.16%), not the raw
   // CBOE index value (which would be the yield x10).
